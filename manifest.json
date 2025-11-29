@@ -1,7 +1,7 @@
 {
-  "name": "German Phrase Practice",
-  "short_name": "German SRS",
-  "description": "An SRS app for practicing German phrases using AI.",
+  "name": "Lingogo",
+  "short_name": "Lingogo",
+  "description": "An SRS app for practicing language phrases using AI.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f172a",

@@ -30,7 +30,7 @@ These concise instructions help AI coding agents be productive in this repositor
 - Weak locales: `validate-i18n.mjs` marks some locales as "weak" (e.g., `de.json`, `fr.json`) and does not fail on empty translations for them. Be mindful when adding new locales.
 
 6) Integration points and important files to review
-- `App.tsx` — high-level app wiring, provider selection, localStorage caching keys (e.g., `germanPhrases`, `germanAppSettings`). Good starting file to understand UI flows.
+- `App.tsx` — high-level app wiring, provider selection, localStorage caching keys (e.g., `learningPhrases`, `learningAppSettings`). Good starting file to understand UI flows.
 - `services/geminiService.ts` — large, canonical example of how AI calls are packaged (translate, generate, evaluate, deep-dive, chat continuations, etc.). Use this as a template for other providers.
 - `services/apiProvider.ts` — shows provider registration and priority. Edit here to add or reorder providers.
 - `scripts/validate-i18n.mjs` — i18n validation logic and placeholder rules.
