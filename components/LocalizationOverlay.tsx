@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { useTranslation } from "../src/hooks/useTranslation.ts";
-import type { LanguageCode } from "../../types.ts";
+import type { LanguageCode } from "../types.ts";
 import {
   LOCALIZATION_STEPS,
   type LocalizationPhase,
@@ -82,8 +82,8 @@ const LocalizationOverlay: React.FC<LocalizationOverlayProps> = ({
                   {status === "completed"
                     ? "✓"
                     : status === "active"
-                    ? "•"
-                    : ""}
+                      ? "•"
+                      : ""}
                 </div>
                 <div>
                   <p className="text-sm font-medium text-slate-100">
