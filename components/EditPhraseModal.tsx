@@ -220,7 +220,7 @@ const EditPhraseModal: React.FC<EditPhraseModalProps> = ({ isOpen, onClose, phra
                                     type="text"
                                     value={learning}
                                     onChange={(e) => setLearning(e.target.value)}
-                                    className="w-full bg-slate-900 border border-slate-700 rounded-md p-3 pr-20 text-slate-300 cursor-not-allowed"
+                                    className="w-full bg-slate-700 border border-slate-600 rounded-md p-3 pr-20 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                                 />
                                 <div className="absolute inset-y-0 right-0 flex items-center pr-2">
                                     {isLoading ? (
