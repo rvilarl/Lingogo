@@ -72,7 +72,7 @@ interface PracticePageProps {
     onOpenNounDeclension: (noun: string, article: string) => void;
     onOpenAdjectiveDeclension: (adjective: string) => void;
     onOpenSentenceChain: (phrase: Phrase) => void;
-    onOpenImprovePhrase: (phrase: Phrase) => void;
+    onEditPhrase: (phrase: Phrase) => void;
     onOpenLearningAssistant: (phrase: Phrase) => void;
     onOpenVoiceWorkspace: (phrase: Phrase) => void;
     onDeletePhrase: (phraseId: string) => void;
@@ -209,7 +209,7 @@ const PracticePage: React.FC<PracticePageProps> = (props) => {
         onUpdateMastery, onUpdateMasteryWithoutUI, onContinue, onSwipeRight,
         onOpenChat, onOpenDeepDive, onOpenMovieExamples, onOpenWordAnalysis, onGetWordTranslation,
         onOpenVerbConjugation, onOpenNounDeclension, onOpenAdjectiveDeclension,
-        onOpenSentenceChain, onOpenImprovePhrase, onOpenLearningAssistant,
+        onOpenSentenceChain, onEditPhrase, onOpenLearningAssistant,
         onOpenVoiceWorkspace, onDeletePhrase, onGoToList, onOpenDiscussTranslation,
         settings, masteryButtonUsage, allPhrases, onCreateCard, onAnalyzeWord,
         isWordAnalysisLoading, cardActionUsage, onLogCardActionUsage,
@@ -394,7 +394,7 @@ const PracticePage: React.FC<PracticePageProps> = (props) => {
                                 onWordClick={onOpenWordAnalysis}
                                 onGetWordTranslation={onGetWordTranslation}
                                 onOpenSentenceChain={onOpenSentenceChain}
-                                onOpenImprovePhrase={onOpenImprovePhrase}
+                                onEditPhrase={onEditPhrase}
                                 onOpenContextMenu={setContextMenuTarget}
                                 onOpenVoicePractice={onOpenVoiceWorkspace}
                                 onOpenLearningAssistant={onOpenLearningAssistant}

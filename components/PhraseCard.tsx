@@ -42,7 +42,7 @@ interface PhraseCardProps {
   onWordClick: (phrase: Phrase, word: string) => void;
   onGetWordTranslation: (nativePhrase: string, learningPhrase: string, nativeWord: string) => Promise<{ learningTranslation: string }>;
   onOpenSentenceChain: (phrase: Phrase) => void;
-  onOpenImprovePhrase: (phrase: Phrase) => void;
+  onEditPhrase: (phrase: Phrase) => void;
   onOpenContextMenu: (target: { phrase: Phrase, word?: string }) => void;
   onOpenVoicePractice: (phrase: Phrase) => void;
   onOpenLearningAssistant: (phrase: Phrase) => void;
@@ -96,7 +96,7 @@ const NativePhraseDisplay: React.FC<NativePhraseDisplayProps> = ({ text, as: Com
 const PhraseCard: React.FC<PhraseCardProps> = ({
   phrase, onSpeak, isFlipped, onFlip, onOpenChat,
   onOpenDeepDive, onOpenMovieExamples, onWordClick, onGetWordTranslation, onOpenSentenceChain,
-  onOpenImprovePhrase, onOpenContextMenu, onOpenVoicePractice,
+  onEditPhrase, onOpenContextMenu, onOpenVoicePractice,
   onOpenLearningAssistant, isWordAnalysisLoading,
   cardActionUsage, onLogCardActionUsage,
   flash, onFlashEnd,
@@ -281,9 +281,9 @@ const PhraseCard: React.FC<PhraseCardProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isMoreMenuOpenBack]);
 
-  const handleOpenImprovePhrase = (e: React.MouseEvent) => {
+  const handleEditPhrase = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onOpenImprovePhrase(phrase);
+    onEditPhrase(phrase);
   }
 
   const handleLearningWordClick = (e: React.MouseEvent, word: string) => {
@@ -399,7 +399,7 @@ const PhraseCard: React.FC<PhraseCardProps> = ({
           className={`card-face bg-slate-400/10 backdrop-blur-xl transition-colors duration-500`}
         >
           <button
-            onClick={handleOpenImprovePhrase}
+            onClick={handleEditPhrase}
             className="absolute top-3 right-3 p-0 rounded-full text-slate-500 hover:bg-white/20 hover:text-white transition-colors z-10"
             aria-label={t('phraseCard.aria.openSettings')}
           >
@@ -452,7 +452,7 @@ const PhraseCard: React.FC<PhraseCardProps> = ({
         <div className="card-face [transform:rotateY(180deg)] bg-gradient-to-br from-purple-500/20 to-blue-500/20 backdrop-blur-xl transition-colors duration-500">
           <div className="flex-grow flex flex-col items-center justify-center w-full">
             <button
-              onClick={handleOpenImprovePhrase}
+              onClick={handleEditPhrase}
               className="absolute top-3 right-3 p-2 rounded-full text-white/70 hover:bg-black/20 hover:text-white transition-colors z-10"
               aria-label={t('phraseCard.aria.openSettings')}
             >

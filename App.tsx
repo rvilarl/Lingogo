@@ -62,7 +62,7 @@ import AdjectiveDeclensionModal from "./components/AdjectiveDeclensionModal";
 import SentenceChainModal from "./components/SentenceChainModal";
 import AddPhraseModal from "./components/AddPhraseModal";
 import SmartImportModal from "./components/SmartImportModal";
-import ImprovePhraseModal from "./components/ImprovePhraseModal";
+//import ImprovePhraseModal from "./components/ImprovePhraseModal";
 import EditPhraseModal from "./components/EditPhraseModal";
 import ConfirmDeleteModal from "./components/ConfirmDeleteModal";
 // FIX: Changed to a named import to resolve "no default export" error.
@@ -2098,23 +2098,6 @@ const App: React.FC = () => {
     setIsImproveModalOpen(true);
   };
 
-  const handleOpenDiscussionFromImprove = (phraseForDiscussion: Phrase) => {
-    setIsImproveModalOpen(false);
-    setPhraseToDiscuss(phraseForDiscussion);
-    setDiscussInitialMessage(
-      "Давай обсудим, можно ли эту фразу улучшить и правильно, если она звучит с точки зрения носителя языка"
-    );
-    setIsDiscussModalOpen(true);
-  };
-
-  const handleGenerateImprovement = useCallback(
-    (originalNative: string, currentLearning: string) =>
-      callApiWithFallback((provider) =>
-        provider.improvePhrase(originalNative, currentLearning)
-      ),
-    [callApiWithFallback]
-  );
-
   const handleTranslatePhrase = useCallback(
     (native: string) =>
       callApiWithFallback((provider) => provider.translatePhrase(native)),
@@ -3212,9 +3195,9 @@ const App: React.FC = () => {
             onOpenNounDeclension={handleOpenNounDeclension}
             onOpenAdjectiveDeclension={handleOpenAdjectiveDeclension}
             onOpenSentenceChain={handleOpenSentenceChain}
-            onOpenImprovePhrase={handleOpenImproveModal}
             onOpenLearningAssistant={handleOpenLearningAssistant}
             onOpenVoiceWorkspace={handleOpenVoiceWorkspace}
+            onEditPhrase={handleOpenEditModal}
             onDeletePhrase={handleDeletePhrase}
             onGoToList={handleGoToListFromPractice}
             onOpenDiscussTranslation={handleOpenDiscussModal}
@@ -3469,16 +3452,6 @@ const App: React.FC = () => {
           initialTopic={smartImportInitialTopic}
           allPhrases={allPhrases}
           categories={categories}
-        />
-      )}
-      {phraseToImprove && (
-        <ImprovePhraseModal
-          isOpen={isImproveModalOpen}
-          onClose={() => setIsImproveModalOpen(false)}
-          phrase={phraseToImprove}
-          onGenerateImprovement={handleGenerateImprovement}
-          onPhraseImproved={handlePhraseImproved}
-          onOpenDiscussion={handleOpenDiscussionFromImprove}
         />
       )}
       {phraseToEdit && apiProvider && (
