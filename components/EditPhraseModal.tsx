@@ -66,6 +66,8 @@ const EditPhraseModal: React.FC<EditPhraseModalProps> = ({ isOpen, onClose, phra
     const [learning, setLearning] = useState(phrase.text.learning);
     // State for the learning language text (romanization)
     const [romanization, setRomanization] = useState(phrase.romanization?.learning || '');
+    // State for the learning language text (context)
+    const [context, setContext] = useState(phrase.context?.native || '');
     // State for the selected category ID
     const [selectedCategory, setSelectedCategory] = useState(phrase.category);
 
@@ -87,6 +89,7 @@ const EditPhraseModal: React.FC<EditPhraseModalProps> = ({ isOpen, onClose, phra
             setNative(phrase.text.native);
             setLearning(phrase.text.learning);
             setRomanization(phrase.romanization?.learning || '');
+            setContext(phrase.context?.native || '');
             setSelectedCategory(phrase.category);
             setError(null);
             initialNativeRef.current = phrase.text.native;
@@ -141,7 +144,7 @@ const EditPhraseModal: React.FC<EditPhraseModalProps> = ({ isOpen, onClose, phra
      * Saves the changes and closes the modal.
      */
     const handleSave = () => {
-        onSave(phrase.id, { text: { native: native, learning: learning }, romanization: { learning: romanization }, category: selectedCategory });
+        onSave(phrase.id, { text: { native: native, learning: learning }, romanization: { learning: romanization }, context: { native: context }, category: selectedCategory });
         onClose();
     };
 
@@ -213,6 +216,18 @@ const EditPhraseModal: React.FC<EditPhraseModalProps> = ({ isOpen, onClose, phra
                                         <MicrophoneIcon className="w-5 h-5" />
                                     </button>
                                 </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-slate-400 mb-1">{nativeLabel}</label>
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    value={context}
+                                    onChange={(e) => setContext(e.target.value)}
+                                    className="w-full bg-slate-700 border border-slate-600 rounded-md p-3 pr-20 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                />
                             </div>
                         </div>
 
