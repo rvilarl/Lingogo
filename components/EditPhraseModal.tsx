@@ -64,6 +64,8 @@ const EditPhraseModal: React.FC<EditPhraseModalProps> = ({ isOpen, onClose, phra
     const [native, setNative] = useState(phrase.text.native);
     // State for the learning language text (translation)
     const [learning, setLearning] = useState(phrase.text.learning);
+    // State for the learning language text (romanization)
+    const [romanization, setRomanization] = useState(phrase.romanization?.learning || '');
     // State for the selected category ID
     const [selectedCategory, setSelectedCategory] = useState(phrase.category);
 
@@ -84,6 +86,7 @@ const EditPhraseModal: React.FC<EditPhraseModalProps> = ({ isOpen, onClose, phra
         if (isOpen) {
             setNative(phrase.text.native);
             setLearning(phrase.text.learning);
+            setRomanization(phrase.romanization?.learning || '');
             setSelectedCategory(phrase.category);
             setError(null);
             initialNativeRef.current = phrase.text.native;
@@ -138,7 +141,7 @@ const EditPhraseModal: React.FC<EditPhraseModalProps> = ({ isOpen, onClose, phra
      * Saves the changes and closes the modal.
      */
     const handleSave = () => {
-        onSave(phrase.id, { text: { native: native, learning: learning }, category: selectedCategory });
+        onSave(phrase.id, { text: { native: native, learning: learning }, romanization: { learning: romanization }, category: selectedCategory });
         onClose();
     };
 
@@ -231,6 +234,18 @@ const EditPhraseModal: React.FC<EditPhraseModalProps> = ({ isOpen, onClose, phra
                                         </div>
                                     ) : learning ? <AudioPlayer textToSpeak={learning} /> : null}
                                 </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-slate-400 mb-1">{learningLabel}</label>
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    value={romanization}
+                                    onChange={(e) => setRomanization(e.target.value)}
+                                    className="w-full bg-slate-700 border border-slate-600 rounded-md p-3 pr-20 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                />
                             </div>
                         </div>
 
