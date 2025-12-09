@@ -40,6 +40,7 @@ const ChatMessageContent: React.FC<{
   onOpenWordAnalysis?: (phrase: Phrase, word: string) => void;
   onOpenContextMenu: (target: { sentence: { learning: string, native: string }, word: string }) => void;
 }> = ({ message, onSpeak, basePhrase, onOpenWordAnalysis, onOpenContextMenu }) => {
+  const { t } = useTranslation();
   const { text, examples, suggestions, contentParts } = message;
   const wordLongPressTimer = useRef<number | null>(null);
 
@@ -126,30 +127,9 @@ const ChatMessageContent: React.FC<{
   if (message.role === 'model' && (examples?.length || suggestions?.length)) {
     return (
       <div className="space-y-4 text-left">
-        {text && <p className="text-slate-300">{text}</p>}
-
-        {examples && examples.length > 0 && (
-          <div className="space-y-3 pt-2">
-            {examples.map((example, index) => (
-              <div key={`ex-${index}`}>
-                <div className="flex items-start">
-                  <button
-                    onClick={() => onSpeak(example.learning)}
-                    className="p-1 rounded-full hover:bg-white/20 flex-shrink-0 mt-0.5 mr-2"
-                    aria-label={`Speak: ${example.learning}`}
-                  >
-                    <SoundIcon className="w-4 h-4 text-slate-300" />
-                  </button>
-                  <p className="flex-1 text-slate-100 leading-relaxed">{renderClickableLearning({ learning: example.learning, native: example.native })}</p>
-                </div>
-                <p className="pl-7 text-sm text-slate-400 italic">{example.native}</p>
-              </div>
-            ))}
-          </div>
-        )}
 
         {suggestions && suggestions.length > 0 && (
-          <div className="space-y-3 pt-3 border-t border-slate-600/50">
+          <div className="space-y-3 pt-3 border-slate-600/50 pb-3">
             {suggestions.map((suggestion, index) => (
               <div key={`sug-${index}`} className="italic bg-slate-600/10 p-2 rounded-lg">
                 <h5 className="font-semibold text-purple-300 mb-1">{suggestion.title}</h5>
@@ -171,6 +151,28 @@ const ChatMessageContent: React.FC<{
                     )
                   )}
                 </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {text && <p className="text-slate-300">{text}</p>}
+
+        {examples && examples.length > 0 && (
+          <div className="space-y-3 pt-2">
+            {examples.map((example, index) => (
+              <div key={`ex-${index}`}>
+                <div className="flex items-start">
+                  <button
+                    onClick={() => onSpeak(example.learning)}
+                    className="p-1 rounded-full hover:bg-white/20 flex-shrink-0 mt-0.5 mr-2"
+                    aria-label={`Speak: ${example.learning}`}
+                  >
+                    <SoundIcon className="w-4 h-4 text-slate-300" />
+                  </button>
+                  <p className="flex-1 text-slate-100 leading-relaxed">{renderClickableLearning({ learning: example.learning, native: example.native })}</p>
+                </div>
+                <p className="pl-7 text-sm text-slate-400 italic">{example.native}</p>
               </div>
             ))}
           </div>

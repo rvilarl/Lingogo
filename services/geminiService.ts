@@ -811,14 +811,34 @@ const generateInitialExamples: AiService['generateInitialExamples'] = async (phr
     if (!api) throw new Error("Gemini API key not configured.");
     const lang = getLang();
 
-    const prompt = `Пользователь изучает ${lang.learning} фразу: "${phrase.text.learning}" (перевод: "${phrase.text.native}").
-1. Сгенерируй 3-5 разнообразных и практичных предложений-примеров на ${lang.learning}, которые используют эту фразу. Для каждого примера предоставь ${lang.native} перевод.
-2. Проанализируй фразу и предложи 1-2 уникальных, полезных совета или альтернативы. Например, для "ich hätte gern" можно предложить "ich möchte". Сделай советы краткими и по делу. ВАЖНО: Разбей содержание каждого совета на массив 'contentParts'. Каждый элемент массива должно быть объектом с 'type' и 'text'. Если часть ответа - обычный текст, используй 'type': 'text'. Если это ${lang.learning} слово или фраза, используй 'type': 'learning' и ОБЯЗАТЕЛЬНО предоставь ${lang.native} перевод в поле 'translation'.
-3. Сгенерируй от 2 до 4 коротких, контекстно-зависимых вопросов для продолжения диалога на ${lang.native} языке, которые пользователь может задать.
-   - Предлагай "Покажи варианты с местоимениями" только если во фразе есть глагол для спряжения.
-   - Предлагай "Как это использовать в вопросе?" только если фраза не является вопросом.
-   - Всегда рассматривай общие полезные вопросы, такие как "Объясни грамматику" или "Предложи стратегию запоминания".
-Верни результат в виде JSON-объекта, соответствующего схеме.`;
+    const prompt = `User is learning the ${lang.learning} phrase: "${phrase.text.learning}" (translation: "${phrase.text.native}").
+
+Your task is to create a useful card for detailed analysis of this phrase.
+The response structure must be as follows (return JSON according to the schema, contentParts will be used for text description):
+
+1. **Deep Analysis and Explanation (contentParts/text)**:
+   - **Do NOT use intro phrases** like "Here are some examples" or "Here is an analysis". Start DIRECTLY with the content.
+   - At the very beginning, provide a detailed explanation of the grammar, usage context, and nuances of this phrase.
+   - Explain why the phrase is constructed this way.
+   - If there are interesting cultural features or etymology, add them.
+   - **IMPORTANT: Provide this explanation in ${lang.native} language.**
+   - **MUST BE IN 'text' FIELD**. Do NOT put this in 'suggestions'.
+
+2. **Alternatives and Variations (proactiveSuggestions)**:
+   - Suggest synonyms, more formal or informal variations.
+   - Compare with similar expressions.
+   - You can add comparison with idioms in ${lang.native} language.
+   - Use 'suggestions' field ONLY for these lists of alternatives.
+
+3. **Examples (examples)**:
+   - Generate exactly **5** diverse and practical example sentences in ${lang.learning}.
+   - The examples should show the phrase in different contexts.
+   - **MUST provide ${lang.native} translation for each example.**
+
+4. **Conversation Questions (promptSuggestions)**:
+   - 2-4 questions that the user can ask you to deepen the topic (in ${lang.native}).
+
+Return the result as a JSON object matching the schema. Use the 'suggestions' (proactiveSuggestions) field STRICTLY for alternatives/synonyms. Place the MAIN ANALYSIS text in the introductory part of the response (text).`;
 
     try {
         const response = await api.models.generateContent({
