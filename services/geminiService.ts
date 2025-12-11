@@ -2,7 +2,7 @@
 
 
 import { GoogleGenAI, Type } from "@google/genai";
-import type { Phrase, ChatMessage, ExamplePair, ProactiveSuggestion, ContentPart, DeepDiveAnalysis, MovieExample, WordAnalysis, VerbConjugation, NounDeclension, AdjectiveDeclension, SentenceContinuation, PhraseBuilderOptions, PhraseEvaluation, CategoryAssistantRequest, CategoryAssistantResponse, CategoryAssistantRequestType, ProposedCard, LanguageCode } from '../types';
+import type { Phrase, ChatMessage, ChatExamplePair, ChatProactiveSuggestion, ContentPart, DeepDiveAnalysis, MovieExample, WordAnalysis, VerbConjugation, NounDeclension, AdjectiveDeclension, SentenceContinuation, PhraseBuilderOptions, PhraseEvaluation, CategoryAssistantRequest, CategoryAssistantResponse, CategoryAssistantRequestType, ProposedCard, LanguageCode } from '../types';
 
 import { AiService } from './aiService';
 import { getGeminiApiKey } from './env';
@@ -751,12 +751,24 @@ const improvePhrase: AiService['improvePhrase'] = async (originalNative, current
     }
 };
 
-
 const initialResponseSchema = () => {
     const lang = getLang();
     return {
         type: Type.OBJECT,
         properties: {
+            grammarParts: {
+                type: Type.ARRAY,
+                description: `REQUIRED. A CONCISE grammar analysis broken into segments. Include: 1) Word breakdown (parts of speech), 2) Word order comparison with ${lang.native}, 3) Key grammar point. Keep SHORT - max 150 words total. When mentioning ${lang.learning} words/phrases, use type 'learning' with translation.`,
+                items: {
+                    type: Type.OBJECT,
+                    properties: {
+                        type: { type: Type.STRING, enum: ['text', 'learning'], description: `Use 'text' for ${lang.native} explanatory text, 'learning' for ${lang.learning} words/phrases.` },
+                        text: { type: Type.STRING, description: "The segment content." },
+                        translation: { type: Type.STRING, description: `${lang.native} translation, REQUIRED when type is 'learning'.` }
+                    },
+                    required: ["type", "text"]
+                }
+            },
             examples: {
                 type: Type.ARRAY,
                 description: "List of 3-5 practical example sentences using the phrase.",
@@ -801,7 +813,7 @@ const initialResponseSchema = () => {
                 }
             }
         },
-        required: ["examples", "proactiveSuggestions", "promptSuggestions"]
+        required: ["grammarParts", "examples", "proactiveSuggestions", "promptSuggestions"]
     };
 };
 
@@ -811,14 +823,30 @@ const generateInitialExamples: AiService['generateInitialExamples'] = async (phr
     if (!api) throw new Error("Gemini API key not configured.");
     const lang = getLang();
 
-    const prompt = `Пользователь изучает ${lang.learning} фразу: "${phrase.text.learning}" (перевод: "${phrase.text.native}").
-1. Сгенерируй 3-5 разнообразных и практичных предложений-примеров на ${lang.learning}, которые используют эту фразу. Для каждого примера предоставь ${lang.native} перевод.
-2. Проанализируй фразу и предложи 1-2 уникальных, полезных совета или альтернативы. Например, для "ich hätte gern" можно предложить "ich möchte". Сделай советы краткими и по делу. ВАЖНО: Разбей содержание каждого совета на массив 'contentParts'. Каждый элемент массива должно быть объектом с 'type' и 'text'. Если часть ответа - обычный текст, используй 'type': 'text'. Если это ${lang.learning} слово или фраза, используй 'type': 'learning' и ОБЯЗАТЕЛЬНО предоставь ${lang.native} перевод в поле 'translation'.
-3. Сгенерируй от 2 до 4 коротких, контекстно-зависимых вопросов для продолжения диалога на ${lang.native} языке, которые пользователь может задать.
-   - Предлагай "Покажи варианты с местоимениями" только если во фразе есть глагол для спряжения.
-   - Предлагай "Как это использовать в вопросе?" только если фраза не является вопросом.
-   - Всегда рассматривай общие полезные вопросы, такие как "Объясни грамматику" или "Предложи стратегию запоминания".
-Верни результат в виде JSON-объекта, соответствующего схеме.`;
+    const prompt = `User is learning the ${lang.learning} phrase: "${phrase.text.learning}" (translation: "${phrase.text.native}").
+
+Your task is to create a useful card for detailed analysis of this phrase.
+Return JSON according to the schema. IMPORTANT: Use the 'grammarParts' field (ARRAY of segments) for grammar analysis.
+
+1. **Grammar Analysis (grammarParts)** - REQUIRED, use grammarParts array:
+   - Break down your explanation into an ARRAY of segments with 'type' and 'text' fields.
+   - For ${lang.native} explanatory text: use type='text'.
+   - For ${lang.learning} words/phrases: use type='learning' with 'translation' field.
+   - Example structure: [{"type":"text","text":"Слово "},{"type":"learning","text":"Monat","translation":"месяц"},{"type":"text","text":" — существительное (м.р.)."}]
+   - Include: parts of speech, word order comparison with ${lang.native}, key grammar points.
+   - Keep it SHORT - max 150 words total.
+   - Start DIRECTLY with content, NO intro phrases.
+
+2. **Alternatives (proactiveSuggestions)**:
+   - 1-2 alternative phrasings with contentParts (same format: text/learning segments).
+
+3. **Examples (examples)**:
+   - Exactly 5 diverse sentence examples with ${lang.learning} and ${lang.native} translations.
+
+4. **Follow-up Questions (promptSuggestions)**:
+   - 2-4 questions in ${lang.native} for continuing the conversation.
+
+CRITICAL: The grammar analysis MUST go into 'grammarParts' as an array of {type, text, translation?} objects. Do NOT use a plain 'text' string.`;
 
     try {
         const response = await api.models.generateContent({
@@ -834,17 +862,16 @@ const generateInitialExamples: AiService['generateInitialExamples'] = async (phr
         const jsonText = response.text.trim();
         const parsedResponse = JSON.parse(jsonText);
 
-        const examples: ExamplePair[] = (parsedResponse.examples || []).map((ex: any) => ({ learning: ex[lang.learningCode], native: ex[lang.nativeCode] }));
-        const suggestions: ProactiveSuggestion[] = parsedResponse.proactiveSuggestions || [];
+        const examples: ChatExamplePair[] = (parsedResponse.examples || []).map((ex: any) => ({ learning: ex[lang.learningCode], native: ex[lang.nativeCode] }));
+        const suggestions: ChatProactiveSuggestion[] = parsedResponse.proactiveSuggestions || [];
         const promptSuggestions: string[] = parsedResponse.promptSuggestions || [];
-        const intro = i18n.t('practice.discuss.examples.intro', {
-            lng: currentLanguageProfile.getUi(),
-            defaultValue: i18n.getFixedT('en')('practice.discuss.examples.intro'),
-        });
+
+        // Use AI-generated grammarParts array for interactive grammar analysis
+        const grammarParts: ContentPart[] = parsedResponse.grammarParts || [];
 
         return {
             role: 'model' as const,
-            text: intro,
+            grammarParts,
             examples,
             suggestions,
             promptSuggestions,
@@ -898,12 +925,12 @@ const continueChat: AiService['continueChat'] = async (phrase, history, newMessa
         } else if (msg.text) {
             fullText = msg.text;
             if (msg.examples && msg.examples.length > 0) {
-                const examplesText = msg.examples.map(ex => `- ${ex.learningExample} (${ex.nativeTranslation})`).join('\n');
+                const examplesText = msg.examples.map(ex => `- ${ex.learning} (${ex.native})`).join('\n');
                 fullText += '\n\nПримеры:\n' + examplesText;
             }
             if (msg.suggestions && msg.suggestions.length > 0) {
                 // We don't have detailed structure for suggestions in the type definition
-                const suggestionsText = msg.suggestions.map(s => `- ${s.topic}`).join('\n');
+                const suggestionsText = msg.suggestions.map(s => `- ${s.title}`).join('\n');
                 fullText += '\n\nСоветы:\n' + suggestionsText;
             }
         }
@@ -914,7 +941,7 @@ const continueChat: AiService['continueChat'] = async (phrase, history, newMessa
     });
 
     const systemInstruction = `Ты AI-помощник для изучения ${lang.learning} языка. Пользователь изучает фразу "${phrase.text.learning}" (${phrase.text.native}).
-1. Отвечай на вопросы пользователя. В своем ответе ОБЯЗАТЕЛЬНО используй предоставленную JSON-схему. Разбей свой ответ на массив 'responseParts'. Каждый элемент массива должен быть объектом с ключами 'type' и 'text'. Если часть ответа - это обычный текст на ${lang.native}, используй 'type': 'text'. Если это ${lang.learning} слово или фраза, используй 'type': 'learning'. Если 'type' равен 'learning', ОБЯЗАТЕЛЬНО предоставь перевод в поле 'translation'. Не используй Markdown в JSON. Сохраняй форматирование с помощью переносов строк (\\n) в текстовых блоках.
+1. Отвечай на вопросы пользователя. В своем ответе ОБЯЗАТЕЛЬНО используй предоставленную JSON-схему. Разбей свой ответ на массив 'contentParts'. Каждый элемент массива должен быть объектом с ключами 'type' и 'text'. Если часть ответа - это обычный текст на ${lang.native}, используй 'type': 'text'. Если это ${lang.learning} слово или фраза, используй 'type': 'learning'. Если 'type' равен 'learning', ОБЯЗАТЕЛЬНО предоставь перевод в поле 'translation'. Не используй Markdown в JSON. Сохраняй форматирование с помощью переносов строк (\\n) в текстовых блоках.
 2. После ответа, сгенерируй от 2 до 4 новых, контекстно-зависимых вопросов для продолжения диалога в поле 'promptSuggestions'. Эти вопросы должны быть основаны на последнем сообщении пользователя и общем контексте диалога.
    - Предлагай "Покажи варианты с местоимениями" только если во фразе есть глагол для спряжения и это релевантно.
    - Предлагай "Как это использовать в вопросе?" только если фраза не является вопросом и это релевантно.
@@ -933,11 +960,30 @@ const continueChat: AiService['continueChat'] = async (phrase, history, newMessa
         });
 
         const jsonText = response.text.trim();
-        const parsedResponse = JSON.parse(jsonText);
 
-        const contentParts: ContentPart[] = parsedResponse.responseParts && parsedResponse.responseParts.length > 0
-            ? parsedResponse.responseParts
-            : [{ type: 'text', text: 'Получен пустой ответ от AI.' }];
+        // Try to extract valid JSON from response (handles cases where AI adds extra text)
+        let cleanedJson = jsonText;
+        const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+            cleanedJson = jsonMatch[0];
+        }
+
+        let parsedResponse;
+        try {
+            parsedResponse = JSON.parse(cleanedJson);
+        } catch (parseError) {
+            console.error("JSON Parse error, raw response:", jsonText);
+            // Fallback: return a generic response
+            return {
+                role: 'model',
+                contentParts: [{ type: 'text', text: 'Sorry, I had trouble processing that. Please try again.' }],
+                promptSuggestions: [],
+            };
+        }
+
+        const contentParts: ContentPart[] = parsedResponse.contentParts && parsedResponse.contentParts.length > 0
+            ? parsedResponse.contentParts
+            : [{ type: 'text', text: 'Received empty response from AI.' }];
 
         const promptSuggestions: string[] = parsedResponse.promptSuggestions || [];
 
@@ -983,7 +1029,7 @@ ${JSON.stringify(allPhrases.map(p => ({ learning: p.text.learning, native: p.tex
 Your response MUST be a JSON object with this EXACT structure:
 
 {
-  "responseParts": [
+  "contentParts": [
     {
       "type": "learning",
       "text": "Your ${lang.learning} conversational response here",
@@ -1003,7 +1049,7 @@ Your response MUST be a JSON object with this EXACT structure:
 
 **EXAMPLE (${lang.native} → ${lang.learning}):**
 {
-  "responseParts": [
+  "contentParts": [
     {
       "type": "learning",
       "text": "Hallo! Wie geht es dir?",
@@ -1018,7 +1064,7 @@ Your response MUST be a JSON object with this EXACT structure:
 }
 
 **IMPORTANT:**
-- responseParts is REQUIRED (array of objects)
+- contentParts is REQUIRED (array of objects)
 - Each object MUST have "type" ("learning" or "text") and "text"
 - If type is "learning", include "translation"
 - promptSuggestions is REQUIRED (array of 2-3 strings)
@@ -1034,7 +1080,7 @@ Your response MUST be a JSON object with this EXACT structure:
                 config: {
                     systemInstruction,
                     responseMimeType: "application/json",
-                    responseSchema: chatResponseSchema,
+                    responseSchema: chatResponseSchema(),
                     temperature: 0.7,
                 },
             });

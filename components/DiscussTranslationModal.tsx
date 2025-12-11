@@ -21,6 +21,8 @@ interface DiscussTranslationModalProps {
     onAccept: (suggestion: { native: string; learning: string }) => void;
     onOpenWordAnalysis: (phrase: Phrase, word: string) => void;
     initialMessage?: string;
+    initialHistory?: ChatMessage[];
+    onUpdateHistory?: (messages: ChatMessage[]) => void;
 }
 
 const ChatMessageContent: React.FC<{
@@ -57,7 +59,7 @@ const ChatMessageContent: React.FC<{
         return (
             <div className="whitespace-pre-wrap leading-relaxed">
                 {contentParts.map((part, index) =>
-                    part.type === 'learning' || part.type === 'learning' ? (
+                    part.type === 'learning' ? (
                         <span key={index} className="inline-flex items-center align-middle bg-slate-600/50 px-1.5 py-0.5 rounded-md mx-0.5">
                             <span className="font-medium text-purple-300">{renderClickableLearning(part.text)}</span>
                             <button onClick={() => onSpeak(part.text)} className="p-0.5 rounded-full hover:bg-white/20 ml-1.5">
@@ -74,7 +76,7 @@ const ChatMessageContent: React.FC<{
     return text ? <p>{text}</p> : null;
 };
 
-const DiscussTranslationModal: React.FC<DiscussTranslationModalProps> = ({ isOpen, onClose, originalNative, currentLearning, onDiscuss, onAccept, onOpenWordAnalysis, initialMessage }) => {
+const DiscussTranslationModal: React.FC<DiscussTranslationModalProps> = ({ isOpen, onClose, originalNative, currentLearning, onDiscuss, onAccept, onOpenWordAnalysis, initialMessage, initialHistory = [], onUpdateHistory }) => {
     const { t } = useTranslation();
     const { profile } = useLanguage();
     const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -117,8 +119,15 @@ const DiscussTranslationModal: React.FC<DiscussTranslationModalProps> = ({ isOpe
             if (response.suggestion) {
                 setLatestSuggestion({ native: response.suggestion.native, learning: response.suggestion.learning });
             }
+            if (onUpdateHistory) {
+                onUpdateHistory([...newMessages, response]);
+            }
         } catch (error) {
-            setMessages(prev => [...prev, { role: 'model', contentParts: [{ type: 'text', text: t('modals.discussTranslation.errors.generic', { message: (error as Error).message }) }] }]);
+            const errorMsg = { role: 'model' as const, contentParts: [{ type: 'text' as const, text: t('modals.discussTranslation.errors.generic', { message: (error as Error).message }) }] };
+            setMessages(prev => [...prev, errorMsg]);
+            if (onUpdateHistory) {
+                onUpdateHistory([...newMessages, errorMsg]);
+            }
         } finally {
             setIsLoading(false);
         }
@@ -131,32 +140,47 @@ const DiscussTranslationModal: React.FC<DiscussTranslationModalProps> = ({ isOpe
 
                 const userMessage: ChatMessage = { role: 'user', text: initialMessage };
                 setIsLoading(true);
-                setMessages([userMessage]);
+
+                // Respect initialHistory
+                const currentHistory = initialHistory || [];
+                const newMessagesWithUser = [...currentHistory, userMessage];
+
+                setMessages(newMessagesWithUser);
 
                 onDiscuss({
                     originalNative: originalNative,
                     currentLearning: currentLearning,
-                    history: [userMessage],
+                    history: newMessagesWithUser,
                     userRequest: initialMessage,
                 }).then(response => {
                     setMessages(prev => [...prev, response]);
-                    if (response.suggestion) {
-                        setLatestSuggestion({ native: response.suggestion.native, learning: response.suggestion.learning });
+                    if (onUpdateHistory) {
+                        onUpdateHistory([...newMessagesWithUser, response]);
                     }
                 }).catch(error => {
-                    setMessages(prev => [...prev, { role: 'model', contentParts: [{ type: 'text', text: t('modals.discussTranslation.errors.generic', { message: (error as Error).message }) }] }]);
+                    const errorMsg = { role: 'model' as const, contentParts: [{ type: 'text' as const, text: t('modals.discussTranslation.errors.generic', { message: (error as Error).message }) }] };
+                    setMessages(prev => [...prev, errorMsg]);
+                    if (onUpdateHistory) {
+                        onUpdateHistory([...newMessagesWithUser, errorMsg]);
+                    }
                 }).finally(() => {
                     setIsLoading(false);
                 });
+            } else if (initialHistory.length > 0 && messages.length === 0) {
+                // Load initial history if available and messages are empty
+                setMessages(initialHistory);
             }
         } else {
-            // Reset state when modal closes
-            setMessages([]);
-            setLatestSuggestion(null);
+            // Reset state or keep it? If we persist, we might want to clear local state to avoid stale data,
+            // but we rely on initialHistory to re-populate it.
             setInput('');
             isInitialMessageSent.current = false;
+            // setMessages([]); // Do NOT clear messages here if we want to persist visual state until full close, but technically valid since we reload from props
+            if (!isOpen) {
+                setMessages([]); // Clear LOCAL state when closed, so next open gets fresh initialHistory
+            }
         }
-    }, [isOpen, initialMessage, originalNative, currentLearning, onDiscuss]);
+    }, [isOpen, initialMessage, originalNative, currentLearning, onDiscuss, initialHistory]);
 
     useEffect(() => {
         const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;

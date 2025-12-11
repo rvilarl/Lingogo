@@ -142,6 +142,10 @@ const PRACTICE_REVIEW_LOG_KEY = (
   userId?: string,
   langProfile?: { native: string; learning: string }
 ) => getStorageKey("userPracticeReviewLog", userId, langProfile);
+const DISCUSS_CHAT_CACHE_KEY = (
+  userId?: string,
+  langProfile?: { native: string; learning: string }
+) => getStorageKey("userDiscussChatCache", userId, langProfile);
 
 const PRACTICE_REVIEW_LOG_LIMIT = 5000;
 
@@ -797,6 +801,12 @@ const App: React.FC = () => {
         );
         if (storedPracticeReviewLog)
           setPracticeReviewLog(JSON.parse(storedPracticeReviewLog));
+        const storedDiscussCache = localStorage.getItem(
+          DISCUSS_CHAT_CACHE_KEY(userId, languageProfile)
+        );
+        if (storedDiscussCache) {
+          setDiscussCache(JSON.parse(storedDiscussCache));
+        }
       } catch (e) {
         console.error("Failed to load settings or trackers", e);
       }
@@ -2095,6 +2105,23 @@ const App: React.FC = () => {
       callApiWithFallback((provider) => provider.discussTranslation(request)),
     [callApiWithFallback]
   );
+  const handleUpdateDiscussHistory = useCallback(
+    (phraseId: string, messages: ChatMessage[]) => {
+      setDiscussCache((prev) => {
+        const newCache = { ...prev, [phraseId]: messages };
+        try {
+          localStorage.setItem(
+            DISCUSS_CHAT_CACHE_KEY(userId, languageProfile),
+            JSON.stringify(newCache)
+          );
+        } catch (error) {
+          console.error("Failed to save discuss cache", error);
+        }
+        return newCache;
+      });
+    },
+    [userId, languageProfile]
+  );
 
   const handleFindDuplicates = useCallback(
     () =>
@@ -2933,12 +2960,24 @@ const App: React.FC = () => {
         action
       );
 
-      setIsPracticeAnswerRevealed(true);
+      // При "Знаю" не переворачиваем карточку - пользователь и так знает ответ
+      if (action !== "know") {
+        setIsPracticeAnswerRevealed(true);
+      }
       setPracticeCardEvaluated(action === "know");
       setCurrentPracticePhrase(finalPhraseState);
 
       if (action === "know") {
         if (settings.soundEffects) playCorrectSound();
+        // Озвучиваем фразу при "Знаю" без переворота карточки
+        if (settings.autoSpeak && "speechSynthesis" in window) {
+          const utterance = new SpeechSynthesisUtterance(originalPhrase.text.learning);
+          const learningLang = languageProfile.learning || "de";
+          utterance.lang = SPEECH_LOCALE_MAP[learningLang] || "de-DE";
+          utterance.rate = 0.9;
+          window.speechSynthesis.cancel();
+          window.speechSynthesis.speak(utterance);
+        }
       } else {
         if (settings.soundEffects) playIncorrectSound();
       }
