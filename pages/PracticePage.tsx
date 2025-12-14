@@ -203,7 +203,7 @@ const PracticePage: React.FC<PracticePageProps> = (props) => {
         }
     }, [currentPhrase, onMarkPhraseAsSeen]);
 
-    const speak = useCallback((text: string, lang: 'de-DE' | 'ru-RU') => {
+    const speak = useCallback((text: string) => {
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
             const utterance = new SpeechSynthesisUtterance(text);
@@ -334,7 +334,7 @@ const PracticePage: React.FC<PracticePageProps> = (props) => {
                                 phrase={currentPhrase}
                                 onSpeak={speak}
                                 isFlipped={isAnswerRevealed}
-                                onFlip={() => onSetIsAnswerRevealed(true)}
+                                onFlip={() => { onSetIsAnswerRevealed(!isAnswerRevealed); speak(currentPhrase.text.learning || ''); }}
                                 onOpenChat={onOpenChat}
                                 onOpenDeepDive={onOpenDeepDive}
                                 onOpenMovieExamples={onOpenMovieExamples}
@@ -356,11 +356,21 @@ const PracticePage: React.FC<PracticePageProps> = (props) => {
 
                     <div className="flex justify-center items-center mt-3 h-12 max-w-md w-full">
                         {!isAnswerRevealed && currentPhrase && (
+                            <button
+                                onClick={onContinue}
+                                disabled={isExiting}
+                                className="p-2 rounded-lg font-semibold text-white shadow-md transition-all duration-300 bg-purple-600 hover:bg-purple-700 animate-fade-in"
+                            >
+                                {t('practice.states.continue')}
+                            </button>
+                        )}
+                        {/* This button appears ONLY when the card is manually flipped to check the answer */}
+                        {isAnswerRevealed && !isCardEvaluated && (
                             <div className="flex items-center justify-center space-x-4 animate-fade-in w-full">
                                 <button
                                     onClick={onContinue}
                                     disabled={isExiting}
-                                    className="flex-grow p-2 rounded-3xl font-light text-sm text-slate-300 shadow-md transition-colors bg-slate-800 hover:bg-slate-500"
+                                    className="flex-grow p-2 rounded-3xl font-light text-sm text-white shadow-md transition-colors bg-red-600 hover:bg-red-700"
                                 >
                                     {t('practice.actions.skip')}
                                 </button>
@@ -372,16 +382,6 @@ const PracticePage: React.FC<PracticePageProps> = (props) => {
                                     {t('practice.actions.know')}
                                 </button>
                             </div>
-                        )}
-                        {/* This button appears ONLY when the card is manually flipped to check the answer */}
-                        {isAnswerRevealed && !isCardEvaluated && (
-                            <button
-                                onClick={onContinue}
-                                disabled={isExiting}
-                                className="p-2 rounded-lg font-semibold text-white shadow-md transition-all duration-300 bg-purple-600 hover:bg-purple-700 animate-fade-in"
-                            >
-                                {t('practice.states.continue')}
-                            </button>
                         )}
                     </div>
                 </div>

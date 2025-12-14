@@ -2990,15 +2990,6 @@ const App: React.FC = () => {
 
       if (action === "know") {
         if (settings.soundEffects) playCorrectSound();
-        // Озвучиваем фразу при "Знаю" без переворота карточки
-        if (settings.autoSpeak && "speechSynthesis" in window) {
-          const utterance = new SpeechSynthesisUtterance(originalPhrase.text.learning);
-          const learningLang = languageProfile.learning || "de";
-          utterance.lang = getSpeechLocale(learningLang);
-          utterance.rate = 0.9;
-          window.speechSynthesis.cancel();
-          window.speechSynthesis.speak(utterance);
-        }
       } else {
         if (settings.soundEffects) playIncorrectSound();
       }
@@ -3072,30 +3063,6 @@ const App: React.FC = () => {
   }, [allPhrases, cardHistory, changePracticePhrase]);
   // --- End Practice Page Logic ---
 
-  // Speak the phrase when the card is flipped to the answer side.
-  useEffect(() => {
-    if (
-      isPracticeAnswerRevealed &&
-      currentPracticePhrase &&
-      settings.autoSpeak &&
-      "speechSynthesis" in window
-    ) {
-      const utterance = new SpeechSynthesisUtterance(
-        currentPracticePhrase.text.learning
-      );
-      // Use learning language from profile for correct pronunciation
-      const learningLang = languageProfile.learning || "de";
-      utterance.lang = getSpeechLocale(learningLang);
-      utterance.rate = 0.9;
-      window.speechSynthesis.cancel();
-      window.speechSynthesis.speak(utterance);
-    }
-  }, [
-    isPracticeAnswerRevealed,
-    currentPracticePhrase,
-    settings.autoSpeak,
-    languageProfile.learning,
-  ]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

@@ -154,12 +154,8 @@ const PhraseCard: React.FC<PhraseCardProps> = ({
 
   const handleCardClick = useCallback(() => {
     setWordHint(null); // Close hint on any card interaction
-    if (isFlipped) {
-      onSpeak(phrase.text.learning, 'de-DE');
-    } else {
-      onFlip();
-    }
-  }, [isFlipped, phrase.text.learning, onSpeak, onFlip]);
+    onFlip();
+  }, [onFlip]);
 
   const handleNativeWordClick = async (e: React.MouseEvent<HTMLSpanElement>, word: string) => {
     e.stopPropagation();
