@@ -11,17 +11,34 @@ import { useLanguage } from '../src/contexts/languageContext';
 import { getNativeSpeechLocale } from '../services/speechService';
 import { getLanguageNameInEnglish } from '../src/i18n/languageMeta.ts';
 
+/**
+ * Props for the EditPhraseModal component.
+ */
 interface EditPhraseModalProps {
+    /** Controls the visibility of the modal */
     isOpen: boolean;
+    /** Callback function to close the modal */
     onClose: () => void;
+    /** The phrase object to be edited */
     phrase: Phrase;
+    /** Callback to save the edited phrase */
     onSave: (phraseId: string, updates: Partial<Omit<Phrase, 'id'>>) => void;
+    /** Callback to translate the native text to the learning language */
     onTranslate: (nativePhrase: string) => Promise<{ learning: string }>;
+    /** Callback to initiate a discussion about the translation */
     onDiscuss: (request: any) => Promise<TranslationChatResponse>;
+    /** Callback to open word analysis for a specific word */
     onOpenWordAnalysis: (phrase: Phrase, word: string) => void;
+    /** List of available categories for the phrase */
     categories: Category[];
 }
 
+/**
+ * Custom hook to debounce a value.
+ * @param value The value to debounce.
+ * @param delay The delay in milliseconds.
+ * @returns The debounced value.
+ */
 const useDebounce = (value: string, delay: number) => {
     const [debouncedValue, setDebouncedValue] = useState(value);
     useEffect(() => {
@@ -35,31 +52,51 @@ const useDebounce = (value: string, delay: number) => {
     return debouncedValue;
 };
 
+/**
+ * Modal component for editing an existing phrase.
+ * Allows editing text, category, and provides auto-translation and speech recognition.
+ */
 const EditPhraseModal: React.FC<EditPhraseModalProps> = ({ isOpen, onClose, phrase, onSave, onTranslate, onDiscuss, onOpenWordAnalysis, categories }) => {
     const { t } = useTranslation();
     const { profile } = useLanguage();
+
+    // State for the native language text
     const [native, setNative] = useState(phrase.text.native);
+    // State for the learning language text (translation)
     const [learning, setLearning] = useState(phrase.text.learning);
+    // State for the learning language text (romanization)
+    const [romanization, setRomanization] = useState(phrase.romanization?.learning || '');
+    // State for the learning language text (context)
+    const [context, setContext] = useState(phrase.context?.native || '');
+    // State for the selected category ID
     const [selectedCategory, setSelectedCategory] = useState(phrase.category);
+
+    // UI states
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isListening, setIsListening] = useState(false);
     const [isDiscussModalOpen, setIsDiscussModalOpen] = useState(false);
 
     const recognitionRef = useRef<any>(null);
+    // Debounce the native text input to avoid excessive API calls for translation
     const debouncedNative = useDebounce(native, 1000);
+    // Ref to store the initial native text to prevent unnecessary re-translation if it hasn't changed
     const initialNativeRef = useRef(phrase.text.native);
 
+    // Reset state when the modal opens or the phrase changes
     useEffect(() => {
         if (isOpen) {
             setNative(phrase.text.native);
             setLearning(phrase.text.learning);
+            setRomanization(phrase.romanization?.learning || '');
+            setContext(phrase.context?.native || '');
             setSelectedCategory(phrase.category);
             setError(null);
             initialNativeRef.current = phrase.text.native;
         }
     }, [isOpen, phrase]);
 
+    // Initialize Speech Recognition API
     useEffect(() => {
         const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (SpeechRecognitionAPI) {
@@ -81,7 +118,9 @@ const EditPhraseModal: React.FC<EditPhraseModalProps> = ({ isOpen, onClose, phra
         }
     }, []);
 
+    // Auto-translate when the native text changes (debounced)
     useEffect(() => {
+        // Only translate if there is text and it has changed from the initial value
         if (debouncedNative && debouncedNative.trim() && debouncedNative !== initialNativeRef.current) {
             const getTranslation = async () => {
                 setIsLoading(true);
@@ -89,6 +128,7 @@ const EditPhraseModal: React.FC<EditPhraseModalProps> = ({ isOpen, onClose, phra
                 try {
                     const { learning } = await onTranslate(debouncedNative);
                     setLearning(learning);
+                    // Update the ref so we don't re-translate the same text
                     initialNativeRef.current = debouncedNative;
                 } catch (err) {
                     setError('Не удалось получить перевод.');
@@ -100,11 +140,17 @@ const EditPhraseModal: React.FC<EditPhraseModalProps> = ({ isOpen, onClose, phra
         }
     }, [debouncedNative, onTranslate]);
 
+    /**
+     * Saves the changes and closes the modal.
+     */
     const handleSave = () => {
-        onSave(phrase.id, { text: { native: native, learning: learning }, category: selectedCategory });
+        onSave(phrase.id, { text: { native: native, learning: learning }, romanization: { learning: romanization }, context: { native: context }, category: selectedCategory });
         onClose();
     };
 
+    /**
+     * Toggles speech recognition.
+     */
     const handleMicClick = () => {
         if (isListening) {
             recognitionRef.current?.stop();
@@ -113,6 +159,10 @@ const EditPhraseModal: React.FC<EditPhraseModalProps> = ({ isOpen, onClose, phra
         }
     };
 
+    /**
+     * Handles the acceptance of a suggestion from the discussion modal.
+     * Updates the text fields and prevents re-translation.
+     */
     const handleDiscussionAccept = (suggestion: { native: string; learning: string }) => {
         setNative(suggestion.native);
         setLearning(suggestion.learning);
@@ -122,9 +172,11 @@ const EditPhraseModal: React.FC<EditPhraseModalProps> = ({ isOpen, onClose, phra
 
     if (!isOpen) return null;
 
-    // Определяем динамические метки языков на основе текущего профиля
+    // Determine dynamic language labels based on the current profile
     const nativeNameRaw = t(`languages.names.${profile.native}`);
     const learningNameRaw = t(`languages.names.${profile.learning}`);
+
+    // Fallback to English name if translation is missing or key is returned
     const nativeLabel = nativeNameRaw && nativeNameRaw !== `languages.names.${profile.native}`
         ? nativeNameRaw
         : getLanguageNameInEnglish(profile.native as any);
@@ -168,13 +220,25 @@ const EditPhraseModal: React.FC<EditPhraseModalProps> = ({ isOpen, onClose, phra
                         </div>
 
                         <div>
+                            <label className="block text-sm font-medium text-slate-400 mb-1">{nativeLabel}</label>
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    value={context}
+                                    onChange={(e) => setContext(e.target.value)}
+                                    className="w-full bg-slate-700 border border-slate-600 rounded-md p-3 pr-20 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                />
+                            </div>
+                        </div>
+
+                        <div>
                             <label className="block text-sm font-medium text-slate-400 mb-1">{learningLabel}</label>
                             <div className="relative">
                                 <input
                                     type="text"
                                     value={learning}
-                                    readOnly
-                                    className="w-full bg-slate-900 border border-slate-700 rounded-md p-3 pr-20 text-slate-300 cursor-not-allowed"
+                                    onChange={(e) => setLearning(e.target.value)}
+                                    className="w-full bg-slate-700 border border-slate-600 rounded-md p-3 pr-20 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                                 />
                                 <div className="absolute inset-y-0 right-0 flex items-center pr-2">
                                     {isLoading ? (
@@ -185,6 +249,18 @@ const EditPhraseModal: React.FC<EditPhraseModalProps> = ({ isOpen, onClose, phra
                                         </div>
                                     ) : learning ? <AudioPlayer textToSpeak={learning} /> : null}
                                 </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-slate-400 mb-1">{learningLabel}</label>
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    value={romanization}
+                                    onChange={(e) => setRomanization(e.target.value)}
+                                    className="w-full bg-slate-700 border border-slate-600 rounded-md p-3 pr-20 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                />
                             </div>
                         </div>
 
