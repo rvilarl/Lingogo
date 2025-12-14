@@ -33,5 +33,5 @@ export interface AiService {
   generateCardsFromImage(imageData: { mimeType: string; data: string }, refinement?: string): Promise<{ cards: ProposedCard[], categoryName: string }>;
   generateTopicCards(topic: string, refinement?: string, existingPhrases?: string[]): Promise<ProposedCard[]>;
   classifyTopic(topic: string): Promise<{ isCategory: boolean; categoryName: string; }>;
-  getCategoryAssistantResponse(categoryName: string, existingPhrases: Phrase[], request: CategoryAssistantRequest): Promise<CategoryAssistantResponse>;
+  getCategoryAssistantResponse(categoryName: string, existingPhrases: Phrase[], request: CategoryAssistantRequest, history?: ChatMessage[]): Promise<CategoryAssistantResponse>;
 }

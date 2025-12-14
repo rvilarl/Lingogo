@@ -1707,13 +1707,15 @@ const App: React.FC = () => {
     (
       categoryName: string,
       existingPhrases: Phrase[],
-      request: CategoryAssistantRequest
+      request: CategoryAssistantRequest,
+      history?: ChatMessage[]
     ) =>
       callApiWithFallback((provider) =>
         provider.getCategoryAssistantResponse(
           categoryName,
           existingPhrases,
-          request
+          request,
+          history
         )
       ),
     [callApiWithFallback]

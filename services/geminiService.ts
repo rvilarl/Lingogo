@@ -2427,6 +2427,7 @@ const categoryAssistantResponseSchema = () => {
             proposedCards: {
                 type: Type.ARRAY,
                 description: `A list of new cards. Only for responseType "proposed_cards". ${requiresRomanization(lang.learningCode) ? `Each card MUST include romanization (transcription) for ${lang.learning} text.` : ''}`,
+                maxItems: 30,
                 items: {
                     type: Type.OBJECT,
                     properties: {
@@ -2469,7 +2470,7 @@ const categoryAssistantResponseSchema = () => {
 };
 
 
-const getCategoryAssistantResponse: AiService['getCategoryAssistantResponse'] = async (categoryName, existingPhrases, request) => {
+const getCategoryAssistantResponse: AiService['getCategoryAssistantResponse'] = async (categoryName, existingPhrases, request, history = []) => {
     const api = initializeApi();
     if (!api) throw new Error("Gemini API key not configured.");
     const lang = getLang();
@@ -2478,7 +2479,7 @@ const getCategoryAssistantResponse: AiService['getCategoryAssistantResponse'] = 
 
     const requestTextMap: Record<CategoryAssistantRequestType, string> = {
         initial: "Это первое открытие. Поприветствуй пользователя и предложи основные действия.",
-        add_similar: "Проанализируй существующие фразы и сгенерируй 10 новых, похожих по теме. Не повторяй существующие.",
+        add_similar: "Проанализируй существующие фразы и сгенерируй 25 новых, похожих по теме. Не повторяй существующие.",
         check_homogeneity: "Проанализируй все фразы на тематическое единство. Укажи те, что не подходят, и объясни почему. Если все хорошо, так и скажи.",
         create_dialogue: `Создай короткий диалог, используя как можно больше фраз из списка. Предоставь ${lang.learning} вариант с переводом в скобках после каждой реплики и отформатируй его с помощью Markdown.`,
         user_text: `Пользователь написал: "${request.text}". Ответь на его запрос.`
@@ -2488,8 +2489,24 @@ const getCategoryAssistantResponse: AiService['getCategoryAssistantResponse'] = 
         ? `\n- **ТРАНСКРИПЦИЯ**: Для языка ${lang.learning} ОБЯЗАТЕЛЬНО предоставляй отдельное поле "romanization" с транскрипцией (Pinyin для китайского, Romaji для японского, транслитерацию для хинди/арабского). НИКОГДА не включай транскрипцию в скобках в само поле "${lang.learningCode}" - используй отдельное поле "romanization".`
         : '';
 
+    // Построить контекст из истории
+    const conversationContext = history.length > 0
+        ? `\n\n**ИСТОРИЯ РАЗГОВОРА:**\n${history.map(msg => {
+            if (msg.role === 'user') {
+                return `Пользователь: ${msg.text || ''}`;
+            } else if (msg.assistantResponse) {
+                const summary = msg.assistantResponse.responseParts
+                    ?.filter(p => p.type === 'text')
+                    .map(p => p.text.substring(0, 150))
+                    .join(' ') || '';
+                return `Ассистент: ${summary}${summary.length >= 150 ? '...' : ''}`;
+            }
+            return '';
+        }).filter(Boolean).join('\n')}\n\n**ТЕКУЩИЙ ЗАПРОС** (учитывай весь предыдущий контекст):`
+        : '';
+
     const prompt = `Ты — AI-ассистент в приложении для изучения ${lang.learning}. Ты находишься внутри категории "${categoryName}".
-Существующие фразы в категории: ${existingPhrasesText || "пока нет"}.
+Существующие фразы в категории: ${existingPhrasesText || "пока нет"}.${conversationContext}
 
 Запрос пользователя: ${requestTextMap[request.type]}
 

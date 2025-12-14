@@ -24,7 +24,7 @@ interface CategoryAssistantModalProps {
     onClose: (view?: View) => void;
     category: Category;
     phrases: Phrase[];
-    onGetAssistantResponse: (categoryName: string, existingPhrases: Phrase[], request: CategoryAssistantRequest) => Promise<ChatMessage['assistantResponse']>;
+    onGetAssistantResponse: (categoryName: string, existingPhrases: Phrase[], request: CategoryAssistantRequest, history?: ChatMessage[]) => Promise<ChatMessage['assistantResponse']>;
     onAddCards: (cards: ProposedCard[], options: { categoryId: string }) => Promise<void>;
     onOpenConfirmDeletePhrases: (phrases: Phrase[], sourceCategory: Category) => void;
     cache: { [categoryId: string]: ChatMessage[] };
@@ -47,11 +47,13 @@ const AssistantChatMessageContent: React.FC<{
     onAddCards: (cards: ProposedCard[], options: { categoryId: string }) => Promise<void>;
     onGoToList: () => void;
     onClose: () => void;
+    categoryPhrases: Phrase[];
     // Interactivity props
     onSpeak: (text: string) => void;
     onOpenWordAnalysis: (phrase: Phrase, word: string) => void;
     onOpenContextMenu: (target: { sentence: { learning: string, native: string }, word: string }) => void;
-}> = ({ msg, category, onAddCards, onGoToList, onClose, onSpeak, onOpenWordAnalysis, onOpenContextMenu }) => {
+    t: (key: string, options?: any) => string;
+}> = ({ msg, category, onAddCards, onGoToList, onClose, categoryPhrases, onSpeak, onOpenWordAnalysis, onOpenContextMenu, t }) => {
     const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
     const [addedInfo, setAddedInfo] = useState<{ count: number } | null>(null);
     const [isAdding, setIsAdding] = useState(false);
@@ -68,9 +70,34 @@ const AssistantChatMessageContent: React.FC<{
     const handleAddSelected = async () => {
         if (!response?.proposedCards || isAdding) return;
         setIsAdding(true);
+
+        // Получить выбранные карточки
         const selected = response.proposedCards.filter((_, i) => selectedIndices.has(i));
-        await onAddCards(selected, { categoryId: category.id });
-        setAddedInfo({ count: selected.length });
+
+        // Проверить на дубликаты: исключить фразы, которые уже существуют в этой категории
+        const existingLearningTexts = new Set(
+            categoryPhrases.map(p => p.text.learning.trim().toLowerCase())
+        );
+
+        const uniqueCards = selected.filter(
+            card => !existingLearningTexts.has(card.learning.trim().toLowerCase())
+        );
+
+        // Если все карточки - дубликаты
+        if (uniqueCards.length === 0) {
+            alert(t('assistant.modal.errors.allDuplicates') || 'Все выбранные фразы уже существуют в приложении');
+            setIsAdding(false);
+            return;
+        }
+
+        // Если есть дубликаты, показать предупреждение
+        if (uniqueCards.length < selected.length) {
+            const skipped = selected.length - uniqueCards.length;
+            console.warn(`Пропущено ${skipped} дубликатов`);
+        }
+
+        await onAddCards(uniqueCards, { categoryId: category.id });
+        setAddedInfo({ count: uniqueCards.length });
         setIsAdding(false);
     };
 
@@ -207,9 +234,12 @@ const CategoryAssistantModal: React.FC<CategoryAssistantModalProps> = (props) =>
     const messages = cache[category.id] || [];
 
     const updateMessages = useCallback((updater: (prev: ChatMessage[]) => ChatMessage[]) => {
-        const newMessages = updater(messages);
-        setCache(prev => ({ ...prev, [category.id]: newMessages }));
-    }, [messages, setCache, category.id]);
+        setCache(prev => {
+            const currentMessages = prev[category.id] || [];
+            const newMessages = updater(currentMessages);
+            return { ...prev, [category.id]: newMessages };
+        });
+    }, [setCache, category.id]);
 
     const scrollToBottom = () => {
         chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -235,7 +265,7 @@ const CategoryAssistantModal: React.FC<CategoryAssistantModalProps> = (props) =>
         }
 
         try {
-            const response = await onGetAssistantResponse(category.name, phrases, request);
+            const response = await onGetAssistantResponse(category.name, phrases, request, messages);
             updateMessages(prev => [...prev, { role: 'model', assistantResponse: response }]);
             if (response?.promptSuggestions) {
                 setPromptSuggestions(response.promptSuggestions);
@@ -253,7 +283,7 @@ const CategoryAssistantModal: React.FC<CategoryAssistantModalProps> = (props) =>
         } finally {
             setIsLoading(false);
         }
-    }, [category, phrases, onGetAssistantResponse, updateMessages, onOpenConfirmDeletePhrases]);
+    }, [category, phrases, onGetAssistantResponse, updateMessages, onOpenConfirmDeletePhrases, messages, t]);
 
     useEffect(() => {
         if (isOpen) {
@@ -352,9 +382,11 @@ const CategoryAssistantModal: React.FC<CategoryAssistantModalProps> = (props) =>
                                             onAddCards={onAddCards}
                                             onGoToList={onGoToList}
                                             onClose={() => onClose()}
+                                            categoryPhrases={phrases}
                                             onSpeak={(text) => onSpeak(text)}
                                             onOpenWordAnalysis={interactiveProps.onOpenWordAnalysis}
                                             onOpenContextMenu={setContextMenuTarget}
+                                            t={t}
                                         />
                                     </div>
                                 </div>
