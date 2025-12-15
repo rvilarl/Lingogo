@@ -203,7 +203,7 @@ const PracticePage: React.FC<PracticePageProps> = (props) => {
         }
     }, [currentPhrase, onMarkPhraseAsSeen]);
 
-    const speak = useCallback((text: string) => {
+    const speak = useCallback((text: string, learning: boolean) => {
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
             const utterance = new SpeechSynthesisUtterance(text);
@@ -334,7 +334,7 @@ const PracticePage: React.FC<PracticePageProps> = (props) => {
                                 phrase={currentPhrase}
                                 onSpeak={speak}
                                 isFlipped={isAnswerRevealed}
-                                onFlip={() => { onSetIsAnswerRevealed(!isAnswerRevealed); speak(currentPhrase.text.learning || ''); }}
+                                onFlip={() => { onSetIsAnswerRevealed(!isAnswerRevealed); speak(!isAnswerRevealed ? currentPhrase.text.learning : currentPhrase.text.native, !isAnswerRevealed); }}
                                 onOpenChat={onOpenChat}
                                 onOpenDeepDive={onOpenDeepDive}
                                 onOpenMovieExamples={onOpenMovieExamples}
@@ -365,12 +365,12 @@ const PracticePage: React.FC<PracticePageProps> = (props) => {
                             </button>
                         )}
                         {/* This button appears ONLY when the card is manually flipped to check the answer */}
-                        {isAnswerRevealed && !isCardEvaluated && (
+                        {isAnswerRevealed && (
                             <div className="flex items-center justify-center space-x-4 animate-fade-in w-full">
                                 <button
                                     onClick={onContinue}
                                     disabled={isExiting}
-                                    className="flex-grow p-2 rounded-3xl font-light text-sm text-white shadow-md transition-colors bg-red-600 hover:bg-red-700"
+                                    className="flex-grow p-2 rounded-3xl font-light text-sm text-slate-300 shadow-md transition-colors bg-purple-600 hover:bg-purple-700"
                                 >
                                     {t('practice.actions.skip')}
                                 </button>
