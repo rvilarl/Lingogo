@@ -234,9 +234,7 @@ const PracticePage: React.FC<PracticePageProps> = (props) => {
         // Если было показано модальное окно "пиявки", оно само управляет переходом.
         // В противном случае, переходим к следующей карточке через задержку.
         if (!leechModalShown) {
-            setTimeout(() => {
-                onContinue();
-            }, 100);
+            onContinue();
         }
     }, [isExiting, currentPhrase, onUpdateMastery, onContinue]);
 
