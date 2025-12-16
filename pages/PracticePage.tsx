@@ -203,10 +203,10 @@ const PracticePage: React.FC<PracticePageProps> = (props) => {
         }
     }, [currentPhrase, onMarkPhraseAsSeen]);
 
-    const speak = useCallback((text: string, learning: boolean) => {
+    const speak = useCallback((text: { native: string; learning: string }, learning: boolean) => {
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(text);
+            const utterance = new SpeechSynthesisUtterance(learning ? text.learning : text.native);
             // Использовать реальный язык из профиля вместо переданного параметра
             utterance.lang = getSpeechLocale(profile.learning);
             utterance.rate = 0.9;
@@ -236,7 +236,7 @@ const PracticePage: React.FC<PracticePageProps> = (props) => {
         if (!leechModalShown) {
             setTimeout(() => {
                 onContinue();
-            }, 200);
+            }, 100);
         }
     }, [isExiting, currentPhrase, onUpdateMastery, onContinue]);
 
@@ -334,7 +334,7 @@ const PracticePage: React.FC<PracticePageProps> = (props) => {
                                 phrase={currentPhrase}
                                 onSpeak={speak}
                                 isFlipped={isAnswerRevealed}
-                                onFlip={() => { onSetIsAnswerRevealed(!isAnswerRevealed); speak(!isAnswerRevealed ? currentPhrase.text.learning : currentPhrase.text.native, !isAnswerRevealed); }}
+                                onFlip={() => { onSetIsAnswerRevealed(!isAnswerRevealed); speak(currentPhrase.text, !isAnswerRevealed); }}
                                 onOpenChat={onOpenChat}
                                 onOpenDeepDive={onOpenDeepDive}
                                 onOpenMovieExamples={onOpenMovieExamples}
@@ -355,15 +355,6 @@ const PracticePage: React.FC<PracticePageProps> = (props) => {
                     </div>
 
                     <div className="flex justify-center items-center mt-3 h-12 max-w-md w-full">
-                        {!isAnswerRevealed && currentPhrase && (
-                            <button
-                                onClick={onContinue}
-                                disabled={isExiting}
-                                className="p-2 rounded-lg font-semibold text-white shadow-md transition-all duration-300 bg-purple-600 hover:bg-purple-700 animate-fade-in"
-                            >
-                                {t('practice.states.continue')}
-                            </button>
-                        )}
                         {/* This button appears ONLY when the card is manually flipped to check the answer */}
                         {isAnswerRevealed && (
                             <div className="flex items-center justify-center space-x-4 animate-fade-in w-full">

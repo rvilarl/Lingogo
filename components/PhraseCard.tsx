@@ -22,7 +22,7 @@ import { FaMars, FaVenus, FaGenderless } from 'react-icons/fa';
 
 interface PhraseCardProps {
   phrase: Phrase;
-  onSpeak: (text: string, lang: 'de-DE' | 'ru-RU') => void;
+  onSpeak: (text: { native: string; learning: string }, learning: boolean) => void;
   isFlipped: boolean;
   onFlip: () => void;
   onOpenChat: (phrase: Phrase) => void;
