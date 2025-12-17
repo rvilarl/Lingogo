@@ -16,6 +16,7 @@ import CheckIcon from '../components/icons/CheckIcon';
 import * as srsService from '../services/srsService';
 import * as cacheService from '../services/cacheService';
 import { playCorrectSound } from '../services/soundService';
+import { SPEECH_LOCALE_MAP } from '../constants/speechLocales';
 import ArrowLeftIcon from '../components/icons/ArrowLeftIcon';
 import ArrowRightIcon from '../components/icons/ArrowRightIcon';
 import ChevronDownIcon from '../components/icons/ChevronDownIcon';
