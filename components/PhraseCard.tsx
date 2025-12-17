@@ -1,4 +1,12 @@
 
+/**
+ * PhraseCard.tsx
+ *
+ * This component renders the interactive flashcard used in practice sessions.
+ * It supports two sides (native and learning), text-to-speech, word analysis,
+ * and various context-aware actions.
+ */
+
 import React, { useRef, useState, useMemo, useCallback, useEffect } from 'react';
 import type { Phrase } from '../types';
 import ChatIcon from './icons/ChatIcon';
@@ -20,6 +28,9 @@ import { useTranslation } from '../src/hooks/useTranslation.ts';
 import { FaMars, FaVenus, FaGenderless } from 'react-icons/fa';
 
 
+/**
+ * Props for the PhraseCard component.
+ */
 interface PhraseCardProps {
   phrase: Phrase;
   onSpeak: (text: { native: string; learning: string }, learning: boolean) => void;
@@ -42,12 +53,19 @@ interface PhraseCardProps {
   onFlashEnd: () => void;
 }
 
+/**
+ * Props for the NativePhraseDisplay component.
+ */
 interface NativePhraseDisplayProps {
   text: string;
   as: 'h2' | 'div';
   onWordClick: (event: React.MouseEvent<HTMLSpanElement>, word: string) => void;
 }
 
+/**
+ * Helper component to display the native phrase.
+ * It parses the text to separate optional notes (in parentheses) and makes individual words clickable.
+ */
 const NativePhraseDisplay: React.FC<NativePhraseDisplayProps> = ({ text, as: Component, onWordClick }) => {
   const match = text.match(/(.*?)\s*\(([^)]+)\)/);
 
@@ -72,6 +90,9 @@ const NativePhraseDisplay: React.FC<NativePhraseDisplayProps> = ({ text, as: Com
   );
 };
 
+/**
+ * The main PhraseCard component.
+ */
 const PhraseCard: React.FC<PhraseCardProps> = ({
   phrase, onSpeak, isFlipped, onFlip, onOpenChat,
   onOpenDeepDive, onOpenMovieExamples, onWordClick, onGetWordTranslation, onOpenSentenceChain,
@@ -81,6 +102,8 @@ const PhraseCard: React.FC<PhraseCardProps> = ({
   flash, onFlashEnd,
 }) => {
   const { t } = useTranslation();
+
+  // State for showing a translation hint when clicking a word on the native side
   const [wordHint, setWordHint] = useState<{
     word: string;
     translation: string | null;
@@ -91,6 +114,7 @@ const PhraseCard: React.FC<PhraseCardProps> = ({
   const longPressTimer = useRef<number | null>(null);
   const wordLongPressTimer = useRef<number | null>(null);
 
+  // State for the "More Actions" menu on both sides of the card
   const [isMoreMenuOpenFront, setIsMoreMenuOpenFront] = useState(false);
   const [isMoreMenuOpenBack, setIsMoreMenuOpenBack] = useState(false);
   const buttonContainerRefFront = useRef<HTMLDivElement>(null);
@@ -131,6 +155,40 @@ const PhraseCard: React.FC<PhraseCardProps> = ({
     return null;
   }, [phrase.text.learning]);
 
+  const detectedGender = useMemo(() => {
+    const words = phrase.text.learning.split(' ');
+    for (let index = 0; index < words.length; index++) {
+      const word = words[index];
+      const cleanWord = word.replace(/[.,!?]/g, '');
+      if (cleanWord && /^[A-ZÄÖÜ]/.test(cleanWord)) {
+        // 1. Check article (Previous word)
+        if (index > 0) {
+          const prevWord = words[index - 1].toLowerCase().replace(/[.,!?]/g, '');
+          if (prevWord === 'der') return 'male';
+          else if (prevWord === 'die') return 'female';
+          else if (prevWord === 'das') return 'neuter';
+        }
+
+        // 2. Suffix Heuristics (if no article match)
+        const lower = cleanWord.toLowerCase();
+        // Female Suffixes (High reliability)
+        if (/(ung|heit|keit|schaft|tät|ion|ie|ei|enz|anz|ur|ik)$/.test(lower)) {
+          return 'female';
+        }
+        // Neuter Suffixes
+        else if (/(chen|lein|ment|tum|um|ma)$/.test(lower)) {
+          return 'neuter';
+        }
+        // Male Suffixes
+        else if (/(ismus|ling|ig|ich)$/.test(lower)) {
+          return 'male';
+        }
+      }
+    }
+    return null;
+  }, [phrase.text.learning]);
+
+  // Effect to handle the flash animation (green/red) when grading
   useEffect(() => {
     const flashElement = flashRef.current;
     if (flash && flashElement) {
@@ -157,6 +215,10 @@ const PhraseCard: React.FC<PhraseCardProps> = ({
     onFlip();
   }, [onFlip]);
 
+  /**
+   * Handles clicking a word on the native side to show its translation.
+   * Calculates the position for the tooltip relative to the card face.
+   */
   const handleNativeWordClick = async (e: React.MouseEvent<HTMLSpanElement>, word: string) => {
     e.stopPropagation();
 
@@ -188,6 +250,11 @@ const PhraseCard: React.FC<PhraseCardProps> = ({
     }
   };
 
+  /**
+   * Higher-order function to create an action handler that logs usage.
+   * @param key - The unique key for the action (e.g., 'chat', 'deepDive').
+   * @param action - The callback function to execute.
+   */
   const createLoggedAction = useCallback((key: string, action: (p: Phrase) => void) => (e: React.MouseEvent) => {
     e.stopPropagation();
     onLogCardActionUsage(key);
@@ -203,6 +270,10 @@ const PhraseCard: React.FC<PhraseCardProps> = ({
     { key: 'movieExamples', label: t('phraseCard.actions.movieExamples'), icon: <FilmIcon className="w-5 h-5" />, action: createLoggedAction('movieExamples', onOpenMovieExamples) },
   ], [t, createLoggedAction, onOpenLearningAssistant, onOpenSentenceChain, onOpenVoicePractice, onOpenChat, onOpenDeepDive, onOpenMovieExamples]);
 
+  /**
+   * Sorts action buttons based on usage frequency.
+   * Most used buttons appear first (visible), less used ones go into the "More" menu.
+   */
   const actionButtons = useMemo(() => {
     // Create a copy to avoid mutating the original allButtons array
     const sortedButtons = [...allButtons];
@@ -257,6 +328,7 @@ const PhraseCard: React.FC<PhraseCardProps> = ({
     }
   }
 
+  // Handlers for long-press on the card (to open context menu)
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     longPressTimer.current = window.setTimeout(() => {
@@ -271,6 +343,7 @@ const PhraseCard: React.FC<PhraseCardProps> = ({
     }
   };
 
+  // Handlers for long-press on a specific word (to open context menu for that word)
   const handleWordPointerDown = (e: React.PointerEvent<HTMLSpanElement>, word: string) => {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     e.stopPropagation(); // prevent card's context menu
@@ -291,6 +364,10 @@ const PhraseCard: React.FC<PhraseCardProps> = ({
     }
   };
 
+  /**
+   * Renders the action buttons for a specific side of the card.
+   * Handles the split between visible buttons and the "More" menu.
+   */
   const renderActionButtons = (theme: 'front' | 'back') => {
     const isMenuOpen = theme === 'front' ? isMoreMenuOpenFront : isMoreMenuOpenBack;
     const setIsMenuOpen = theme === 'front' ? setIsMoreMenuOpenFront : setIsMoreMenuOpenBack;
