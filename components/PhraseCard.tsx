@@ -155,39 +155,6 @@ const PhraseCard: React.FC<PhraseCardProps> = ({
     return null;
   }, [phrase.text.learning]);
 
-  const detectedGender = useMemo(() => {
-    const words = phrase.text.learning.split(' ');
-    for (let index = 0; index < words.length; index++) {
-      const word = words[index];
-      const cleanWord = word.replace(/[.,!?]/g, '');
-      if (cleanWord && /^[A-ZÄÖÜ]/.test(cleanWord)) {
-        // 1. Check article (Previous word)
-        if (index > 0) {
-          const prevWord = words[index - 1].toLowerCase().replace(/[.,!?]/g, '');
-          if (prevWord === 'der') return 'male';
-          else if (prevWord === 'die') return 'female';
-          else if (prevWord === 'das') return 'neuter';
-        }
-
-        // 2. Suffix Heuristics (if no article match)
-        const lower = cleanWord.toLowerCase();
-        // Female Suffixes (High reliability)
-        if (/(ung|heit|keit|schaft|tät|ion|ie|ei|enz|anz|ur|ik)$/.test(lower)) {
-          return 'female';
-        }
-        // Neuter Suffixes
-        else if (/(chen|lein|ment|tum|um|ma)$/.test(lower)) {
-          return 'neuter';
-        }
-        // Male Suffixes
-        else if (/(ismus|ling|ig|ich)$/.test(lower)) {
-          return 'male';
-        }
-      }
-    }
-    return null;
-  }, [phrase.text.learning]);
-
   // Effect to handle the flash animation (green/red) when grading
   useEffect(() => {
     const flashElement = flashRef.current;
