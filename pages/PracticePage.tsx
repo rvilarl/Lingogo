@@ -1,4 +1,12 @@
 
+/**
+ * PracticePage.tsx
+ *
+ * This file contains the main practice interface for the application.
+ * It handles the display of flashcards, user interaction (swiping, grading),
+ * and manages the flow of the practice session.
+ */
+
 import React, { useCallback, useRef, useState, useEffect, useMemo } from 'react';
 import type { Phrase, WordAnalysis, PhraseCategory, Category } from '../types';
 import PhraseCard from '../components/PhraseCard';
@@ -8,6 +16,7 @@ import CheckIcon from '../components/icons/CheckIcon';
 import * as srsService from '../services/srsService';
 import * as cacheService from '../services/cacheService';
 import { playCorrectSound } from '../services/soundService';
+import { SPEECH_LOCALE_MAP } from '../constants/speechLocales';
 import ArrowLeftIcon from '../components/icons/ArrowLeftIcon';
 import ArrowRightIcon from '../components/icons/ArrowRightIcon';
 import ChevronDownIcon from '../components/icons/ChevronDownIcon';
@@ -20,11 +29,22 @@ import { getSpeechLocale } from '../src/i18n/languageMeta';
 const SWIPE_THRESHOLD = 50; // pixels
 
 type AnimationDirection = 'left' | 'right';
+
+/**
+ * Represents the state of the card animation.
+ * @property key - Unique key to trigger re-renders/animations.
+ * @property direction - Direction of the animation (left or right).
+ */
 interface AnimationState {
     key: string;
     direction: AnimationDirection;
 }
 
+/**
+ * Props for the PracticePage component.
+ * Includes data for the current phrase, callbacks for user actions,
+ * and settings for the practice session.
+ */
 interface PracticePageProps {
     currentPhrase: Phrase | null;
     isAnswerRevealed: boolean;
@@ -81,6 +101,10 @@ interface PracticePageProps {
     onOpenSmartImport: () => void;
 }
 
+/**
+ * Component for filtering phrases by category.
+ * Allows users to switch between practicing all categories or a specific one.
+ */
 const CategoryFilter: React.FC<{
     currentFilter: 'all' | PhraseCategory;
     onFilterChange: (filter: 'all' | PhraseCategory) => void;
@@ -174,6 +198,10 @@ const CategoryFilter: React.FC<{
 };
 
 
+/**
+ * The main Practice Page component.
+ * Orchestrates the flashcard practice experience.
+ */
 const PracticePage: React.FC<PracticePageProps> = (props) => {
     const {
         currentPhrase, isAnswerRevealed, onSetIsAnswerRevealed, isCardEvaluated, animationState, isExiting, unmasteredCount, currentPoolCount,
@@ -192,21 +220,31 @@ const PracticePage: React.FC<PracticePageProps> = (props) => {
     const { profile } = useLanguage();
 
 
+    // State for the context menu (long press or specific action)
     const [contextMenuTarget, setContextMenuTarget] = useState<{ phrase: Phrase; word?: string } | null>(null);
+    // State for visual feedback (e.g., green flash on correct answer)
     const [flashState, setFlashState] = useState<'green' | null>(null);
+
+    // Refs for handling touch gestures (swiping)
     const touchStartRef = useRef<number | null>(null);
     const touchMoveRef = useRef<number | null>(null);
 
+    // Effect to mark a new phrase as seen when it appears
     useEffect(() => {
         if (currentPhrase && currentPhrase.isNew) {
             onMarkPhraseAsSeen(currentPhrase.id);
         }
     }, [currentPhrase, onMarkPhraseAsSeen]);
 
-    const speak = useCallback((text: string, lang: 'de-DE' | 'ru-RU') => {
+    /**
+     * Handles text-to-speech functionality.
+     * @param text - Object containing native and learning text.
+     * @param learning - Boolean indicating if the text to speak is in the learning language.
+     */
+    const speak = useCallback((text: { native: string; learning: string }, learning: boolean) => {
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(text);
+            const utterance = new SpeechSynthesisUtterance(learning ? text.learning : text.native);
             // Использовать реальный язык из профиля вместо переданного параметра
             utterance.lang = getSpeechLocale(profile.learning);
             utterance.rate = 0.9;
@@ -214,8 +252,15 @@ const PracticePage: React.FC<PracticePageProps> = (props) => {
         }
     }, [profile.learning]);
 
+    // Touch event handlers for swipe gestures
     const handleTouchStart = (e: React.TouchEvent) => { touchMoveRef.current = null; touchStartRef.current = e.targetTouches[0].clientX; };
     const handleTouchMove = (e: React.TouchEvent) => { touchMoveRef.current = e.targetTouches[0].clientX; };
+
+    /**
+     * Handles the end of a touch event to determine if a swipe occurred.
+     * Swiping left triggers 'onContinue' (next card).
+     * Swiping right triggers 'onSwipeRight' (previous card).
+     */
     const handleTouchEnd = () => {
         if (touchStartRef.current !== null && touchMoveRef.current !== null) {
             const deltaX = touchMoveRef.current - touchStartRef.current;
@@ -225,21 +270,29 @@ const PracticePage: React.FC<PracticePageProps> = (props) => {
         touchStartRef.current = null; touchMoveRef.current = null;
     };
 
+    /**
+     * Handles the "Know" button click.
+     * Updates mastery, shows visual feedback, and proceeds to the next card.
+     * Checks if a "leech" modal was shown to avoid conflicting transitions.
+     */
     const handleKnowClick = useCallback(async () => {
         if (isExiting || !currentPhrase) return;
 
         setFlashState('green');
         const leechModalShown = await onUpdateMastery('know');
 
-        // Если было показано модальное окно "пиявки", оно само управляет переходом.
-        // В противном случае, переходим к следующей карточке через задержку.
+        // If leech modal was shown, it handles the transition.
+        // Otherwise, proceed to next card.
         if (!leechModalShown) {
-            setTimeout(() => {
-                onContinue();
-            }, 600);
+            onContinue();
         }
     }, [isExiting, currentPhrase, onUpdateMastery, onContinue]);
 
+    /**
+     * Renders the main content of the practice page based on the current state.
+     * Handles loading, error, empty states (completed all, completed category, etc.),
+     * and the active flashcard view.
+     */
     const renderContent = () => {
         if (isLoading) return <PhraseCardSkeleton />;
         if (error) return <div className="text-center bg-red-900/50 border border-red-700 text-red-300 p-4 rounded-lg max-w-md mx-auto"><p className="font-semibold">{t('practice.states.errorOccurred')}</p><p className="text-sm">{error}</p></div>;
@@ -334,7 +387,7 @@ const PracticePage: React.FC<PracticePageProps> = (props) => {
                                 phrase={currentPhrase}
                                 onSpeak={speak}
                                 isFlipped={isAnswerRevealed}
-                                onFlip={() => onSetIsAnswerRevealed(true)}
+                                onFlip={() => { onSetIsAnswerRevealed(!isAnswerRevealed); speak(currentPhrase.text, !isAnswerRevealed); }}
                                 onOpenChat={onOpenChat}
                                 onOpenDeepDive={onOpenDeepDive}
                                 onOpenMovieExamples={onOpenMovieExamples}
@@ -355,12 +408,13 @@ const PracticePage: React.FC<PracticePageProps> = (props) => {
                     </div>
 
                     <div className="flex justify-center items-center mt-3 h-12 max-w-md w-full">
-                        {!isAnswerRevealed && currentPhrase && (
+                        {/* This button appears ONLY when the card is manually flipped to check the answer */}
+                        {isAnswerRevealed && (
                             <div className="flex items-center justify-center space-x-4 animate-fade-in w-full">
                                 <button
                                     onClick={onContinue}
                                     disabled={isExiting}
-                                    className="flex-grow p-2 rounded-3xl font-light text-sm text-slate-300 shadow-md transition-colors bg-slate-800 hover:bg-slate-500"
+                                    className="flex-grow p-2 rounded-3xl font-light text-sm text-slate-300 shadow-md transition-colors bg-purple-600 hover:bg-purple-700"
                                 >
                                     {t('practice.actions.skip')}
                                 </button>
@@ -372,16 +426,6 @@ const PracticePage: React.FC<PracticePageProps> = (props) => {
                                     {t('practice.actions.know')}
                                 </button>
                             </div>
-                        )}
-                        {/* This button appears ONLY when the card is manually flipped to check the answer */}
-                        {isAnswerRevealed && !isCardEvaluated && (
-                            <button
-                                onClick={onContinue}
-                                disabled={isExiting}
-                                className="p-2 rounded-lg font-semibold text-white shadow-md transition-all duration-300 bg-purple-600 hover:bg-purple-700 animate-fade-in"
-                            >
-                                {t('practice.states.continue')}
-                            </button>
                         )}
                     </div>
                 </div>
