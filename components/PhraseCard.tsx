@@ -8,7 +8,8 @@
  */
 
 import React, { useRef, useState, useMemo, useCallback, useEffect } from 'react';
-import type { Phrase } from '../types';
+import type { Phrase, LanguageCode } from '../types';
+import { SpeechOptions } from '../services/speechService';
 import ChatIcon from './icons/ChatIcon';
 import AnalysisIcon from './icons/AnalysisIcon';
 import FilmIcon from './icons/FilmIcon';
@@ -17,7 +18,6 @@ import SettingsIcon from './icons/SettingsIcon';
 import BlocksIcon from './icons/BlocksIcon';
 import BookOpenIcon from './icons/BookOpenIcon';
 import Spinner from './Spinner';
-import { getPhraseCategory } from '../services/srsService';
 import MoreHorizontalIcon from './icons/MoreHorizontalIcon';
 import CloseIcon from './icons/CloseIcon';
 import MoreActionsMenu from './MoreActionsMenu';
@@ -25,6 +25,7 @@ import ProgressBar from './ProgressBar';
 import { MAX_MASTERY_LEVEL } from '../services/srsService';
 import SoundIcon from './icons/SoundIcon';
 import { useTranslation } from '../src/hooks/useTranslation.ts';
+import { useLanguage } from '@/src/contexts/languageContext.tsx';
 
 
 /**
@@ -32,7 +33,7 @@ import { useTranslation } from '../src/hooks/useTranslation.ts';
  */
 interface PhraseCardProps {
   phrase: Phrase;
-  onSpeak: (text: { native: string; learning: string }, learning: boolean) => void;
+  onSpeak: (text: string, options: SpeechOptions) => void;
   isFlipped: boolean;
   onFlip: () => void;
   onOpenChat: (phrase: Phrase) => void;
@@ -112,6 +113,7 @@ const PhraseCard: React.FC<PhraseCardProps> = ({
 
   const longPressTimer = useRef<number | null>(null);
   const wordLongPressTimer = useRef<number | null>(null);
+  const { profile } = useLanguage();
 
   // State for the "More Actions" menu on both sides of the card
   const [isMoreMenuOpenFront, setIsMoreMenuOpenFront] = useState(false);
@@ -391,7 +393,7 @@ const PhraseCard: React.FC<PhraseCardProps> = ({
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        onSpeak(wordHint.translation!, 'de-DE');
+                        onSpeak(wordHint.translation!, { lang: profile.learning });
                       }}
                       className="p-1 -my-1 -mr-1.5 rounded-full hover:bg-white/20 transition-colors"
                       aria-label={t('phraseCard.aria.playTranslation')}

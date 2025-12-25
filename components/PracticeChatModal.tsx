@@ -8,8 +8,7 @@ import MicrophoneIcon from './icons/MicrophoneIcon';
 import MessageQuestionIcon from './icons/MessageQuestionIcon';
 import { useTranslation } from '../src/hooks/useTranslation.ts';
 import { useLanguage } from '../src/contexts/languageContext';
-import { getSpeechLocale } from '../src/i18n/languageMeta';
-import { getLearningSpeechLocale } from '../services/speechService';
+import { speak } from '../services/speechService';
 
 // Reusing a similar component from other chat modals for consistent UI
 import ChatContextMenu from './ChatContextMenu';
@@ -92,7 +91,7 @@ const ChatMessageContent: React.FC<{
     return (
       <div className="whitespace-pre-wrap leading-relaxed">
         {contentParts.map((part, index) =>
-          part.type === 'learning' || part.type === 'learning' ? (
+          part.type === 'learning' ? (
             <span key={index} className="inline-flex items-center align-middle bg-slate-600/50 px-1.5 py-0.5 rounded-md mx-0.5">
               <span className="font-medium text-purple-300">{renderClickableLearning(part.text, part.translation || '')}</span>
               <button onClick={() => onSpeak(part.text)} className="p-0.5 rounded-full hover:bg-white/20 flex-shrink-0 ml-1.5">
@@ -139,18 +138,6 @@ const PracticeChatModal: React.FC<PracticeChatModalProps> = ({ isOpen, onClose, 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const prevIsLoadingRef = useRef(isLoading);
-
-  const onSpeak = useCallback((text: string) => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      // Use learning language from profile for correct pronunciation
-      const learningLang = profile.learning || 'de';
-      utterance.lang = getSpeechLocale(learningLang);
-      utterance.rate = 0.9;
-      window.speechSynthesis.speak(utterance);
-    }
-  }, [profile.learning]);
 
   const scrollToBottom = () => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -231,15 +218,15 @@ const PracticeChatModal: React.FC<PracticeChatModalProps> = ({ isOpen, onClose, 
 
     // Auto-speak on transition from loading to not loading with a new model message
     if (wasLoading && !isLoading && lastMessage?.role === 'model' && settings.autoSpeak) {
-      const learningParts = lastMessage.contentParts?.filter(p => p.type === 'learning' || p.type === 'learning').map(p => p.text) || [];
+      const learningParts = lastMessage.contentParts?.filter(p => p.type === 'learning').map(p => p.text) || [];
       const textToSpeak = learningParts.join('. ');
       if (textToSpeak) {
-        onSpeak(textToSpeak);
+        speak(textToSpeak, { lang: profile.learning });
       }
     }
 
     prevIsLoadingRef.current = isLoading;
-  }, [history, isLoading, settings.autoSpeak, onSpeak]);
+  }, [history, isLoading, settings.autoSpeak, speak]);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -278,7 +265,7 @@ const PracticeChatModal: React.FC<PracticeChatModalProps> = ({ isOpen, onClose, 
               {history.map((msg, index) => (
                 <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   <div className={`max-w-[85%] px-4 py-3 rounded-2xl break-words ${msg.role === 'user' ? 'bg-purple-600 text-white rounded-br-lg' : 'bg-slate-700 text-slate-200 rounded-bl-lg'}`}>
-                    <ChatMessageContent message={msg} onSpeak={onSpeak} onOpenWordAnalysis={interactiveProps.onOpenWordAnalysis} onOpenContextMenu={setContextMenuTarget} />
+                    <ChatMessageContent message={msg} onSpeak={(text, options) => speak(text, options)} onOpenWordAnalysis={interactiveProps.onOpenWordAnalysis} onOpenContextMenu={setContextMenuTarget} />
                   </div>
                 </div>
               ))}
@@ -334,7 +321,7 @@ const PracticeChatModal: React.FC<PracticeChatModalProps> = ({ isOpen, onClose, 
           onClose={() => setContextMenuTarget(null)}
           allPhrases={allPhrases}
           onGenerateMore={handleSendMessage}
-          onSpeak={onSpeak}
+          onSpeak={(text, options) => speak(text, options)}
           {...interactiveProps}
         />
       )}

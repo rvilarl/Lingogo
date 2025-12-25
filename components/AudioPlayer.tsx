@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import SoundIcon from './icons/SoundIcon';
 import { useLanguage } from '../src/contexts/languageContext';
-import { getSpeechLocale } from '../src/i18n/languageMeta';
+import { speak, stopSpeaking } from '@/services/speechService';
 
 interface AudioPlayerProps {
   textToSpeak: string;
@@ -11,42 +11,17 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ textToSpeak }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const { profile } = useLanguage();
 
-  const utteranceRef = React.useRef<SpeechSynthesisUtterance | null>(null);
-
   const isDisabled = !textToSpeak || textToSpeak.trim().length === 0;
 
-  useEffect(() => {
-    const utterance = new SpeechSynthesisUtterance(textToSpeak);
-    // Use learning language from profile
-    utterance.lang = getSpeechLocale(profile.learning);
-    utterance.rate = 0.9;
-
-    const handleEnd = () => setIsPlaying(false);
-    utterance.addEventListener('end', handleEnd);
-    utterance.addEventListener('error', handleEnd);
-
-    utteranceRef.current = utterance;
-
-    return () => {
-      // Cleanup: remove listeners when component unmounts or text changes
-      utterance.removeEventListener('end', handleEnd);
-      utterance.removeEventListener('error', handleEnd);
-      window.speechSynthesis.cancel();
-    };
-  }, [textToSpeak, profile.learning]);
+  const handleEnd = () => setIsPlaying(false);
 
   const handlePlay = () => {
-    if (!utteranceRef.current || isDisabled) return;
-
-    // Stop any other speech before starting a new one
-    window.speechSynthesis.cancel();
-
+    speak(textToSpeak, { lang: profile.learning, onEnd: handleEnd, onError: handleEnd });
     setIsPlaying(true);
-    window.speechSynthesis.speak(utteranceRef.current);
   };
 
   const handleStop = () => {
-    window.speechSynthesis.cancel();
+    stopSpeaking()
     setIsPlaying(false);
   };
 

@@ -16,8 +16,9 @@ import type { Phrase, PracticeChatMessage, PracticeChatSessionStats, PracticeCha
 import { sendPracticeChatMessage, createInitialGreeting } from '../services/practiceChatService';
 import { useLanguage } from '../src/contexts/languageContext';
 import { useTranslation } from '../src/hooks/useTranslation';
+import { speak, SpeechOptions } from '../services/speechService';
 import { getSpeechLocale } from '../src/i18n/languageMeta';
-import { getLearningSpeechLocale } from '../services/speechService';
+
 import CloseIcon from './icons/CloseIcon';
 import SendIcon from './icons/SendIcon';
 import SoundIcon from './icons/SoundIcon';
@@ -47,7 +48,7 @@ interface Props {
  */
 const MessageBubble: React.FC<{
   message: PracticeChatMessage;
-  onSpeak?: (text: string) => void;
+  onSpeak?: (text: string, options: SpeechOptions) => void;
   isUser: boolean;
   onOpenWordAnalysis?: (phrase: Phrase, word: string) => void;
   onOpenContextMenu?: (target: { sentence: { learning: string, native: string }, word: string }) => void;
@@ -144,7 +145,7 @@ const MessageBubble: React.FC<{
             </p>
             {onSpeak && (
               <button
-                onClick={() => onSpeak(message.content.primary.text)}
+                onClick={() => onSpeak(message.content.primary.text, { lang: useLanguage().profile.learning })}
                 className="p-1.5 rounded-full hover:bg-white/10 flex-shrink-0 transition-colors"
                 title={t('practice.chat.actions.speak', { defaultValue: 'Speak' })}
               >
@@ -283,18 +284,6 @@ export const PracticeChatModal_v2: React.FC<Props> = ({
     messagesRef.current = messages;
   }, [messages]);
 
-  // Speech synthesis
-  const speakText = useCallback((text: string) => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      const learningLang = profile.learning || 'de';
-      utterance.lang = getSpeechLocale(learningLang);
-      utterance.rate = 0.9;
-      window.speechSynthesis.speak(utterance);
-    }
-  }, [profile.learning]);
-
   const handleRevealTranslation = useCallback((messageIndex: number) => {
     setRevealedTranslations(prev => {
       if (prev.has(messageIndex)) {
@@ -361,10 +350,10 @@ export const PracticeChatModal_v2: React.FC<Props> = ({
       // Auto-speak greeting if enabled
       if (settings?.autoSpeak && greeting.content.primary.text) {
         // Only speak the dialogue part, not the explanation
-        setTimeout(() => speakText(greeting.content.primary.text), 300);
+        setTimeout(() => speak(greeting.content.primary.text, { lang: profile.learning }), 300);
       }
     }
-  }, [isOpen, profile, allPhrases, settings?.autoSpeak, speakText]);
+  }, [isOpen, profile, allPhrases, settings?.autoSpeak, speak]);
 
   useEffect(() => {
     if (prevIsOpenRef.current && !isOpen) {
@@ -435,12 +424,12 @@ export const PracticeChatModal_v2: React.FC<Props> = ({
     if (wasLoading && !isLoading && lastMessage?.role === 'assistant' && settings?.autoSpeak) {
       // Only speak the primary dialogue text, not the secondary explanation
       if (lastMessage.content.primary.text) {
-        speakText(lastMessage.content.primary.text);
+        speak(lastMessage.content.primary.text, { lang: profile.learning });
       }
     }
 
     prevIsLoadingRef.current = isLoading;
-  }, [messages, isLoading, settings?.autoSpeak, speakText]);
+  }, [messages, isLoading, settings?.autoSpeak, speak]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -617,7 +606,7 @@ export const PracticeChatModal_v2: React.FC<Props> = ({
                 key={index}
                 message={msg}
                 isUser={msg.role === 'user'}
-                onSpeak={msg.role === 'assistant' ? speakText : undefined}
+                onSpeak={msg.role === 'assistant' ? speak : undefined}
                 onOpenWordAnalysis={onOpenWordAnalysis}
                 onOpenContextMenu={setContextMenuTarget}
                 messageIndex={index}
@@ -713,7 +702,7 @@ export const PracticeChatModal_v2: React.FC<Props> = ({
           onClose={() => setContextMenuTarget(null)}
           allPhrases={allPhrases}
           onGenerateMore={handleSendMessage}
-          onSpeak={speakText}
+          onSpeak={speak}
           onOpenWordAnalysis={onOpenWordAnalysis}
           onAnalyzeWord={onAnalyzeWord}
           onCreateCard={onCreateCard}

@@ -9,8 +9,7 @@ import SoundIcon from './icons/SoundIcon';
 import CheckIcon from './icons/CheckIcon';
 import { useTranslation } from '../src/hooks/useTranslation';
 import { useLanguage } from '../src/contexts/languageContext';
-import { getSpeechLocale } from '../src/i18n/languageMeta';
-import { getNativeSpeechLocale } from '../services/speechService';
+import { getNativeSpeechLocale, speak, SpeechOptions } from '../services/speechService';
 
 interface DiscussTranslationModalProps {
     isOpen: boolean;
@@ -27,7 +26,7 @@ interface DiscussTranslationModalProps {
 
 const ChatMessageContent: React.FC<{
     message: ChatMessage;
-    onSpeak: (text: string) => void;
+    onSpeak: (text: string, options: SpeechOptions) => void;
     basePhrase: Omit<Phrase, 'id'>;
     onOpenWordAnalysis: (phrase: Phrase, word: string) => void;
 }> = ({ message, onSpeak, basePhrase, onOpenWordAnalysis }) => {
@@ -62,7 +61,7 @@ const ChatMessageContent: React.FC<{
                     part.type === 'learning' ? (
                         <span key={index} className="inline-flex items-center align-middle bg-slate-600/50 px-1.5 py-0.5 rounded-md mx-0.5">
                             <span className="font-medium text-purple-300">{renderClickableLearning(part.text)}</span>
-                            <button onClick={() => onSpeak(part.text)} className="p-0.5 rounded-full hover:bg-white/20 ml-1.5">
+                            <button onClick={() => onSpeak(part.text, { lang: useLanguage().profile.learning })} className="p-0.5 rounded-full hover:bg-white/20 ml-1.5">
                                 <SoundIcon className="w-3.5 h-3.5 text-slate-300" />
                             </button>
                         </span>
@@ -205,17 +204,6 @@ const DiscussTranslationModal: React.FC<DiscussTranslationModalProps> = ({ isOpe
         }
     }, [handleSendMessage]);
 
-    const onSpeak = useCallback((text: string) => {
-        if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(text);
-            // Use learning language from profile for correct pronunciation
-            utterance.lang = getSpeechLocale(profile.learning);
-            utterance.rate = 0.9;
-            window.speechSynthesis.speak(utterance);
-        }
-    }, [profile.learning]);
-
     useEffect(() => {
         chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
@@ -254,7 +242,7 @@ const DiscussTranslationModal: React.FC<DiscussTranslationModalProps> = ({ isOpe
                     {messages.map((msg, index) => (
                         <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                             <div className={`max-w-[85%] px-4 py-3 rounded-2xl break-words ${msg.role === 'user' ? 'bg-purple-600 text-white rounded-br-lg' : 'bg-slate-700 text-slate-200 rounded-bl-lg'}`}>
-                                <ChatMessageContent message={msg} onSpeak={onSpeak} basePhrase={basePhrase} onOpenWordAnalysis={onOpenWordAnalysis} />
+                                <ChatMessageContent message={msg} onSpeak={speak} basePhrase={basePhrase} onOpenWordAnalysis={onOpenWordAnalysis} />
                             </div>
                         </div>
                     ))}

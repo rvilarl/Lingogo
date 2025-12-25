@@ -17,8 +17,7 @@ import ListIcon from './icons/ListIcon';
 import Spinner from './Spinner';
 import { useTranslation } from '../src/hooks/useTranslation';
 import { useLanguage } from '../src/contexts/languageContext';
-import { getSpeechLocale } from '../src/i18n/languageMeta';
-import { getNativeSpeechLocale } from '../services/speechService';
+import { speak, SpeechOptions } from '../services/speechService';
 
 interface CategoryAssistantModalProps {
     isOpen: boolean;
@@ -50,7 +49,7 @@ const AssistantChatMessageContent: React.FC<{
     onClose: () => void;
     categoryPhrases: Phrase[];
     // Interactivity props
-    onSpeak: (text: string) => void;
+    onSpeak: (text: string, options: SpeechOptions) => void;
     onOpenWordAnalysis: (phrase: Phrase, word: string) => void;
     onOpenContextMenu: (target: { sentence: { learning: string, native: string }, word: string }) => void;
 }> = ({ msg, category, onAddCards, onGoToList, onClose, onSpeak, onOpenWordAnalysis, onOpenContextMenu }) => {
@@ -156,11 +155,11 @@ const AssistantChatMessageContent: React.FC<{
             <div className="space-y-3">
                 <div className="prose prose-invert prose-sm max-w-none prose-p:my-2 prose-headings:my-3">
                     {responseParts.map((part, index) =>
-                        part.type === 'learning' || part.type === 'learning' ? (
+                        part.type === 'learning' ? (
                             <span key={index} className="inline-flex items-center align-middle bg-slate-600/50 px-1.5 py-0.5 rounded-md mx-0.5">
                                 <span className="font-medium text-purple-300 not-prose">{renderClickableLearning(part)}</span>
                                 <button
-                                    onClick={() => onSpeak(part.text)}
+                                    onClick={() => onSpeak(part.text, { lang: useLanguage().profile.learning })}
                                     className="p-0.5 rounded-full hover:bg-white/20 flex-shrink-0 ml-1.5"
                                     aria-label={`Speak: ${part.text}`}
                                 >
@@ -245,17 +244,6 @@ const CategoryAssistantModal: React.FC<CategoryAssistantModalProps> = (props) =>
     const scrollToBottom = () => {
         chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
-
-    const onSpeak = useCallback((text: string) => {
-        if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(text);
-            // Use learning language from profile for correct pronunciation
-            utterance.lang = getSpeechLocale(profile.native);
-            utterance.rate = 0.9;
-            window.speechSynthesis.speak(utterance);
-        }
-    }, [profile.learning]);
 
     const handleRequest = useCallback(async (request: CategoryAssistantRequest) => {
         setIsLoading(true);
@@ -383,7 +371,7 @@ const CategoryAssistantModal: React.FC<CategoryAssistantModalProps> = (props) =>
                                             onGoToList={onGoToList}
                                             onClose={() => onClose()}
                                             categoryPhrases={phrases}
-                                            onSpeak={(text) => onSpeak(text)}
+                                            onSpeak={(text, options) => speak(text, options)}
                                             onOpenWordAnalysis={interactiveProps.onOpenWordAnalysis}
                                             onOpenContextMenu={setContextMenuTarget}
                                             t={t}
@@ -441,7 +429,7 @@ const CategoryAssistantModal: React.FC<CategoryAssistantModalProps> = (props) =>
                     target={contextMenuTarget}
                     onClose={() => setContextMenuTarget(null)}
                     onGenerateMore={(prompt) => handleRequest({ type: 'user_text', text: prompt })}
-                    onSpeak={(text) => onSpeak(text)}
+                    onSpeak={(text, options) => speak(text, options)}
                     {...interactiveProps}
                 />
             )}

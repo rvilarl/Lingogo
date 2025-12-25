@@ -12,11 +12,7 @@ import type { Phrase, WordAnalysis, PhraseCategory, Category } from '../types';
 import PhraseCard from '../components/PhraseCard';
 import PhraseCardSkeleton from '../components/PhraseCardSkeleton';
 import PracticePageContextMenu from '../components/PracticePageContextMenu';
-import CheckIcon from '../components/icons/CheckIcon';
-import * as srsService from '../services/srsService';
-import * as cacheService from '../services/cacheService';
-import { playCorrectSound } from '../services/soundService';
-import { SPEECH_LOCALE_MAP } from '../constants/speechLocales';
+import { speak } from '../services/speechService';
 import ArrowLeftIcon from '../components/icons/ArrowLeftIcon';
 import ArrowRightIcon from '../components/icons/ArrowRightIcon';
 import ChevronDownIcon from '../components/icons/ChevronDownIcon';
@@ -24,7 +20,6 @@ import PlusIcon from '../components/icons/PlusIcon';
 import SettingsIcon from '../components/icons/SettingsIcon';
 import { useTranslation } from '../src/hooks/useTranslation.ts';
 import { useLanguage } from '../src/contexts/languageContext';
-import { getSpeechLocale } from '../src/i18n/languageMeta';
 
 const SWIPE_THRESHOLD = 50; // pixels
 
@@ -236,22 +231,6 @@ const PracticePage: React.FC<PracticePageProps> = (props) => {
         }
     }, [currentPhrase, onMarkPhraseAsSeen]);
 
-    /**
-     * Handles text-to-speech functionality.
-     * @param text - Object containing native and learning text.
-     * @param learning - Boolean indicating if the text to speak is in the learning language.
-     */
-    const speak = useCallback((text: { native: string; learning: string }, learning: boolean) => {
-        if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(learning ? text.learning : text.native);
-            // Использовать реальный язык из профиля вместо переданного параметра
-            utterance.lang = getSpeechLocale(profile.learning);
-            utterance.rate = 0.9;
-            window.speechSynthesis.speak(utterance);
-        }
-    }, [profile.learning]);
-
     // Touch event handlers for swipe gestures
     const handleTouchStart = (e: React.TouchEvent) => { touchMoveRef.current = null; touchStartRef.current = e.targetTouches[0].clientX; };
     const handleTouchMove = (e: React.TouchEvent) => { touchMoveRef.current = e.targetTouches[0].clientX; };
@@ -385,9 +364,13 @@ const PracticePage: React.FC<PracticePageProps> = (props) => {
                         <div key={animationState.key} className={`absolute inset-0 ${animationClass}`}>
                             <PhraseCard
                                 phrase={currentPhrase}
-                                onSpeak={speak}
                                 isFlipped={isAnswerRevealed}
-                                onFlip={() => { onSetIsAnswerRevealed(!isAnswerRevealed); speak(currentPhrase.text, !isAnswerRevealed); }}
+                                onFlip={() => {
+                                    onSetIsAnswerRevealed(!isAnswerRevealed);
+                                    speak(isAnswerRevealed ? currentPhrase.text.native : currentPhrase.text.learning,
+                                        { lang: isAnswerRevealed ? profile.native : profile.learning });
+                                }}
+                                onSpeak={(text, options) => speak(text, options)}
                                 onOpenChat={onOpenChat}
                                 onOpenDeepDive={onOpenDeepDive}
                                 onOpenMovieExamples={onOpenMovieExamples}

@@ -9,6 +9,8 @@ import SoundIcon from './icons/SoundIcon';
 import TableIcon from './icons/TableIcon';
 import LanguagesIcon from './icons/LanguagesIcon';
 import { useTranslation } from '../src/hooks/useTranslation';
+import { SpeechOptions } from '@/services/speechService';
+import { useLanguage } from '@/src/contexts/languageContext';
 
 interface ChatContextMenuProps {
   target: { sentence: { learning: string; native: string }; word: string };
@@ -16,7 +18,7 @@ interface ChatContextMenuProps {
   onAnalyzeWord: (phrase: Phrase, word: string) => Promise<WordAnalysis | null>;
   onCreateCard: (data: { learning: string; native: string }) => void;
   onGenerateMore: (prompt: string) => void;
-  onSpeak: (text: string) => void;
+  onSpeak: (text: string, options: SpeechOptions) => void;
   onOpenVerbConjugation: (infinitive: string) => void;
   onOpenNounDeclension: (noun: string, article: string) => void;
   onOpenAdjectiveDeclension: (adjective: string) => void;
@@ -142,7 +144,7 @@ const ChatContextMenu: React.FC<ChatContextMenuProps> = ({
         <div className="px-4 py-3">
           <div className="flex items-center justify-between">
             <p className="text-base font-medium text-slate-200 break-words flex-grow">{sentence.learning}</p>
-            <button onClick={(e) => { e.stopPropagation(); onSpeak(sentence.learning); }} className="p-1 rounded-full hover:bg-white/10 ml-2 flex-shrink-0">
+            <button onClick={(e) => { e.stopPropagation(); onSpeak(sentence.learning, { lang: useLanguage().profile.learning }); }} className="p-1 rounded-full hover:bg-white/10 ml-2 flex-shrink-0">
               <SoundIcon className="w-4 h-4 text-slate-300" />
             </button>
           </div>
@@ -165,7 +167,7 @@ const ChatContextMenu: React.FC<ChatContextMenuProps> = ({
         <div className="px-4 py-3 border-t border-slate-700">
           <div className="flex items-center justify-between">
             <p className="text-lg font-bold text-purple-300 break-words flex-grow">{word}</p>
-            <button onClick={(e) => { e.stopPropagation(); onSpeak(word); }} className="p-1 rounded-full hover:bg-white/10 ml-2 flex-shrink-0">
+            <button onClick={(e) => { e.stopPropagation(); onSpeak(word, { lang: useLanguage().profile.learning }); }} className="p-1 rounded-full hover:bg-white/10 ml-2 flex-shrink-0">
               <SoundIcon className="w-4 h-4 text-slate-300" />
             </button>
           </div>

@@ -14,8 +14,7 @@ import MicrophoneIcon from './icons/MicrophoneIcon';
 import ChatContextMenu from './ChatContextMenu';
 import { useTranslation } from '../src/hooks/useTranslation';
 import { useLanguage } from '../src/contexts/languageContext';
-import { getSpeechLocale } from '../src/i18n/languageMeta';
-import { getNativeSpeechLocale } from '../services/speechService';
+import { speak, SpeechOptions } from '../services/speechService';
 
 interface ChatModalProps {
   isOpen: boolean;
@@ -36,7 +35,7 @@ interface ChatModalProps {
 
 const ChatMessageContent: React.FC<{
   message: ChatMessage;
-  onSpeak: (text: string) => void;
+  onSpeak: (text: string, options: SpeechOptions) => void;
   basePhrase?: Phrase;
   onOpenWordAnalysis?: (phrase: Phrase, word: string) => void;
   onOpenContextMenu: (target: { sentence: { learning: string, native: string }, word: string }) => void;
@@ -105,11 +104,11 @@ const ChatMessageContent: React.FC<{
     return (
       <div className="whitespace-pre-wrap leading-relaxed">
         {contentParts.map((part, index) =>
-          part.type === 'learning' || part.type === 'learning' ? (
+          part.type === 'learning' ? (
             <span key={index} className="inline-flex items-center align-middle bg-slate-600/50 px-1.5 py-0.5 rounded-md mx-0.5">
               <span className="font-medium text-purple-300">{renderClickableLearning({ learning: part.text, native: part.translation || '' })}</span>
               <button
-                onClick={() => onSpeak(part.text)}
+                onClick={() => onSpeak(part.text, { lang: useLanguage().profile.learning })}
                 className="p-0.5 rounded-full hover:bg-white/20 flex-shrink-0 ml-1.5"
                 aria-label={`Speak: ${part.text}`}
               >
@@ -137,7 +136,7 @@ const ChatMessageContent: React.FC<{
                   <span key={partIndex} className="inline-flex items-center align-middle bg-slate-500/50 px-1.5 py-0.5 rounded-md mx-0.5">
                     <span className="font-medium text-purple-200">{renderClickableLearning({ learning: part.text, native: part.translation || '' })}</span>
                     <button
-                      onClick={() => onSpeak(part.text)}
+                      onClick={() => onSpeak(part.text, { lang: useLanguage().profile.learning })}
                       className="p-0.5 rounded-full hover:bg-white/20 flex-shrink-0 ml-1.5"
                       aria-label={`Speak: ${part.text}`}
                     >
@@ -164,7 +163,7 @@ const ChatMessageContent: React.FC<{
                       <span key={partIndex} className="inline-flex items-center align-middle bg-slate-500/50 px-1.5 py-0.5 rounded-md mx-0.5">
                         <span className="font-medium text-purple-200">{renderClickableLearning({ learning: part.text, native: part.translation || '' })}</span>
                         <button
-                          onClick={() => onSpeak(part.text)}
+                          onClick={() => speak(part.text, { lang: useLanguage().profile.learning })}
                           className="p-0.5 rounded-full hover:bg-white/20 flex-shrink-0 ml-1.5"
                           aria-label={`Speak: ${part.text}`}
                         >
@@ -179,29 +178,32 @@ const ChatMessageContent: React.FC<{
               </div>
             ))}
           </div>
-        )}
+        )
+        }
 
         {/* Examples - LAST */}
-        {examples && examples.length > 0 && (
-          <div className="space-y-3 pt-2">
-            {examples.map((example, index) => (
-              <div key={`ex-${index}`}>
-                <div className="flex items-start">
-                  <button
-                    onClick={() => onSpeak(example.learning)}
-                    className="p-1 rounded-full hover:bg-white/20 flex-shrink-0 mt-0.5 mr-2"
-                    aria-label={`Speak: ${example.learning}`}
-                  >
-                    <SoundIcon className="w-4 h-4 text-slate-300" />
-                  </button>
-                  <p className="flex-1 text-slate-100 leading-relaxed">{renderClickableLearning({ learning: example.learning, native: example.native })}</p>
+        {
+          examples && examples.length > 0 && (
+            <div className="space-y-3 pt-2">
+              {examples.map((example, index) => (
+                <div key={`ex-${index}`}>
+                  <div className="flex items-start">
+                    <button
+                      onClick={() => onSpeak(example.learning, { lang: useLanguage().profile.learning })}
+                      className="p-1 rounded-full hover:bg-white/20 flex-shrink-0 mt-0.5 mr-2"
+                      aria-label={`Speak: ${example.learning}`}
+                    >
+                      <SoundIcon className="w-4 h-4 text-slate-300" />
+                    </button>
+                    <p className="flex-1 text-slate-100 leading-relaxed">{renderClickableLearning({ learning: example.learning, native: example.native })}</p>
+                  </div>
+                  <p className="pl-7 text-sm text-slate-400 italic">{example.native}</p>
                 </div>
-                <p className="pl-7 text-sm text-slate-400 italic">{example.native}</p>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+              ))}
+            </div>
+          )
+        }
+      </div >
     );
   }
 
@@ -243,17 +245,6 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, phrase, onGenera
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  const onSpeak = useCallback((text: string) => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      // Use learning language from profile for correct pronunciation
-      utterance.lang = getSpeechLocale(profile.learning);
-      utterance.rate = 0.9;
-      window.speechSynthesis.speak(utterance);
-    }
-  }, [profile.learning]);
 
   const scrollToBottom = () => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -425,7 +416,7 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, phrase, onGenera
             {messages.map((msg, index) => (
               <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className={`max-w-[85%] px-2 py-2 rounded-2xl break-words bg l${msg.role === 'user' ? 'bg-purple-600 text-white rounded-br-lg' : 'bg-slate-700 text-slate-200 rounded-bl-lg'}`}>
-                  <ChatMessageContent message={msg} onSpeak={onSpeak} basePhrase={phrase} onOpenWordAnalysis={onOpenWordAnalysis} onOpenContextMenu={setContextMenuTarget} />
+                  <ChatMessageContent message={msg} onSpeak={speak} basePhrase={phrase} onOpenWordAnalysis={onOpenWordAnalysis} onOpenContextMenu={setContextMenuTarget} />
                 </div>
               </div>
             ))}
@@ -501,7 +492,7 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, phrase, onGenera
           onAnalyzeWord={onAnalyzeWord}
           onCreateCard={onCreateCard}
           onGenerateMore={handleSendMessage}
-          onSpeak={onSpeak}
+          onSpeak={speak}
           onOpenVerbConjugation={onOpenVerbConjugation}
           onOpenNounDeclension={onOpenNounDeclension}
           onOpenAdjectiveDeclension={onOpenAdjectiveDeclension}
