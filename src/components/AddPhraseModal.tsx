@@ -1,13 +1,14 @@
-import React, { useState, useEffect, useRef, useCallback, useContext } from 'react';
-import { SpeechRecognition, SpeechRecognitionErrorEvent, LanguageCode } from '../types.ts';
-import MicrophoneIcon from './icons/MicrophoneIcon';
+import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
+
+import { LanguageContext } from '../contexts/languageContext.tsx';
+import { useTranslation } from '../hooks/useTranslation.ts';
+import { getLanguageLabel, getSpeechLocale } from '../i18n/languageMeta.ts';
+import { LanguageCode, SpeechRecognition, SpeechRecognitionErrorEvent } from '../types.ts';
 import CloseIcon from './icons/CloseIcon';
 import KeyboardIcon from './icons/KeyboardIcon';
+import MicrophoneIcon from './icons/MicrophoneIcon';
 import SendIcon from './icons/SendIcon';
 import PhraseCardSkeleton from './PhraseCardSkeleton';
-import { useTranslation } from '../hooks/useTranslation.ts';
-import { LanguageContext } from '../contexts/languageContext.tsx';
-import { getSpeechLocale, getLanguageLabel } from '../i18n/languageMeta.ts';
 
 interface AddPhraseModalProps {
   isOpen: boolean;
@@ -71,7 +72,7 @@ const AddPhraseModal: React.FC<AddPhraseModalProps> = ({
       }
       // Parent component closes the modal, which resets `isLoading` on success.
     },
-    [isLoading, onGenerate, onPhraseCreated, language, onTranslateLearning, t, profile],
+    [isLoading, onGenerate, onPhraseCreated, language, onTranslateLearning, t, profile]
   );
 
   useEffect(() => {
@@ -176,9 +177,7 @@ const AddPhraseModal: React.FC<AddPhraseModalProps> = ({
           <>
             <div className="text-center">
               <h2 className="text-xl font-bold text-slate-100">{t('modals.addPhrase.title')}</h2>
-              <p className="text-slate-400 mt-1">
-                {mode === 'voice' ? instructionVoice : instructionText}
-              </p>
+              <p className="text-slate-400 mt-1">{mode === 'voice' ? instructionVoice : instructionText}</p>
             </div>
 
             <div className="flex-grow flex items-center justify-center w-full">
@@ -189,8 +188,9 @@ const AddPhraseModal: React.FC<AddPhraseModalProps> = ({
                       type="button"
                       onClick={() => recognitionRef.current?.start()}
                       aria-label={t('modals.addPhrase.aria.microphone')}
-                      className={`w-28 h-28 rounded-full flex items-center justify-center transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-purple-500/50 ${isListening ? 'listening-glow' : 'bg-slate-700/50 hover:bg-slate-700'
-                        }`}
+                      className={`w-28 h-28 rounded-full flex items-center justify-center transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-purple-500/50 ${
+                        isListening ? 'listening-glow' : 'bg-slate-700/50 hover:bg-slate-700'
+                      }`}
                     >
                       <MicrophoneIcon className="w-12 h-12 text-white" />
                     </button>
@@ -235,7 +235,9 @@ const AddPhraseModal: React.FC<AddPhraseModalProps> = ({
               <button
                 onClick={handleToggleMode}
                 className="p-3 rounded-full bg-slate-600 hover:bg-slate-500 transition-colors"
-                aria-label={mode === 'voice' ? t('modals.addPhrase.aria.toggleToText') : t('modals.addPhrase.aria.toggleToVoice')}
+                aria-label={
+                  mode === 'voice' ? t('modals.addPhrase.aria.toggleToText') : t('modals.addPhrase.aria.toggleToVoice')
+                }
               >
                 {mode === 'voice' ? (
                   <KeyboardIcon className="w-6 h-6 text-slate-200" />

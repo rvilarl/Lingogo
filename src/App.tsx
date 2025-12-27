@@ -1,105 +1,95 @@
-import React, {
-  useState,
-  useEffect,
-  useCallback,
-  useMemo,
-  useRef,
-} from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
+import AccountDrawer from './components/AccountDrawer';
+import AddPhraseModal from './components/AddPhraseModal';
+import AdjectiveDeclensionModal from './components/AdjectiveDeclensionModal';
+import AiErrorBoundary from './components/AiErrorBoundary';
+import AutoFillLoadingModal from './components/AutoFillLoadingModal';
+import AutoFillPreviewModal from './components/AutoFillPreviewModal';
+import AutoFixModal from './components/AutoFixModal';
+import CategoryAssistantModal from './components/CategoryAssistantModal';
+import CategoryDetailModal from './components/CategoryDetailModal';
+import CategoryFormModal from './components/CategoryFormModal';
+import CategoryManagerModal from './components/CategoryManagerModal';
+import ChatModal from './components/ChatModal';
+import ConfirmCategoryFillModal from './components/ConfirmCategoryFillModal';
+import ConfirmDeleteCategoryModal from './components/ConfirmDeleteCategoryModal';
+import ConfirmDeleteModal from './components/ConfirmDeleteModal';
+import ConfirmDeletePhrasesModal from './components/ConfirmDeletePhrasesModal';
+import DeepDiveModal from './components/DeepDiveModal';
+import DiscussTranslationModal from './components/DiscussTranslationModal';
+import EditPhraseModal from './components/EditPhraseModal';
+import ExpandingFab from './components/ExpandingFab';
+import Header from './components/Header';
+import BugIcon from './components/icons/BugIcon';
+import MessageQuestionIcon from './components/icons/MessageQuestionIcon';
+import WandIcon from './components/icons/WandIcon';
+import ImprovePhraseModal from './components/ImprovePhraseModal';
+import LanguageOnboardingModal from './components/LanguageOnboardingModal';
+import LearningAssistantModal from './components/LearningAssistantModal';
+import MoveOrSkipModal from './components/MoveOrSkipModal';
+import MovieExamplesModal from './components/MovieExamplesModal';
+import NounDeclensionModal from './components/NounDeclensionModal';
+import PracticeChatFab from './components/PracticeChatFab';
+import PracticeChatModal_v2 from './components/PracticeChatModal_v2';
+import PronounsModal from './components/PronounsModal';
+import SentenceChainModal from './components/SentenceChainModal';
+import SettingsModal from './components/SettingsModal';
+import SmartImportModal from './components/SmartImportModal';
+import Toast from './components/Toast';
+import VerbConjugationModal from './components/VerbConjugationModal';
+// FIX: Changed to a named import to resolve "no default export" error.
+import { VoiceWorkspaceModal } from './components/VoiceWorkspaceModal';
+import WFragenModal from './components/WFragenModal';
+import WordAnalysisModal from './components/WordAnalysisModal';
+import { useAuth } from './contexts/authContext.tsx';
+import { useLanguage } from './contexts/languageContext.tsx';
+import { useAutoFixPhrases } from './hooks/useAutoFixPhrases.ts';
+import { useLanguageOnboarding } from './hooks/useLanguageOnboarding.ts';
+import { useTranslation } from './hooks/useTranslation.ts';
+import { getSpeechLocale } from './i18n/languageMeta.ts';
+import LibraryPage from './pages/LibraryPage.tsx';
+// FIX: Changed to a named import to resolve "no default export" error.
+import { PhraseListPage } from './pages/PhraseListPage.tsx';
+import PracticePage from './pages/PracticePage.tsx';
+import { ReaderPage } from './pages/ReaderPage.tsx';
+import { AiService } from './services/aiService';
+import { ApiProviderType, getFallbackProvider, getProviderPriorityList } from './services/apiProvider';
+import * as backendService from './services/backendService';
+import * as cacheService from './services/cacheService';
+import { setCurrentLanguageProfile } from './services/languageAwareAiService';
+import { buildPracticeAnalyticsSummary } from './services/practiceAnalyticsService';
+import { playCorrectSound, playIncorrectSound } from './services/soundService';
+import * as srsService from './services/srsService';
 // FIX: Import View type from shared types.ts
 import {
-  Phrase,
-  DeepDiveAnalysis,
-  MovieExample,
-  WordAnalysis,
-  VerbConjugation,
-  NounDeclension,
   AdjectiveDeclension,
-  SentenceContinuation,
-  PhraseBuilderOptions,
-  PhraseEvaluation,
-  ChatMessage,
-  PhraseCategory,
-  ProposedCard,
   BookRecord,
   Category,
   CategoryAssistantRequest,
   CategoryAssistantResponse,
-  View,
+  ChatMessage,
+  DeepDiveAnalysis,
   LanguageCode,
+  MovieExample,
+  NounDeclension,
+  Phrase,
+  PhraseBuilderOptions,
+  PhraseCategory,
+  PhraseEvaluation,
   PracticeChatSessionRecord,
-  PracticeReviewLogEntry,
   PracticeReviewAction,
-} from "./types.ts";
-import * as srsService from "./services/srsService";
-import * as cacheService from "./services/cacheService";
-import * as backendService from "./services/backendService";
-import {
-  getProviderPriorityList,
-  getFallbackProvider,
-  ApiProviderType,
-} from "./services/apiProvider";
-import { AiService } from "./services/aiService";
-import { buildPracticeAnalyticsSummary } from "./services/practiceAnalyticsService";
-import { playCorrectSound, playIncorrectSound } from "./services/soundService";
-import { getSpeechLocale } from "./i18n/languageMeta.ts";
-
-import Header from "./components/Header";
-import PracticePage from "./pages/PracticePage.tsx";
-// FIX: Changed to a named import to resolve "no default export" error.
-import { PhraseListPage } from "./pages/PhraseListPage.tsx";
-import LibraryPage from "./pages/LibraryPage.tsx";
-import { ReaderPage } from "./pages/ReaderPage.tsx";
-import ChatModal from "./components/ChatModal";
-import SettingsModal from "./components/SettingsModal";
-import DeepDiveModal from "./components/DeepDiveModal";
-import MovieExamplesModal from "./components/MovieExamplesModal";
-import WordAnalysisModal from "./components/WordAnalysisModal";
-import VerbConjugationModal from "./components/VerbConjugationModal";
-import NounDeclensionModal from "./components/NounDeclensionModal";
-import AdjectiveDeclensionModal from "./components/AdjectiveDeclensionModal";
-import SentenceChainModal from "./components/SentenceChainModal";
-import AddPhraseModal from "./components/AddPhraseModal";
-import SmartImportModal from "./components/SmartImportModal";
-import ImprovePhraseModal from "./components/ImprovePhraseModal";
-import EditPhraseModal from "./components/EditPhraseModal";
-import ConfirmDeleteModal from "./components/ConfirmDeleteModal";
-// FIX: Changed to a named import to resolve "no default export" error.
-import { VoiceWorkspaceModal } from "./components/VoiceWorkspaceModal";
-import ExpandingFab from "./components/ExpandingFab";
-import DiscussTranslationModal from "./components/DiscussTranslationModal";
-import LearningAssistantModal from "./components/LearningAssistantModal";
-import PronounsModal from "./components/PronounsModal";
-import WFragenModal from "./components/WFragenModal";
-import Toast from "./components/Toast";
-import AccountDrawer from "./components/AccountDrawer";
-import BugIcon from "./components/icons/BugIcon";
-import WandIcon from "./components/icons/WandIcon";
-import MessageQuestionIcon from "./components/icons/MessageQuestionIcon";
-import CategoryManagerModal from "./components/CategoryManagerModal";
-import CategoryDetailModal from "./components/CategoryDetailModal";
-import CategoryFormModal from "./components/CategoryFormModal";
-import ConfirmDeleteCategoryModal from "./components/ConfirmDeleteCategoryModal";
-import ConfirmCategoryFillModal from "./components/ConfirmCategoryFillModal";
-import AutoFillLoadingModal from "./components/AutoFillLoadingModal";
-import AutoFillPreviewModal from "./components/AutoFillPreviewModal";
-import MoveOrSkipModal from "./components/MoveOrSkipModal";
-import CategoryAssistantModal from "./components/CategoryAssistantModal";
-import ConfirmDeletePhrasesModal from "./components/ConfirmDeletePhrasesModal";
-import PracticeChatFab from "./components/PracticeChatFab";
-import PracticeChatModal_v2 from "./components/PracticeChatModal_v2";
-import AiErrorBoundary from "./components/AiErrorBoundary";
-import { useTranslation } from "./hooks/useTranslation.ts";
-import { useAuth } from "./contexts/authContext.tsx";
-import { useLanguage } from "./contexts/languageContext.tsx";
-import { setCurrentLanguageProfile } from "./services/languageAwareAiService";
-import { useLanguageOnboarding } from "./hooks/useLanguageOnboarding.ts";
-import LanguageOnboardingModal from "./components/LanguageOnboardingModal";
-import { useAutoFixPhrases } from "./hooks/useAutoFixPhrases.ts";
-import AutoFixModal from "./components/AutoFixModal";
+  PracticeReviewLogEntry,
+  ProposedCard,
+  SentenceContinuation,
+  VerbConjugation,
+  View,
+  WordAnalysis,
+} from './types.ts';
 
 // Legacy keys (for migration)
-const LEGACY_PHRASES_KEY = "learningPhrases";
-const LEGACY_CATEGORIES_KEY = "learningAppCategories";
+const LEGACY_PHRASES_KEY = 'learningPhrases';
+const LEGACY_CATEGORIES_KEY = 'learningAppCategories';
 
 // Helper function to create user-aware and language-aware storage keys
 const getStorageKey = (
@@ -113,49 +103,33 @@ const getStorageKey = (
 };
 
 // Storage key generators
-const PHRASES_KEY = (
-  userId?: string,
-  langProfile?: { native: string; learning: string }
-) => getStorageKey("userPhrases", userId, langProfile);
-const CATEGORIES_KEY = (
-  userId?: string,
-  langProfile?: { native: string; learning: string }
-) => getStorageKey("userCategories", userId, langProfile);
-const SETTINGS_KEY = (userId?: string) => getStorageKey("userSettings", userId);
-const BUTTON_USAGE_KEY = (userId?: string) =>
-  getStorageKey("userButtonUsage", userId);
-const MASTERY_BUTTON_USAGE_KEY = (userId?: string) =>
-  getStorageKey("userMasteryButtonUsage", userId);
-const HABIT_TRACKER_KEY = (userId?: string) =>
-  getStorageKey("userHabitTracker", userId);
-const CARD_ACTION_USAGE_KEY = (userId?: string) =>
-  getStorageKey("userCardActionUsage", userId);
-const PRACTICE_CHAT_HISTORY_KEY = (
-  userId?: string,
-  langProfile?: { native: string; learning: string }
-) => getStorageKey("userPracticeChatHistory", userId, langProfile);
-const PRACTICE_CHAT_SESSIONS_KEY = (
-  userId?: string,
-  langProfile?: { native: string; learning: string }
-) => getStorageKey("userPracticeChatSessions", userId, langProfile);
-const PRACTICE_REVIEW_LOG_KEY = (
-  userId?: string,
-  langProfile?: { native: string; learning: string }
-) => getStorageKey("userPracticeReviewLog", userId, langProfile);
-const DISCUSS_CHAT_CACHE_KEY = (
-  userId?: string,
-  langProfile?: { native: string; learning: string }
-) => getStorageKey("userDiscussChatCache", userId, langProfile);
+const PHRASES_KEY = (userId?: string, langProfile?: { native: string; learning: string }) =>
+  getStorageKey('userPhrases', userId, langProfile);
+const CATEGORIES_KEY = (userId?: string, langProfile?: { native: string; learning: string }) =>
+  getStorageKey('userCategories', userId, langProfile);
+const SETTINGS_KEY = (userId?: string) => getStorageKey('userSettings', userId);
+const BUTTON_USAGE_KEY = (userId?: string) => getStorageKey('userButtonUsage', userId);
+const MASTERY_BUTTON_USAGE_KEY = (userId?: string) => getStorageKey('userMasteryButtonUsage', userId);
+const HABIT_TRACKER_KEY = (userId?: string) => getStorageKey('userHabitTracker', userId);
+const CARD_ACTION_USAGE_KEY = (userId?: string) => getStorageKey('userCardActionUsage', userId);
+const PRACTICE_CHAT_HISTORY_KEY = (userId?: string, langProfile?: { native: string; learning: string }) =>
+  getStorageKey('userPracticeChatHistory', userId, langProfile);
+const PRACTICE_CHAT_SESSIONS_KEY = (userId?: string, langProfile?: { native: string; learning: string }) =>
+  getStorageKey('userPracticeChatSessions', userId, langProfile);
+const PRACTICE_REVIEW_LOG_KEY = (userId?: string, langProfile?: { native: string; learning: string }) =>
+  getStorageKey('userPracticeReviewLog', userId, langProfile);
+const DISCUSS_CHAT_CACHE_KEY = (userId?: string, langProfile?: { native: string; learning: string }) =>
+  getStorageKey('userDiscussChatCache', userId, langProfile);
 
 const PRACTICE_REVIEW_LOG_LIMIT = 5000;
 
 // FIX: Removed local View type definition. It's now imported from types.ts
-type AnimationDirection = "left" | "right";
+type AnimationDirection = 'left' | 'right';
 interface AnimationState {
   key: string;
   direction: AnimationDirection;
 }
-type ToastType = "default" | "automationSuccess";
+type ToastType = 'default' | 'automationSuccess';
 interface ToastState {
   message: string;
   id: number;
@@ -243,15 +217,11 @@ const LeechModal: React.FC<LeechModalProps> = ({
         </div>
 
         <h2 className="text-xl font-bold text-slate-100">Сложная фраза</h2>
-        <p className="text-slate-400 mt-2 mb-4">
-          Эта фраза дается вам с трудом. Что с ней сделать?
-        </p>
+        <p className="text-slate-400 mt-2 mb-4">Эта фраза дается вам с трудом. Что с ней сделать?</p>
 
         <div className="bg-slate-700/50 p-4 rounded-md text-center mb-6">
           {/* FIX: Use phrase.text.native and phrase.text.learning to match the updated Phrase type */}
-          <p className="text-slate-200 font-medium text-lg">
-            "{phrase.text.native}"
-          </p>
+          <p className="text-slate-200 font-medium text-lg">"{phrase.text.native}"</p>
           <p className="text-slate-400 mt-1">"{phrase.text.learning}"</p>
         </div>
 
@@ -299,37 +269,25 @@ const LeechModal: React.FC<LeechModalProps> = ({
 /**
  * Migrate legacy localStorage data to new user+language aware keys
  */
-const migrateLegacyStorage = (
-  userId: string,
-  languageProfile: { native: string; learning: string }
-) => {
-  console.log("[Migration] Checking for legacy data...");
+const migrateLegacyStorage = (userId: string, languageProfile: { native: string; learning: string }) => {
+  console.log('[Migration] Checking for legacy data...');
 
   // Migrate phrases
   const legacyPhrases = localStorage.getItem(LEGACY_PHRASES_KEY);
-  if (
-    legacyPhrases &&
-    !localStorage.getItem(PHRASES_KEY(userId, languageProfile))
-  ) {
-    console.log("[Migration] Migrating legacy phrases...");
+  if (legacyPhrases && !localStorage.getItem(PHRASES_KEY(userId, languageProfile))) {
+    console.log('[Migration] Migrating legacy phrases...');
     localStorage.setItem(PHRASES_KEY(userId, languageProfile), legacyPhrases);
     localStorage.removeItem(LEGACY_PHRASES_KEY);
-    console.log("[Migration] Phrases migrated successfully");
+    console.log('[Migration] Phrases migrated successfully');
   }
 
   // Migrate categories
   const legacyCategories = localStorage.getItem(LEGACY_CATEGORIES_KEY);
-  if (
-    legacyCategories &&
-    !localStorage.getItem(CATEGORIES_KEY(userId, languageProfile))
-  ) {
-    console.log("[Migration] Migrating legacy categories...");
-    localStorage.setItem(
-      CATEGORIES_KEY(userId, languageProfile),
-      legacyCategories
-    );
+  if (legacyCategories && !localStorage.getItem(CATEGORIES_KEY(userId, languageProfile))) {
+    console.log('[Migration] Migrating legacy categories...');
+    localStorage.setItem(CATEGORIES_KEY(userId, languageProfile), legacyCategories);
     localStorage.removeItem(LEGACY_CATEGORIES_KEY);
-    console.log("[Migration] Categories migrated successfully");
+    console.log('[Migration] Categories migrated successfully');
   }
 };
 
@@ -350,32 +308,23 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [view, setView] = useState<View>("practice");
-  const [highlightedPhraseId, setHighlightedPhraseId] = useState<string | null>(
-    null
-  );
+  const [view, setView] = useState<View>('practice');
+  const [highlightedPhraseId, setHighlightedPhraseId] = useState<string | null>(null);
   const [activeBookId, setActiveBookId] = useState<number | null>(null);
 
   // --- State Lifted from PracticePage ---
-  const [currentPracticePhrase, setCurrentPracticePhrase] =
-    useState<Phrase | null>(null);
-  const [isPracticeAnswerRevealed, setIsPracticeAnswerRevealed] =
-    useState(false);
+  const [currentPracticePhrase, setCurrentPracticePhrase] = useState<Phrase | null>(null);
+  const [isPracticeAnswerRevealed, setIsPracticeAnswerRevealed] = useState(false);
   const [practiceCardEvaluated, setPracticeCardEvaluated] = useState(false);
-  const [practiceAnimationState, setPracticeAnimationState] =
-    useState<AnimationState>({ key: "", direction: "right" });
+  const [practiceAnimationState, setPracticeAnimationState] = useState<AnimationState>({ key: '', direction: 'right' });
   const [cardHistory, setCardHistory] = useState<string[]>([]);
-  const [practiceCategoryFilter, setPracticeCategoryFilter] = useState<
-    "all" | PhraseCategory
-  >("all");
+  const [practiceCategoryFilter, setPracticeCategoryFilter] = useState<'all' | PhraseCategory>('all');
   const practiceIsExitingRef = useRef(false);
   const specificPhraseRequestedRef = useRef(false);
   // --- End State Lift ---
 
   const [isChatModalOpen, setIsChatModalOpen] = useState(false);
-  const [chatContextPhrase, setChatContextPhrase] = useState<Phrase | null>(
-    null
-  );
+  const [chatContextPhrase, setChatContextPhrase] = useState<Phrase | null>(null);
 
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   // FIX: Initialize settings state to be type-safe.
@@ -394,88 +343,58 @@ const App: React.FC = () => {
     dont_know: 0,
   });
   const [habitTracker, setHabitTracker] = useState(defaultHabitTracker);
-  const [cardActionUsage, setCardActionUsage] = useState(
-    defaultCardActionUsage
-  );
+  const [cardActionUsage, setCardActionUsage] = useState(defaultCardActionUsage);
 
   const [toast, setToast] = useState<ToastState | null>(null);
 
   const [isDeepDiveModalOpen, setIsDeepDiveModalOpen] = useState(false);
   const [deepDivePhrase, setDeepDivePhrase] = useState<Phrase | null>(null);
-  const [deepDiveAnalysis, setDeepDiveAnalysis] =
-    useState<DeepDiveAnalysis | null>(null);
+  const [deepDiveAnalysis, setDeepDiveAnalysis] = useState<DeepDiveAnalysis | null>(null);
   const [isDeepDiveLoading, setIsDeepDiveLoading] = useState<boolean>(false);
   const [deepDiveError, setDeepDiveError] = useState<string | null>(null);
 
-  const [isMovieExamplesModalOpen, setIsMovieExamplesModalOpen] =
-    useState(false);
-  const [movieExamplesPhrase, setMovieExamplesPhrase] = useState<Phrase | null>(
-    null
-  );
+  const [isMovieExamplesModalOpen, setIsMovieExamplesModalOpen] = useState(false);
+  const [movieExamplesPhrase, setMovieExamplesPhrase] = useState<Phrase | null>(null);
   const [movieExamples, setMovieExamples] = useState<MovieExample[]>([]);
-  const [isMovieExamplesLoading, setIsMovieExamplesLoading] =
-    useState<boolean>(false);
-  const [movieExamplesError, setMovieExamplesError] = useState<string | null>(
-    null
-  );
+  const [isMovieExamplesLoading, setIsMovieExamplesLoading] = useState<boolean>(false);
+  const [movieExamplesError, setMovieExamplesError] = useState<string | null>(null);
 
   const [isWordAnalysisModalOpen, setIsWordAnalysisModalOpen] = useState(false);
-  const [wordAnalysisPhrase, setWordAnalysisPhrase] = useState<Phrase | null>(
-    null
-  );
-  const [selectedWord, setSelectedWord] = useState<string>("");
+  const [wordAnalysisPhrase, setWordAnalysisPhrase] = useState<Phrase | null>(null);
+  const [selectedWord, setSelectedWord] = useState<string>('');
   const [wordAnalysis, setWordAnalysis] = useState<WordAnalysis | null>(null);
-  const [isWordAnalysisLoading, setIsWordAnalysisLoading] =
-    useState<boolean>(false);
-  const [wordAnalysisError, setWordAnalysisError] = useState<string | null>(
-    null
-  );
+  const [isWordAnalysisLoading, setIsWordAnalysisLoading] = useState<boolean>(false);
+  const [wordAnalysisError, setWordAnalysisError] = useState<string | null>(null);
 
-  const [isVerbConjugationModalOpen, setIsVerbConjugationModalOpen] =
-    useState(false);
-  const [conjugationVerb, setConjugationVerb] = useState<string>("");
+  const [isVerbConjugationModalOpen, setIsVerbConjugationModalOpen] = useState(false);
+  const [conjugationVerb, setConjugationVerb] = useState<string>('');
 
-  const [isNounDeclensionModalOpen, setIsNounDeclensionModalOpen] =
-    useState(false);
-  const [nounDeclensionData, setNounDeclensionData] =
-    useState<NounDeclension | null>(null);
-  const [isNounDeclensionLoading, setIsNounDeclensionLoading] =
-    useState<boolean>(false);
-  const [nounDeclensionError, setNounDeclensionError] = useState<string | null>(
-    null
-  );
+  const [isNounDeclensionModalOpen, setIsNounDeclensionModalOpen] = useState(false);
+  const [nounDeclensionData, setNounDeclensionData] = useState<NounDeclension | null>(null);
+  const [isNounDeclensionLoading, setIsNounDeclensionLoading] = useState<boolean>(false);
+  const [nounDeclensionError, setNounDeclensionError] = useState<string | null>(null);
   const [declensionNoun, setDeclensionNoun] = useState<{
     noun: string;
     article: string;
   } | null>(null);
 
-  const [isAdjectiveDeclensionModalOpen, setIsAdjectiveDeclensionModalOpen] =
-    useState(false);
-  const [adjectiveDeclensionData, setAdjectiveDeclensionData] =
-    useState<AdjectiveDeclension | null>(null);
-  const [isAdjectiveDeclensionLoading, setIsAdjectiveDeclensionLoading] =
-    useState<boolean>(false);
-  const [adjectiveDeclensionError, setAdjectiveDeclensionError] = useState<
-    string | null
-  >(null);
-  const [declensionAdjective, setDeclensionAdjective] = useState<string>("");
+  const [isAdjectiveDeclensionModalOpen, setIsAdjectiveDeclensionModalOpen] = useState(false);
+  const [adjectiveDeclensionData, setAdjectiveDeclensionData] = useState<AdjectiveDeclension | null>(null);
+  const [isAdjectiveDeclensionLoading, setIsAdjectiveDeclensionLoading] = useState<boolean>(false);
+  const [adjectiveDeclensionError, setAdjectiveDeclensionError] = useState<string | null>(null);
+  const [declensionAdjective, setDeclensionAdjective] = useState<string>('');
 
-  const [isSentenceChainModalOpen, setIsSentenceChainModalOpen] =
-    useState(false);
-  const [sentenceChainPhrase, setSentenceChainPhrase] = useState<Phrase | null>(
-    null
-  );
+  const [isSentenceChainModalOpen, setIsSentenceChainModalOpen] = useState(false);
+  const [sentenceChainPhrase, setSentenceChainPhrase] = useState<Phrase | null>(null);
 
   const [isAddPhraseModalOpen, setIsAddPhraseModalOpen] = useState(false);
   const [addPhraseConfig, setAddPhraseConfig] = useState({
-    language: "ru" as LanguageCode,
+    language: 'ru' as LanguageCode,
     autoSubmit: true,
   });
 
   const [isSmartImportModalOpen, setIsSmartImportModalOpen] = useState(false);
-  const [smartImportInitialTopic, setSmartImportInitialTopic] = useState<
-    string | undefined
-  >();
+  const [smartImportInitialTopic, setSmartImportInitialTopic] = useState<string | undefined>();
 
   const [isImproveModalOpen, setIsImproveModalOpen] = useState(false);
   const [phraseToImprove, setPhraseToImprove] = useState<Phrase | null>(null);
@@ -486,28 +405,21 @@ const App: React.FC = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [phraseToDelete, setPhraseToDelete] = useState<Phrase | null>(null);
 
-  const [isVoiceWorkspaceModalOpen, setIsVoiceWorkspaceModalOpen] =
-    useState(false);
-  const [voiceWorkspacePhrase, setVoiceWorkspacePhrase] =
-    useState<Phrase | null>(null);
+  const [isVoiceWorkspaceModalOpen, setIsVoiceWorkspaceModalOpen] = useState(false);
+  const [voiceWorkspacePhrase, setVoiceWorkspacePhrase] = useState<Phrase | null>(null);
 
-  const [isLearningAssistantModalOpen, setIsLearningAssistantModalOpen] =
-    useState(false);
-  const [learningAssistantPhrase, setLearningAssistantPhrase] =
-    useState<Phrase | null>(null);
+  const [isLearningAssistantModalOpen, setIsLearningAssistantModalOpen] = useState(false);
+  const [learningAssistantPhrase, setLearningAssistantPhrase] = useState<Phrase | null>(null);
   const [learningAssistantCache, setLearningAssistantCache] = useState<{
     [phraseId: string]: ChatMessage[];
   }>({});
 
   const [apiProvider, setApiProvider] = useState<AiService | null>(null);
-  const [apiProviderType, setApiProviderType] =
-    useState<ApiProviderType | null>(null);
+  const [apiProviderType, setApiProviderType] = useState<ApiProviderType | null>(null);
 
   const [isDiscussModalOpen, setIsDiscussModalOpen] = useState(false);
   const [phraseToDiscuss, setPhraseToDiscuss] = useState<Phrase | null>(null);
-  const [discussInitialMessage, setDiscussInitialMessage] = useState<
-    string | undefined
-  >();
+  const [discussInitialMessage, setDiscussInitialMessage] = useState<string | undefined>();
 
   const [isPronounsModalOpen, setIsPronounsModalOpen] = useState(false);
   const [isWFragenModalOpen, setIsWFragenModalOpen] = useState(false);
@@ -515,27 +427,18 @@ const App: React.FC = () => {
   const [isLeechModalOpen, setIsLeechModalOpen] = useState(false);
   const [leechPhrase, setLeechPhrase] = useState<Phrase | null>(null);
 
-  const [isCategoryManagerModalOpen, setIsCategoryManagerModalOpen] =
-    useState(false);
+  const [isCategoryManagerModalOpen, setIsCategoryManagerModalOpen] = useState(false);
   const [categoryToView, setCategoryToView] = useState<Category | null>(null);
   const [isCategoryFormModalOpen, setIsCategoryFormModalOpen] = useState(false);
   const [categoryToEdit, setCategoryToEdit] = useState<Category | null>(null);
-  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(
-    null
-  );
-  const [isAddingCategoryFromPractice, setIsAddingCategoryFromPractice] =
-    useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
+  const [isAddingCategoryFromPractice, setIsAddingCategoryFromPractice] = useState(false);
 
   // New state for auto-fill flow
-  const [categoryToAutoFill, setCategoryToAutoFill] = useState<Category | null>(
-    null
-  );
-  const [autoFillingCategory, setAutoFillingCategory] =
-    useState<Category | null>(null);
+  const [categoryToAutoFill, setCategoryToAutoFill] = useState<Category | null>(null);
+  const [autoFillingCategory, setAutoFillingCategory] = useState<Category | null>(null);
   const [isAutoFillPreviewOpen, setIsAutoFillPreviewOpen] = useState(false);
-  const [proposedCardsForFill, setProposedCardsForFill] = useState<
-    ProposedCard[]
-  >([]);
+  const [proposedCardsForFill, setProposedCardsForFill] = useState<ProposedCard[]>([]);
   const [isRefining, setIsRefining] = useState(false);
 
   // New state for duplicate review flow
@@ -550,15 +453,11 @@ const App: React.FC = () => {
   const [assistantCache, setAssistantCache] = useState<{
     [categoryId: string]: ChatMessage[];
   }>({});
-  const [isCategoryAssistantModalOpen, setIsCategoryAssistantModalOpen] =
-    useState(false);
-  const [assistantCategory, setAssistantCategory] = useState<Category | null>(
-    null
-  );
+  const [isCategoryAssistantModalOpen, setIsCategoryAssistantModalOpen] = useState(false);
+  const [assistantCategory, setAssistantCategory] = useState<Category | null>(null);
 
   // New state for multi-delete confirmation
-  const [isConfirmDeletePhrasesModalOpen, setIsConfirmDeletePhrasesModalOpen] =
-    useState(false);
+  const [isConfirmDeletePhrasesModalOpen, setIsConfirmDeletePhrasesModalOpen] = useState(false);
   const [phrasesForDeletion, setPhrasesForDeletion] = useState<{
     phrases: Phrase[];
     sourceCategory: Category;
@@ -566,15 +465,9 @@ const App: React.FC = () => {
 
   // New state for practice chat
   const [isPracticeChatModalOpen, setIsPracticeChatModalOpen] = useState(false);
-  const [practiceChatHistory, setPracticeChatHistory] = useState<ChatMessage[]>(
-    []
-  );
-  const [practiceChatSessions, setPracticeChatSessions] = useState<
-    PracticeChatSessionRecord[]
-  >([]);
-  const [practiceReviewLog, setPracticeReviewLog] = useState<
-    PracticeReviewLogEntry[]
-  >([]);
+  const [practiceChatHistory, setPracticeChatHistory] = useState<ChatMessage[]>([]);
+  const [practiceChatSessions, setPracticeChatSessions] = useState<PracticeChatSessionRecord[]>([]);
+  const [practiceReviewLog, setPracticeReviewLog] = useState<PracticeReviewLogEntry[]>([]);
 
   const [isAccountDrawerOpen, setIsAccountDrawerOpen] = useState(false);
 
@@ -587,29 +480,22 @@ const App: React.FC = () => {
     }
   }, [userId, languageProfile]);
 
-  const showToast = useCallback(
-    (config: { message: string; type?: ToastType }) => {
-      setToast({
-        message: config.message,
-        type: config.type || "default",
-        id: Date.now(),
-      });
-    },
-    []
-  );
+  const showToast = useCallback((config: { message: string; type?: ToastType }) => {
+    setToast({
+      message: config.message,
+      type: config.type || 'default',
+      id: Date.now(),
+    });
+  }, []);
 
   const updateAndSavePhrases = useCallback(
     (updater: React.SetStateAction<Phrase[]>) => {
       setAllPhrases((prevPhrases) => {
-        const newPhrases =
-          typeof updater === "function" ? updater(prevPhrases) : updater;
+        const newPhrases = typeof updater === 'function' ? updater(prevPhrases) : updater;
         try {
-          localStorage.setItem(
-            PHRASES_KEY(userId, languageProfile),
-            JSON.stringify(newPhrases)
-          );
+          localStorage.setItem(PHRASES_KEY(userId, languageProfile), JSON.stringify(newPhrases));
         } catch (e) {
-          console.error("Failed to save phrases to storage", e);
+          console.error('Failed to save phrases to storage', e);
         }
         return newPhrases;
       });
@@ -638,24 +524,16 @@ const App: React.FC = () => {
       setApiProvider(activeProvider);
       setApiProviderType(activeProviderType);
     } else {
-      setError(
-        providerList.length === 0
-          ? "No AI provider configured."
-          : "AI features are temporarily unavailable."
-      );
+      setError(providerList.length === 0 ? 'No AI provider configured.' : 'AI features are temporarily unavailable.');
     }
 
     // --- Data Loading (Categories & Phrases) ---
-    const storedCategories = localStorage.getItem(
-      CATEGORIES_KEY(userId, languageProfile)
-    );
-    const storedPhrases = localStorage.getItem(
-      PHRASES_KEY(userId, languageProfile)
-    );
+    const storedCategories = localStorage.getItem(CATEGORIES_KEY(userId, languageProfile));
+    const storedPhrases = localStorage.getItem(PHRASES_KEY(userId, languageProfile));
     let dataLoaded = false;
 
     if (storedCategories && storedPhrases) {
-      console.log("Loading data from localStorage cache...");
+      console.log('Loading data from localStorage cache...');
       const loadedCategories = JSON.parse(storedCategories);
       let loadedPhrases: Phrase[] = JSON.parse(storedPhrases);
       loadedPhrases = loadedPhrases.map((p) => ({
@@ -670,77 +548,54 @@ const App: React.FC = () => {
       backendService
         .fetchInitialData()
         .then((serverData) => {
-          console.log("Syncing with server in background...");
-          const {
-            loadedCategories: serverCategories,
-            loadedPhrases: serverPhrases,
-          } = processInitialServerData(serverData);
-          localStorage.setItem(
-            CATEGORIES_KEY(userId, languageProfile),
-            JSON.stringify(serverCategories)
-          );
+          console.log('Syncing with server in background...');
+          const { loadedCategories: serverCategories, loadedPhrases: serverPhrases } =
+            processInitialServerData(serverData);
+          localStorage.setItem(CATEGORIES_KEY(userId, languageProfile), JSON.stringify(serverCategories));
           updateAndSavePhrases(serverPhrases);
           setCategories(serverCategories);
-          showToast({ message: t("notifications.sync.synced") });
+          showToast({ message: t('notifications.sync.synced') });
         })
         .catch((syncError) => {
-          console.warn("Background sync failed:", (syncError as Error).message);
+          console.warn('Background sync failed:', (syncError as Error).message);
         });
     } else {
-      console.log("No local data, fetching from server...");
+      console.log('No local data, fetching from server...');
       try {
         const serverData = await backendService.fetchInitialData();
-        const { loadedCategories, loadedPhrases } =
-          processInitialServerData(serverData);
+        const { loadedCategories, loadedPhrases } = processInitialServerData(serverData);
 
-        localStorage.setItem(
-          CATEGORIES_KEY(userId, languageProfile),
-          JSON.stringify(loadedCategories)
-        );
-        localStorage.setItem(
-          PHRASES_KEY(userId, languageProfile),
-          JSON.stringify(loadedPhrases)
-        );
+        localStorage.setItem(CATEGORIES_KEY(userId, languageProfile), JSON.stringify(loadedCategories));
+        localStorage.setItem(PHRASES_KEY(userId, languageProfile), JSON.stringify(loadedPhrases));
         setCategories(loadedCategories);
         setAllPhrases(loadedPhrases);
         dataLoaded = true;
-        showToast({ message: t("notifications.sync.loaded") });
+        showToast({ message: t('notifications.sync.loaded') });
       } catch (fetchError) {
-        console.error(
-          "Server not available, initializing with empty data:",
-          (fetchError as Error).message
-        );
+        console.error('Server not available, initializing with empty data:', (fetchError as Error).message);
         // Initialize with empty data if server is not available
         const defaultCategories = [
           {
-            id: "1",
-            name: "Общие",
-            color: "bg-slate-500",
+            id: '1',
+            name: 'Общие',
+            color: 'bg-slate-500',
             isFoundational: true,
           },
         ];
         const defaultPhrases: Phrase[] = [];
 
-        localStorage.setItem(
-          CATEGORIES_KEY(userId, languageProfile),
-          JSON.stringify(defaultCategories)
-        );
-        localStorage.setItem(
-          PHRASES_KEY(userId, languageProfile),
-          JSON.stringify(defaultPhrases)
-        );
+        localStorage.setItem(CATEGORIES_KEY(userId, languageProfile), JSON.stringify(defaultCategories));
+        localStorage.setItem(PHRASES_KEY(userId, languageProfile), JSON.stringify(defaultPhrases));
         setCategories(defaultCategories);
         setAllPhrases(defaultPhrases);
         dataLoaded = true;
-        showToast({ message: "Инициализация с пустыми данными" });
+        showToast({ message: 'Инициализация с пустыми данными' });
       }
     }
 
     if (dataLoaded) {
       try {
-        const loadedCategories = JSON.parse(
-          localStorage.getItem(CATEGORIES_KEY(userId, languageProfile)) || "[]"
-        );
+        const loadedCategories = JSON.parse(localStorage.getItem(CATEGORIES_KEY(userId, languageProfile)) || '[]');
         const storedSettings = localStorage.getItem(SETTINGS_KEY(userId));
         const defaultEnabledCategories = loadedCategories.reduce(
           (acc: any, cat: Category) => ({ ...acc, [cat.id]: true }),
@@ -754,8 +609,7 @@ const App: React.FC = () => {
             ...parsedSettings.enabledCategories,
           };
           loadedCategories.forEach((cat: Category) => {
-            if (!(cat.id in enabledCategories))
-              enabledCategories[cat.id] = true;
+            if (!(cat.id in enabledCategories)) enabledCategories[cat.id] = true;
           });
           setSettings({
             ...defaultSettings,
@@ -771,54 +625,32 @@ const App: React.FC = () => {
 
         const storedUsage = localStorage.getItem(BUTTON_USAGE_KEY(userId));
         if (storedUsage) setButtonUsage(JSON.parse(storedUsage));
-        const storedMasteryUsage = localStorage.getItem(
-          MASTERY_BUTTON_USAGE_KEY(userId)
-        );
-        if (storedMasteryUsage)
-          setMasteryButtonUsage(JSON.parse(storedMasteryUsage));
-        const storedCardActionUsage = localStorage.getItem(
-          CARD_ACTION_USAGE_KEY(userId)
-        );
-        if (storedCardActionUsage)
-          setCardActionUsage(JSON.parse(storedCardActionUsage));
-        const storedHabitTracker = localStorage.getItem(
-          HABIT_TRACKER_KEY(userId)
-        );
+        const storedMasteryUsage = localStorage.getItem(MASTERY_BUTTON_USAGE_KEY(userId));
+        if (storedMasteryUsage) setMasteryButtonUsage(JSON.parse(storedMasteryUsage));
+        const storedCardActionUsage = localStorage.getItem(CARD_ACTION_USAGE_KEY(userId));
+        if (storedCardActionUsage) setCardActionUsage(JSON.parse(storedCardActionUsage));
+        const storedHabitTracker = localStorage.getItem(HABIT_TRACKER_KEY(userId));
         if (storedHabitTracker) setHabitTracker(JSON.parse(storedHabitTracker));
 
-        const storedPracticeChat = localStorage.getItem(
-          PRACTICE_CHAT_HISTORY_KEY(userId, languageProfile)
-        );
-        if (storedPracticeChat)
-          setPracticeChatHistory(JSON.parse(storedPracticeChat));
-        const storedPracticeChatSessions = localStorage.getItem(
-          PRACTICE_CHAT_SESSIONS_KEY(userId, languageProfile)
-        );
-        if (storedPracticeChatSessions)
-          setPracticeChatSessions(JSON.parse(storedPracticeChatSessions));
-        const storedPracticeReviewLog = localStorage.getItem(
-          PRACTICE_REVIEW_LOG_KEY(userId, languageProfile)
-        );
-        if (storedPracticeReviewLog)
-          setPracticeReviewLog(JSON.parse(storedPracticeReviewLog));
-        const storedDiscussCache = localStorage.getItem(
-          DISCUSS_CHAT_CACHE_KEY(userId, languageProfile)
-        );
+        const storedPracticeChat = localStorage.getItem(PRACTICE_CHAT_HISTORY_KEY(userId, languageProfile));
+        if (storedPracticeChat) setPracticeChatHistory(JSON.parse(storedPracticeChat));
+        const storedPracticeChatSessions = localStorage.getItem(PRACTICE_CHAT_SESSIONS_KEY(userId, languageProfile));
+        if (storedPracticeChatSessions) setPracticeChatSessions(JSON.parse(storedPracticeChatSessions));
+        const storedPracticeReviewLog = localStorage.getItem(PRACTICE_REVIEW_LOG_KEY(userId, languageProfile));
+        if (storedPracticeReviewLog) setPracticeReviewLog(JSON.parse(storedPracticeReviewLog));
+        const storedDiscussCache = localStorage.getItem(DISCUSS_CHAT_CACHE_KEY(userId, languageProfile));
         if (storedDiscussCache) {
           setDiscussCache(JSON.parse(storedDiscussCache));
         }
       } catch (e) {
-        console.error("Failed to load settings or trackers", e);
+        console.error('Failed to load settings or trackers', e);
       }
     }
 
     setIsLoading(false);
   }, [showToast, updateAndSavePhrases, userId, languageProfile, t]);
 
-  const processInitialServerData = (serverData: {
-    categories: Category[];
-    phrases: Phrase[];
-  }) => {
+  const processInitialServerData = (serverData: { categories: Category[]; phrases: Phrase[] }) => {
     let loadedPhrases = serverData.phrases.map((p) => ({
       ...p,
       isMastered: srsService.isPhraseMastered(p, serverData.categories),
@@ -829,14 +661,11 @@ const App: React.FC = () => {
   // Sync language profile with AI service
   useEffect(() => {
     setCurrentLanguageProfile(languageProfile);
-    console.log(
-      "[App] Language profile updated for AI services:",
-      languageProfile
-    );
+    console.log('[App] Language profile updated for AI services:', languageProfile);
   }, [languageProfile]);
 
   useEffect(() => {
-    console.log("🔍 [App] loadUserData useEffect triggered:", {
+    console.log('🔍 [App] loadUserData useEffect triggered:', {
       needsOnboarding,
       isOnboardingLoading,
       willLoadData: !needsOnboarding && !isOnboardingLoading,
@@ -844,10 +673,10 @@ const App: React.FC = () => {
 
     // Don't load data if user needs onboarding or onboarding is still checking
     if (!needsOnboarding && !isOnboardingLoading) {
-      console.log("✅ [App] Conditions met, calling loadUserData()");
+      console.log('✅ [App] Conditions met, calling loadUserData()');
       loadUserData();
     } else {
-      console.log("⏸️ [App] Skipping loadUserData because:", {
+      console.log('⏸️ [App] Skipping loadUserData because:', {
         needsOnboarding,
         isOnboardingLoading,
       });
@@ -857,7 +686,7 @@ const App: React.FC = () => {
   // Handle user change - reload data for new user
   useEffect(() => {
     if (userChanged) {
-      console.log("User changed, reloading data...");
+      console.log('User changed, reloading data...');
       // Clear current state
       setAllPhrases([]);
       setCategories([]);
@@ -871,12 +700,8 @@ const App: React.FC = () => {
       // Clear localStorage for user data
       localStorage.removeItem(PHRASES_KEY(userId, languageProfile));
       localStorage.removeItem(CATEGORIES_KEY(userId, languageProfile));
-      localStorage.removeItem(
-        PRACTICE_CHAT_HISTORY_KEY(userId, languageProfile)
-      );
-      localStorage.removeItem(
-        PRACTICE_CHAT_SESSIONS_KEY(userId, languageProfile)
-      );
+      localStorage.removeItem(PRACTICE_CHAT_HISTORY_KEY(userId, languageProfile));
+      localStorage.removeItem(PRACTICE_CHAT_SESSIONS_KEY(userId, languageProfile));
       localStorage.removeItem(PRACTICE_REVIEW_LOG_KEY(userId, languageProfile));
 
       // Reload data from server
@@ -887,15 +712,11 @@ const App: React.FC = () => {
 
   const callApiWithFallback = useCallback(
     async <T,>(apiCall: (provider: AiService) => Promise<T>): Promise<T> => {
-      if (!apiProvider || !apiProviderType)
-        throw new Error("AI provider not initialized.");
+      if (!apiProvider || !apiProviderType) throw new Error('AI provider not initialized.');
 
       const maxRetries = 3;
 
-      const executeWithRetries = async (
-        provider: AiService,
-        type: ApiProviderType
-      ): Promise<T> => {
+      const executeWithRetries = async (provider: AiService, type: ApiProviderType): Promise<T> => {
         let attempt = 0;
         let delay = 1000; // 1s initial delay
         while (attempt < maxRetries) {
@@ -904,59 +725,41 @@ const App: React.FC = () => {
           } catch (error: any) {
             attempt++;
             let isRetryableError = false;
-            let errorType = "generic";
+            let errorType = 'generic';
 
-            if (type === "gemini") {
+            if (type === 'gemini') {
               try {
-                const message = error.message || "";
+                const message = error.message || '';
                 const jsonMatch = message.match(/{.*}/s);
                 if (jsonMatch) {
                   const errorJson = JSON.parse(jsonMatch[0]);
                   const errorCode = errorJson?.error?.code;
                   const errorStatus = errorJson?.error?.status;
 
-                  if (
-                    errorCode === 429 ||
-                    errorStatus === "RESOURCE_EXHAUSTED"
-                  ) {
+                  if (errorCode === 429 || errorStatus === 'RESOURCE_EXHAUSTED') {
                     isRetryableError = true;
-                    errorType = "rate limit";
-                  } else if (
-                    errorCode === 503 ||
-                    errorStatus === "UNAVAILABLE"
-                  ) {
+                    errorType = 'rate limit';
+                  } else if (errorCode === 503 || errorStatus === 'UNAVAILABLE') {
                     isRetryableError = true;
-                    errorType = "server overloaded";
+                    errorType = 'server overloaded';
                   }
                 } else {
-                  if (
-                    message.includes("429") ||
-                    message.includes("RESOURCE_EXHAUSTED")
-                  ) {
+                  if (message.includes('429') || message.includes('RESOURCE_EXHAUSTED')) {
                     isRetryableError = true;
-                    errorType = "rate limit";
-                  } else if (
-                    message.includes("503") ||
-                    message.includes("UNAVAILABLE")
-                  ) {
+                    errorType = 'rate limit';
+                  } else if (message.includes('503') || message.includes('UNAVAILABLE')) {
                     isRetryableError = true;
-                    errorType = "server overloaded";
+                    errorType = 'server overloaded';
                   }
                 }
               } catch (e) {
-                const message = error.message || "";
-                if (
-                  message.includes("429") ||
-                  message.includes("RESOURCE_EXHAUSTED")
-                ) {
+                const message = error.message || '';
+                if (message.includes('429') || message.includes('RESOURCE_EXHAUSTED')) {
                   isRetryableError = true;
-                  errorType = "rate limit";
-                } else if (
-                  message.includes("503") ||
-                  message.includes("UNAVAILABLE")
-                ) {
+                  errorType = 'rate limit';
+                } else if (message.includes('503') || message.includes('UNAVAILABLE')) {
                   isRetryableError = true;
-                  errorType = "server overloaded";
+                  errorType = 'server overloaded';
                 }
               }
             }
@@ -964,7 +767,8 @@ const App: React.FC = () => {
             if (isRetryableError && attempt < maxRetries) {
               const jitter = Math.random() * 500;
               console.warn(
-                `API call failed (${errorType}) on attempt ${attempt} with ${type}. Retrying in ${(delay + jitter) / 1000
+                `API call failed (${errorType}) on attempt ${attempt} with ${type}. Retrying in ${
+                  (delay + jitter) / 1000
                 }s...`
               );
               await sleep(delay + jitter);
@@ -974,9 +778,7 @@ const App: React.FC = () => {
             }
           }
         }
-        throw new Error(
-          `API call failed with ${type} after ${maxRetries} attempts.`
-        );
+        throw new Error(`API call failed with ${type} after ${maxRetries} attempts.`);
       };
 
       try {
@@ -991,12 +793,10 @@ const App: React.FC = () => {
           try {
             return await executeWithRetries(fallback.provider, fallback.type);
           } catch (fallbackError) {
-            console.error(
-              `Fallback API call with ${fallback.type} also failed:`,
-              fallbackError
-            );
+            console.error(`Fallback API call with ${fallback.type} also failed:`, fallbackError);
             throw new Error(
-              `Primary API failed: ${(primaryError as Error).message
+              `Primary API failed: ${
+                (primaryError as Error).message
               }. Fallback API also failed: ${(fallbackError as Error).message}`
             );
           }
@@ -1010,12 +810,8 @@ const App: React.FC = () => {
   const updateAndSaveCategories = useCallback(
     (updater: React.SetStateAction<Category[]>) => {
       setCategories((prev) => {
-        const newCategories =
-          typeof updater === "function" ? updater(prev) : updater;
-        localStorage.setItem(
-          CATEGORIES_KEY(userId, languageProfile),
-          JSON.stringify(newCategories)
-        );
+        const newCategories = typeof updater === 'function' ? updater(prev) : updater;
+        localStorage.setItem(CATEGORIES_KEY(userId, languageProfile), JSON.stringify(newCategories));
         return newCategories;
       });
     },
@@ -1033,12 +829,8 @@ const App: React.FC = () => {
   const handlePracticeChatHistoryChange = useCallback(
     (updater: React.SetStateAction<ChatMessage[]>) => {
       setPracticeChatHistory((prev) => {
-        const newHistory =
-          typeof updater === "function" ? updater(prev) : updater;
-        localStorage.setItem(
-          PRACTICE_CHAT_HISTORY_KEY(userId, languageProfile),
-          JSON.stringify(newHistory)
-        );
+        const newHistory = typeof updater === 'function' ? updater(prev) : updater;
+        localStorage.setItem(PRACTICE_CHAT_HISTORY_KEY(userId, languageProfile), JSON.stringify(newHistory));
         return newHistory;
       });
     },
@@ -1050,10 +842,7 @@ const App: React.FC = () => {
       setPracticeChatSessions((prev) => {
         const updatedSessions = [...prev, session];
         const trimmed = updatedSessions.slice(-50);
-        localStorage.setItem(
-          PRACTICE_CHAT_SESSIONS_KEY(userId, languageProfile),
-          JSON.stringify(trimmed)
-        );
+        localStorage.setItem(PRACTICE_CHAT_SESSIONS_KEY(userId, languageProfile), JSON.stringify(trimmed));
         return trimmed;
       });
     },
@@ -1067,13 +856,11 @@ const App: React.FC = () => {
       setPracticeReviewLog((prev) => {
         const next = [...prev, entry];
         const trimmed =
-          next.length > PRACTICE_REVIEW_LOG_LIMIT
-            ? next.slice(next.length - PRACTICE_REVIEW_LOG_LIMIT)
-            : next;
+          next.length > PRACTICE_REVIEW_LOG_LIMIT ? next.slice(next.length - PRACTICE_REVIEW_LOG_LIMIT) : next;
         try {
           localStorage.setItem(storageKey, JSON.stringify(trimmed));
         } catch (error) {
-          console.error("[PracticeReviewLog] Failed to persist log", error);
+          console.error('[PracticeReviewLog] Failed to persist log', error);
         }
         return trimmed;
       });
@@ -1084,12 +871,8 @@ const App: React.FC = () => {
   const handleHabitTrackerChange = useCallback(
     (updater: React.SetStateAction<typeof habitTracker>) => {
       setHabitTracker((prev) => {
-        const newTracker =
-          typeof updater === "function" ? updater(prev) : updater;
-        localStorage.setItem(
-          HABIT_TRACKER_KEY(userId),
-          JSON.stringify(newTracker)
-        );
+        const newTracker = typeof updater === 'function' ? updater(prev) : updater;
+        localStorage.setItem(HABIT_TRACKER_KEY(userId), JSON.stringify(newTracker));
         return newTracker;
       });
     },
@@ -1097,7 +880,7 @@ const App: React.FC = () => {
   );
 
   const handleLogButtonUsage = useCallback(
-    (button: "close" | "continue" | "next") => {
+    (button: 'close' | 'continue' | 'next') => {
       const DECAY_FACTOR = 0.95;
       const INCREMENT = 1;
       setButtonUsage((prev) => {
@@ -1107,10 +890,7 @@ const App: React.FC = () => {
           next: prev.next * DECAY_FACTOR,
         };
         newUsage[button] += INCREMENT;
-        localStorage.setItem(
-          BUTTON_USAGE_KEY(userId),
-          JSON.stringify(newUsage)
-        );
+        localStorage.setItem(BUTTON_USAGE_KEY(userId), JSON.stringify(newUsage));
         return newUsage;
       });
     },
@@ -1118,7 +898,7 @@ const App: React.FC = () => {
   );
 
   const handleLogMasteryButtonUsage = useCallback(
-    (button: "know" | "forgot" | "dont_know") => {
+    (button: 'know' | 'forgot' | 'dont_know') => {
       const DECAY_FACTOR = 0.95;
       const INCREMENT = 1;
       setMasteryButtonUsage((prev) => {
@@ -1128,10 +908,7 @@ const App: React.FC = () => {
           dont_know: prev.dont_know * DECAY_FACTOR,
         };
         newUsage[button] += INCREMENT;
-        localStorage.setItem(
-          MASTERY_BUTTON_USAGE_KEY(userId),
-          JSON.stringify(newUsage)
-        );
+        localStorage.setItem(MASTERY_BUTTON_USAGE_KEY(userId), JSON.stringify(newUsage));
         return newUsage;
       });
     },
@@ -1148,10 +925,7 @@ const App: React.FC = () => {
           (newUsage as any)[key] *= DECAY_FACTOR;
         }
         newUsage[button] += INCREMENT;
-        localStorage.setItem(
-          CARD_ACTION_USAGE_KEY(userId),
-          JSON.stringify(newUsage)
-        );
+        localStorage.setItem(CARD_ACTION_USAGE_KEY(userId), JSON.stringify(newUsage));
         return newUsage;
       });
     },
@@ -1161,29 +935,19 @@ const App: React.FC = () => {
   const fetchNewPhrases = useCallback(
     async (count: number = 5) => {
       if (isGenerating || !apiProvider) {
-        if (!apiProvider)
-          setError("AI provider is not available for generating new phrases.");
+        if (!apiProvider) setError('AI provider is not available for generating new phrases.');
         return;
       }
       setIsGenerating(true);
-      if (!error?.includes("AI features are temporarily unavailable"))
-        setError(null);
+      if (!error?.includes('AI features are temporarily unavailable')) setError(null);
       try {
         // FIX: Use phrase.text.learning to match the updated Phrase type
-        const existingLearningPhrases = allPhrases
-          .map((p) => p.text.learning)
-          .join("; ");
+        const existingLearningPhrases = allPhrases.map((p) => p.text.learning).join('; ');
         const prompt = `Сгенерируй ${count} новых, полезных в быту немецких фраз уровня A1. Не повторяй: "${existingLearningPhrases}". Верни JSON-массив объектов с ключами 'learning' и 'native'.`;
-        const newPhrasesData = await callApiWithFallback((provider) =>
-          provider.generatePhrases(prompt)
-        );
+        const newPhrasesData = await callApiWithFallback((provider) => provider.generatePhrases(prompt));
 
-        const generalCategory = categories.find(
-          (c) => c.name.toLowerCase() === "общие"
-        );
-        const defaultCategoryId =
-          generalCategory?.id ||
-          (categories.length > 0 ? categories[0].id : "1");
+        const generalCategory = categories.find((c) => c.name.toLowerCase() === 'общие');
+        const defaultCategoryId = generalCategory?.id || (categories.length > 0 ? categories[0].id : '1');
 
         const phrasesToCreate = newPhrasesData.map((p) => ({
           // FIX: Map flat structure to nested `text` object
@@ -1197,7 +961,7 @@ const App: React.FC = () => {
             const newPhrase = await backendService.createPhrase(p);
             createdPhrases.push(newPhrase);
           } catch (err) {
-            console.error("Failed to save new phrase to backend:", err);
+            console.error('Failed to save new phrase to backend:', err);
           }
         }
 
@@ -1205,24 +969,12 @@ const App: React.FC = () => {
           updateAndSavePhrases((prev) => [...prev, ...createdPhrases]);
         }
       } catch (err) {
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Unknown error during phrase generation."
-        );
+        setError(err instanceof Error ? err.message : 'Unknown error during phrase generation.');
       } finally {
         setIsGenerating(false);
       }
     },
-    [
-      allPhrases,
-      categories,
-      isGenerating,
-      updateAndSavePhrases,
-      callApiWithFallback,
-      apiProvider,
-      error,
-    ]
+    [allPhrases, categories, isGenerating, updateAndSavePhrases, callApiWithFallback, apiProvider, error]
   );
 
   const openChatForPhrase = (phrase: Phrase) => {
@@ -1247,17 +999,11 @@ const App: React.FC = () => {
         return;
       }
       try {
-        const analysis = await callApiWithFallback((provider) =>
-          provider.generateDeepDiveAnalysis(phrase)
-        );
+        const analysis = await callApiWithFallback((provider) => provider.generateDeepDiveAnalysis(phrase));
         setDeepDiveAnalysis(analysis);
         cacheService.setCache(cacheKey, analysis);
       } catch (err) {
-        setDeepDiveError(
-          err instanceof Error
-            ? err.message
-            : "Unknown error during analysis generation."
-        );
+        setDeepDiveError(err instanceof Error ? err.message : 'Unknown error during analysis generation.');
       } finally {
         setIsDeepDiveLoading(false);
       }
@@ -1281,17 +1027,11 @@ const App: React.FC = () => {
         return;
       }
       try {
-        const examples = await callApiWithFallback((provider) =>
-          provider.generateMovieExamples(phrase)
-        );
+        const examples = await callApiWithFallback((provider) => provider.generateMovieExamples(phrase));
         setMovieExamples(examples);
         cacheService.setCache(cacheKey, examples);
       } catch (err) {
-        setMovieExamplesError(
-          err instanceof Error
-            ? err.message
-            : "Unknown error during example generation."
-        );
+        setMovieExamplesError(err instanceof Error ? err.message : 'Unknown error during example generation.');
       } finally {
         setIsMovieExamplesLoading(false);
       }
@@ -1307,13 +1047,11 @@ const App: React.FC = () => {
       if (cachedAnalysis) return cachedAnalysis;
 
       try {
-        const analysis = await callApiWithFallback((provider) =>
-          provider.analyzeWordInPhrase(phrase, word)
-        );
+        const analysis = await callApiWithFallback((provider) => provider.analyzeWordInPhrase(phrase, word));
         cacheService.setCache(cacheKey, analysis);
         return analysis;
       } catch (err) {
-        console.error("Error analyzing word:", err);
+        console.error('Error analyzing word:', err);
         return null;
       }
     },
@@ -1334,7 +1072,7 @@ const App: React.FC = () => {
       if (analysisResult) {
         setWordAnalysis(analysisResult);
       } else {
-        setWordAnalysisError("Unknown error during word analysis.");
+        setWordAnalysisError('Unknown error during word analysis.');
       }
       setIsWordAnalysisLoading(false);
     },
@@ -1366,17 +1104,11 @@ const App: React.FC = () => {
         return;
       }
       try {
-        const data = await callApiWithFallback((provider) =>
-          provider.declineNoun(noun, article)
-        );
+        const data = await callApiWithFallback((provider) => provider.declineNoun(noun, article));
         setNounDeclensionData(data);
         cacheService.setCache(cacheKey, data);
       } catch (err) {
-        setNounDeclensionError(
-          err instanceof Error
-            ? err.message
-            : "Unknown error during declension generation."
-        );
+        setNounDeclensionError(err instanceof Error ? err.message : 'Unknown error during declension generation.');
       } finally {
         setIsNounDeclensionLoading(false);
       }
@@ -1400,16 +1132,12 @@ const App: React.FC = () => {
         return;
       }
       try {
-        const data = await callApiWithFallback((provider) =>
-          provider.declineAdjective(adjective)
-        );
+        const data = await callApiWithFallback((provider) => provider.declineAdjective(adjective));
         setAdjectiveDeclensionData(data);
         cacheService.setCache(cacheKey, data);
       } catch (err) {
         setAdjectiveDeclensionError(
-          err instanceof Error
-            ? err.message
-            : "Unknown error during adjective declension generation."
+          err instanceof Error ? err.message : 'Unknown error during adjective declension generation.'
         );
       } finally {
         setIsAdjectiveDeclensionLoading(false);
@@ -1436,10 +1164,7 @@ const App: React.FC = () => {
         const unmastered = allPhrases.filter((p) => p && !p.isMastered);
 
         for (let i = 0; i < PREFETCH_COUNT; i++) {
-          const nextPhrase = srsService.selectNextPhrase(
-            unmastered,
-            nextPhraseId
-          );
+          const nextPhrase = srsService.selectNextPhrase(unmastered, nextPhraseId);
           if (nextPhrase) {
             if (phrasesToFetch.some((p) => p.id === nextPhrase.id)) break;
             phrasesToFetch.push(nextPhrase);
@@ -1454,15 +1179,10 @@ const App: React.FC = () => {
             const cacheKey = `phrase_builder_${phrase.id}`;
             if (!cacheService.getCache<PhraseBuilderOptions>(cacheKey)) {
               try {
-                const options = await callApiWithFallback((provider) =>
-                  provider.generatePhraseBuilderOptions(phrase)
-                );
+                const options = await callApiWithFallback((provider) => provider.generatePhraseBuilderOptions(phrase));
                 cacheService.setCache(cacheKey, options);
               } catch (err) {
-                console.warn(
-                  `Background prefetch failed for phrase ${phrase.id}:`,
-                  err
-                );
+                console.warn(`Background prefetch failed for phrase ${phrase.id}:`, err);
               }
             }
           })
@@ -1476,7 +1196,7 @@ const App: React.FC = () => {
 
   // New proactive pre-fetching effect for both phrase builder and quick replies
   useEffect(() => {
-    if (view === "practice" && currentPracticePhrase) {
+    if (view === 'practice' && currentPracticePhrase) {
       prefetchPhraseBuilderOptions(currentPracticePhrase.id);
     }
   }, [view, currentPracticePhrase, prefetchPhraseBuilderOptions]);
@@ -1489,34 +1209,24 @@ const App: React.FC = () => {
 
   const handleEvaluatePhraseAttempt = useCallback(
     (phrase: Phrase, userAttempt: string): Promise<PhraseEvaluation> => {
-      return callApiWithFallback((provider) =>
-        provider.evaluatePhraseAttempt(phrase, userAttempt)
-      );
+      return callApiWithFallback((provider) => provider.evaluatePhraseAttempt(phrase, userAttempt));
     },
     [callApiWithFallback]
   );
 
   const handleEvaluateSpokenPhraseAttempt = useCallback(
     (phrase: Phrase, userAttempt: string): Promise<PhraseEvaluation> => {
-      return callApiWithFallback((provider) =>
-        provider.evaluateSpokenPhraseAttempt(phrase, userAttempt)
-      );
+      return callApiWithFallback((provider) => provider.evaluateSpokenPhraseAttempt(phrase, userAttempt));
     },
     [callApiWithFallback]
   );
 
   const updatePhraseMasteryAndCache = useCallback(
     async (phrase: Phrase, action: PracticeReviewAction) => {
-      const updatedPhrase = srsService.updatePhraseMastery(
-        phrase,
-        action,
-        categories
-      );
+      const updatedPhrase = srsService.updatePhraseMastery(phrase, action, categories);
 
       // Optimistic UI update
-      updateAndSavePhrases((prev) =>
-        prev.map((p) => (p.id === phrase.id ? updatedPhrase : p))
-      );
+      updateAndSavePhrases((prev) => prev.map((p) => (p.id === phrase.id ? updatedPhrase : p)));
       if (updatedPhrase.isMastered && !phrase.isMastered) {
         cacheService.clearCacheForPhrase(phrase.id);
       }
@@ -1527,28 +1237,26 @@ const App: React.FC = () => {
       } catch (err) {
         // On failure, just show a toast. Do NOT revert the UI state.
         showToast({
-          message: t("notifications.sync.error", {
+          message: t('notifications.sync.error', {
             message: (err as Error).message,
           }),
         });
-        console.error("Background sync failed for phrase " + phrase.id, err);
+        console.error('Background sync failed for phrase ' + phrase.id, err);
       }
 
       const logTimestamp = Date.now();
       const randomSource =
-        typeof globalThis !== "undefined"
-          ? (globalThis as typeof globalThis & { crypto?: Crypto }).crypto
-          : undefined;
+        typeof globalThis !== 'undefined' ? (globalThis as typeof globalThis & { crypto?: Crypto }).crypto : undefined;
       const logEntry: PracticeReviewLogEntry = {
         id:
-          randomSource && typeof randomSource.randomUUID === "function"
+          randomSource && typeof randomSource.randomUUID === 'function'
             ? randomSource.randomUUID()
             : `review_${phrase.id}_${logTimestamp}`,
         timestamp: logTimestamp,
         phraseId: phrase.id,
         categoryId: phrase.category,
         action,
-        wasCorrect: action === "know",
+        wasCorrect: action === 'know',
         wasNew: phrase.lastReviewedAt === null,
         previousMasteryLevel: phrase.masteryLevel,
         newMasteryLevel: updatedPhrase.masteryLevel,
@@ -1563,8 +1271,8 @@ const App: React.FC = () => {
         previousKnowCount: phrase.knowCount,
         newKnowCount: updatedPhrase.knowCount,
         intervalMs: Math.max(updatedPhrase.nextReviewAt - logTimestamp, 0),
-        languageLearning: languageProfile?.learning ?? "",
-        languageNative: languageProfile?.native ?? "",
+        languageLearning: languageProfile?.learning ?? '',
+        languageNative: languageProfile?.native ?? '',
         isLeechAfter: srsService.isLeech(updatedPhrase),
       };
 
@@ -1572,19 +1280,13 @@ const App: React.FC = () => {
 
       return updatedPhrase; // Return the optimistically updated phrase.
     },
-    [
-      updateAndSavePhrases,
-      categories,
-      showToast,
-      appendPracticeReviewLog,
-      languageProfile,
-    ]
+    [updateAndSavePhrases, categories, showToast, appendPracticeReviewLog, languageProfile]
   );
 
   const handlePhraseActionSuccess = useCallback(
     async (phrase: Phrase) => {
       if (settings.soundEffects) playCorrectSound();
-      return updatePhraseMasteryAndCache(phrase, "know");
+      return updatePhraseMasteryAndCache(phrase, 'know');
     },
     [settings.soundEffects, updatePhraseMasteryAndCache]
   );
@@ -1592,14 +1294,14 @@ const App: React.FC = () => {
   const handlePhraseActionFailure = useCallback(
     async (phrase: Phrase) => {
       if (settings.soundEffects) playIncorrectSound();
-      return updatePhraseMasteryAndCache(phrase, "forgot");
+      return updatePhraseMasteryAndCache(phrase, 'forgot');
     },
     [settings.soundEffects, updatePhraseMasteryAndCache]
   );
 
   const handleUpdateMasteryWithoutUI = useCallback(
-    async (phrase: Phrase, action: "know" | "forgot" | "dont_know") => {
-      if (action === "know") {
+    async (phrase: Phrase, action: 'know' | 'forgot' | 'dont_know') => {
+      if (action === 'know') {
         await handlePhraseActionSuccess(phrase);
       } else {
         await handlePhraseActionFailure(phrase);
@@ -1609,52 +1311,34 @@ const App: React.FC = () => {
   );
 
   const handleGenerateContinuations = useCallback(
-    (nativePhrase: string) =>
-      callApiWithFallback((provider) =>
-        provider.generateSentenceContinuations(nativePhrase)
-      ),
+    (nativePhrase: string) => callApiWithFallback((provider) => provider.generateSentenceContinuations(nativePhrase)),
     [callApiWithFallback]
   );
   const handleGenerateInitialExamples = useCallback(
-    (phrase: Phrase) =>
-      callApiWithFallback((provider) =>
-        provider.generateInitialExamples(phrase)
-      ),
+    (phrase: Phrase) => callApiWithFallback((provider) => provider.generateInitialExamples(phrase)),
     [callApiWithFallback]
   );
   const handleContinueChat = useCallback(
     (phrase: Phrase, history: any[], newMessage: string) =>
-      callApiWithFallback((provider) =>
-        provider.continueChat(phrase, history, newMessage)
-      ),
+      callApiWithFallback((provider) => provider.continueChat(phrase, history, newMessage)),
     [callApiWithFallback]
   );
   const handlePracticeConversation = useCallback(
     (history: ChatMessage[], newMessage: string) =>
-      callApiWithFallback((provider) =>
-        provider.practiceConversation(history, newMessage, allPhrases)
-      ),
+      callApiWithFallback((provider) => provider.practiceConversation(history, newMessage, allPhrases)),
     [callApiWithFallback, allPhrases]
   );
   const handleGuideToTranslation = useCallback(
     (phrase: Phrase, history: ChatMessage[], userAnswer: string) =>
-      callApiWithFallback((provider) =>
-        provider.guideToTranslation(phrase, history, userAnswer)
-      ),
+      callApiWithFallback((provider) => provider.guideToTranslation(phrase, history, userAnswer)),
     [callApiWithFallback]
   );
   const handleGenerateSinglePhrase = useCallback(
-    (nativePhrase: string) =>
-      callApiWithFallback((provider) =>
-        provider.generateSinglePhrase(nativePhrase)
-      ),
+    (nativePhrase: string) => callApiWithFallback((provider) => provider.generateSinglePhrase(nativePhrase)),
     [callApiWithFallback]
   );
   const handleTranslateLearningToNative = useCallback(
-    (learningPhrase: string) =>
-      callApiWithFallback((provider) =>
-        provider.translateLearningToNative(learningPhrase)
-      ),
+    (learningPhrase: string) => callApiWithFallback((provider) => provider.translateLearningToNative(learningPhrase)),
     [callApiWithFallback]
   );
   const handleGetWordTranslation = useCallback(
@@ -1664,9 +1348,7 @@ const App: React.FC = () => {
       nativeWord: string
     ): Promise<{ learningTranslation: string }> => {
       const cacheKey = `word_translation_${nativePhrase}_${nativeWord}`;
-      const cached = cacheService.getCache<{ learningTranslation: string }>(
-        cacheKey
-      );
+      const cached = cacheService.getCache<{ learningTranslation: string }>(cacheKey);
       if (cached) return cached;
 
       const result = await callApiWithFallback((provider) =>
@@ -1678,58 +1360,37 @@ const App: React.FC = () => {
     [callApiWithFallback]
   );
   const handleGenerateCardsFromTranscript = useCallback(
-    (transcript: string, sourceLang: "ru" | "de") =>
-      callApiWithFallback((provider) =>
-        provider.generateCardsFromTranscript(transcript, sourceLang)
-      ),
+    (transcript: string, sourceLang: 'ru' | 'de') =>
+      callApiWithFallback((provider) => provider.generateCardsFromTranscript(transcript, sourceLang)),
     [callApiWithFallback]
   );
   const handleGenerateCardsFromImage = useCallback(
     (imageData: { mimeType: string; data: string }) =>
-      callApiWithFallback((provider) =>
-        provider.generateCardsFromImage(imageData)
-      ),
+      callApiWithFallback((provider) => provider.generateCardsFromImage(imageData)),
     [callApiWithFallback]
   );
   const handleGenerateTopicCards = useCallback(
     (topic: string, refinement?: string, existingPhrases?: string[]) =>
-      callApiWithFallback((provider) =>
-        provider.generateTopicCards(topic, refinement, existingPhrases)
-      ),
+      callApiWithFallback((provider) => provider.generateTopicCards(topic, refinement, existingPhrases)),
     [callApiWithFallback]
   );
   const handleClassifyTopic = useCallback(
-    (topic: string) =>
-      callApiWithFallback((provider) => provider.classifyTopic(topic)),
+    (topic: string) => callApiWithFallback((provider) => provider.classifyTopic(topic)),
     [callApiWithFallback]
   );
   const handleGetCategoryAssistantResponse = useCallback(
-    (
-      categoryName: string,
-      existingPhrases: Phrase[],
-      request: CategoryAssistantRequest,
-      history?: ChatMessage[]
-    ) =>
+    (categoryName: string, existingPhrases: Phrase[], request: CategoryAssistantRequest, history?: ChatMessage[]) =>
       callApiWithFallback((provider) =>
-        provider.getCategoryAssistantResponse(
-          categoryName,
-          existingPhrases,
-          request,
-          history
-        )
+        provider.getCategoryAssistantResponse(categoryName, existingPhrases, request, history)
       ),
     [callApiWithFallback]
   );
   const handleConjugateVerbSimple = useCallback(
     async (infinitive: string) => {
-      const cacheKey = cacheService.createLanguageAwareKey(
-        `verb_conjugation_simple_${infinitive}`
-      );
+      const cacheKey = cacheService.createLanguageAwareKey(`verb_conjugation_simple_${infinitive}`);
       const cached = cacheService.getCache<any[]>(cacheKey);
       if (cached) return cached;
-      const result = await callApiWithFallback((provider) =>
-        provider.conjugateVerbSimple(infinitive)
-      );
+      const result = await callApiWithFallback((provider) => provider.conjugateVerbSimple(infinitive));
       cacheService.setCache(cacheKey, result);
       return result;
     },
@@ -1737,53 +1398,39 @@ const App: React.FC = () => {
   );
   const handleConjugateVerbDetailed = useCallback(
     async (infinitive: string) => {
-      const cacheKey = cacheService.createLanguageAwareKey(
-        `verb_conjugation_detailed_${infinitive}`
-      );
+      const cacheKey = cacheService.createLanguageAwareKey(`verb_conjugation_detailed_${infinitive}`);
       const cached = cacheService.getCache<VerbConjugation>(cacheKey);
       if (cached) return cached;
-      const result = await callApiWithFallback((provider) =>
-        provider.conjugateVerb(infinitive)
-      );
+      const result = await callApiWithFallback((provider) => provider.conjugateVerb(infinitive));
       cacheService.setCache(cacheKey, result);
       return result;
     },
     [callApiWithFallback]
   );
 
-  const handleOpenAddPhraseModal = (options: {
-    language: LanguageCode;
-    autoSubmit: boolean;
-  }) => {
+  const handleOpenAddPhraseModal = (options: { language: LanguageCode; autoSubmit: boolean }) => {
     if (!apiProvider) return;
     setAddPhraseConfig(options);
     setIsAddPhraseModalOpen(true);
   };
 
-  const handlePhraseCreated = async (newPhraseData: {
-    learning: string;
-    native: string;
-  }) => {
+  const handlePhraseCreated = async (newPhraseData: { learning: string; native: string }) => {
     const normalizedLearning = newPhraseData.learning.trim().toLowerCase();
-    const isDuplicate = allPhrases.some(
-      (p) => p.text.learning.trim().toLowerCase() === normalizedLearning
-    );
+    const isDuplicate = allPhrases.some((p) => p.text.learning.trim().toLowerCase() === normalizedLearning);
     const isDuplicateInCategory = categoryToView
       ? allPhrases.some(
-        (p) =>
-          p.category === categoryToView.id &&
-          p.text.learning.trim().toLowerCase() === normalizedLearning
-      )
+          (p) => p.category === categoryToView.id && p.text.learning.trim().toLowerCase() === normalizedLearning
+        )
       : false;
 
     if (isDuplicateInCategory) {
-      const message = t("notifications.phrases.existsInCategory", {
+      const message = t('notifications.phrases.existsInCategory', {
         phrase: newPhraseData.learning,
       });
       showToast({ message });
       throw new Error(message);
     } else if (isDuplicate) {
-      const message = t("notifications.phrases.existsInOtherCategory", {
+      const message = t('notifications.phrases.existsInOtherCategory', {
         phrase: newPhraseData.learning,
       });
       showToast({ message });
@@ -1791,12 +1438,9 @@ const App: React.FC = () => {
     }
 
     try {
-      const generalCategory = categories.find(
-        (c) => c.name.toLowerCase() === "общие"
-      );
-      const defaultCategoryId = categories.length > 0 ? categories[0].id : "1";
-      const categoryId =
-        categoryToView?.id || generalCategory?.id || defaultCategoryId;
+      const generalCategory = categories.find((c) => c.name.toLowerCase() === 'общие');
+      const defaultCategoryId = categories.length > 0 ? categories[0].id : '1';
+      const categoryId = categoryToView?.id || generalCategory?.id || defaultCategoryId;
 
       // FIX: The Phrase type requires a nested `text` object.
       const phraseToCreate = {
@@ -1811,11 +1455,11 @@ const App: React.FC = () => {
       if (!categoryToView) {
         setCurrentPracticePhrase(newPhrase);
         setIsPracticeAnswerRevealed(false);
-        setView("practice");
+        setView('practice');
       }
     } catch (err) {
       showToast({
-        message: t("notifications.phrases.createError", {
+        message: t('notifications.phrases.createError', {
           message: (err as Error).message,
         }),
       });
@@ -1823,43 +1467,37 @@ const App: React.FC = () => {
   };
 
   const handleCreateProposedCards = useCallback(
-    async (
-      proposedCards: ProposedCard[],
-      options?: { categoryId?: string; createCategoryName?: string }
-    ) => {
+    async (proposedCards: ProposedCard[], options?: { categoryId?: string; createCategoryName?: string }) => {
       let finalCategoryId = options?.categoryId;
       let newCategory: Category | null = null;
 
       if (options?.createCategoryName && !finalCategoryId) {
         const trimmedName = options.createCategoryName.trim();
-        const existingCategory = categories.find(
-          (c) => c.name.trim().toLowerCase() === trimmedName.toLowerCase()
-        );
+        const existingCategory = categories.find((c) => c.name.trim().toLowerCase() === trimmedName.toLowerCase());
 
         if (existingCategory) {
           finalCategoryId = existingCategory.id;
         } else {
           const colors = [
-            "bg-red-500",
-            "bg-orange-500",
-            "bg-amber-500",
-            "bg-yellow-500",
-            "bg-lime-500",
-            "bg-green-500",
-            "bg-emerald-500",
-            "bg-teal-500",
-            "bg-cyan-500",
-            "bg-sky-500",
-            "bg-blue-500",
-            "bg-indigo-500",
-            "bg-violet-500",
-            "bg-fuchsia-500",
-            "bg-pink-500",
-            "bg-rose-500",
+            'bg-red-500',
+            'bg-orange-500',
+            'bg-amber-500',
+            'bg-yellow-500',
+            'bg-lime-500',
+            'bg-green-500',
+            'bg-emerald-500',
+            'bg-teal-500',
+            'bg-cyan-500',
+            'bg-sky-500',
+            'bg-blue-500',
+            'bg-indigo-500',
+            'bg-violet-500',
+            'bg-fuchsia-500',
+            'bg-pink-500',
+            'bg-rose-500',
           ];
           const randomColor = colors[Math.floor(Math.random() * colors.length)];
-          const capitalizedName =
-            trimmedName.charAt(0).toUpperCase() + trimmedName.slice(1);
+          const capitalizedName = trimmedName.charAt(0).toUpperCase() + trimmedName.slice(1);
 
           const newCategoryData = {
             name: capitalizedName,
@@ -1879,7 +1517,7 @@ const App: React.FC = () => {
             finalCategoryId = newCategory.id;
           } catch (err) {
             showToast({
-              message: t("notifications.categories.createError", {
+              message: t('notifications.categories.createError', {
                 message: (err as Error).message,
               }),
             });
@@ -1888,22 +1526,15 @@ const App: React.FC = () => {
         }
       }
 
-      const generalCategory = categories.find(
-        (c) => c.name.toLowerCase() === "общие"
-      );
-      const defaultCategoryId = categories.length > 0 ? categories[0].id : "1";
+      const generalCategory = categories.find((c) => c.name.toLowerCase() === 'общие');
+      const defaultCategoryId = categories.length > 0 ? categories[0].id : '1';
       const targetCategoryId =
-        finalCategoryId ||
-        assistantCategory?.id ||
-        categoryToView?.id ||
-        generalCategory?.id ||
-        defaultCategoryId;
+        finalCategoryId || assistantCategory?.id || categoryToView?.id || generalCategory?.id || defaultCategoryId;
 
-      const targetCategory =
-        newCategory || categories.find((c) => c.id === targetCategoryId);
+      const targetCategory = newCategory || categories.find((c) => c.id === targetCategoryId);
 
       if (!targetCategory) {
-        console.error("Target category could not be determined.");
+        console.error('Target category could not be determined.');
         return;
       }
 
@@ -1921,8 +1552,7 @@ const App: React.FC = () => {
         // FIX: Use `proposed.learning` instead of `proposed.learning`
         // Use `proposed.learning` instead of `proposed.learning`
         const normalizedProposed = proposed.learning.trim().toLowerCase();
-        const existingPhrase =
-          normalizedExistingPhrases.get(normalizedProposed);
+        const existingPhrase = normalizedExistingPhrases.get(normalizedProposed);
 
         if (existingPhrase && existingPhrase.category !== targetCategory.id) {
           duplicatesFound.push({ existingPhrase, proposedCard: proposed });
@@ -1946,21 +1576,21 @@ const App: React.FC = () => {
       const addedCount = await addCardsToCategory(newCards, targetCategory);
 
       const skippedCount = proposedCards.length - addedCount;
-      const baseToastMessage = t("notifications.cards.bulkAdded", {
+      const baseToastMessage = t('notifications.cards.bulkAdded', {
         count: addedCount,
       });
       const toastMessage =
         skippedCount > 0
-          ? `${baseToastMessage} ${t("notifications.cards.bulkSkipped", {
-            count: skippedCount,
-          })}`
+          ? `${baseToastMessage} ${t('notifications.cards.bulkSkipped', {
+              count: skippedCount,
+            })}`
           : baseToastMessage;
       showToast({ message: toastMessage });
 
       if (categoryToView || assistantCategory) {
         /* stay in view */
       } else {
-        setView("list");
+        setView('list');
         setHighlightedPhraseId(null);
       }
     },
@@ -1980,13 +1610,11 @@ const App: React.FC = () => {
   const handleCreateCardFromWord = useCallback(
     async (phraseData: { learning: string; native: string }) => {
       const alreadyExists = allPhrases.some(
-        (p) =>
-          p.text.learning.trim().toLowerCase() ===
-          phraseData.learning.trim().toLowerCase()
+        (p) => p.text.learning.trim().toLowerCase() === phraseData.learning.trim().toLowerCase()
       );
       if (alreadyExists) {
         showToast({
-          message: t("notifications.phrases.exists", {
+          message: t('notifications.phrases.exists', {
             phrase: phraseData.learning,
           }),
         });
@@ -1994,11 +1622,8 @@ const App: React.FC = () => {
       }
 
       try {
-        const generalCategory = categories.find(
-          (c) => c.name.toLowerCase() === "общие"
-        );
-        const defaultCategoryId =
-          categories.length > 0 ? categories[0].id : "1";
+        const generalCategory = categories.find((c) => c.name.toLowerCase() === 'общие');
+        const defaultCategoryId = categories.length > 0 ? categories[0].id : '1';
         const categoryId = generalCategory?.id || defaultCategoryId;
 
         // FIX: The Phrase type requires a nested `text` object.
@@ -2008,18 +1633,15 @@ const App: React.FC = () => {
         };
         const newPhrase = await backendService.createPhrase(phraseToCreate);
 
-        updateAndSavePhrases((prev) => [
-          { ...newPhrase, isNew: true },
-          ...prev,
-        ]);
+        updateAndSavePhrases((prev) => [{ ...newPhrase, isNew: true }, ...prev]);
         showToast({
-          message: t("notifications.phrases.created", {
+          message: t('notifications.phrases.created', {
             phrase: phraseData.learning,
           }),
         });
       } catch (err) {
         showToast({
-          message: t("notifications.phrases.createCardError", {
+          message: t('notifications.phrases.createCardError', {
             message: (err as Error).message,
           }),
         });
@@ -2031,30 +1653,23 @@ const App: React.FC = () => {
   const handleCreateCardFromSelection = useCallback(
     async (learningText: string): Promise<boolean> => {
       if (!apiProvider) {
-        showToast({ message: t("notifications.ai.providerUnavailable") });
+        showToast({ message: t('notifications.ai.providerUnavailable') });
         return false;
       }
       const alreadyExists = allPhrases.some(
-        (p) =>
-          p.text.learning.trim().toLowerCase() ===
-          learningText.trim().toLowerCase()
+        (p) => p.text.learning.trim().toLowerCase() === learningText.trim().toLowerCase()
       );
       if (alreadyExists) {
         showToast({
-          message: t("notifications.phrases.exists", { phrase: learningText }),
+          message: t('notifications.phrases.exists', { phrase: learningText }),
         });
         return false;
       }
 
       try {
-        const { native } = await callApiWithFallback((provider) =>
-          provider.translateLearningToNative(learningText)
-        );
-        const generalCategory = categories.find(
-          (c) => c.name.toLowerCase() === "общие"
-        );
-        const defaultCategoryId =
-          categories.length > 0 ? categories[0].id : "1";
+        const { native } = await callApiWithFallback((provider) => provider.translateLearningToNative(learningText));
+        const generalCategory = categories.find((c) => c.name.toLowerCase() === 'общие');
+        const defaultCategoryId = categories.length > 0 ? categories[0].id : '1';
         const categoryId = generalCategory?.id || defaultCategoryId;
 
         // FIX: The Phrase type requires a nested `text` object.
@@ -2064,30 +1679,20 @@ const App: React.FC = () => {
         };
         const newPhrase = await backendService.createPhrase(phraseToCreate);
 
-        updateAndSavePhrases((prev) => [
-          { ...newPhrase, isNew: true },
-          ...prev,
-        ]);
+        updateAndSavePhrases((prev) => [{ ...newPhrase, isNew: true }, ...prev]);
         showToast({
-          message: t("notifications.phrases.created", { phrase: learningText }),
+          message: t('notifications.phrases.created', { phrase: learningText }),
         });
         return true;
       } catch (error) {
-        console.error("Failed to create card from selection:", error);
+        console.error('Failed to create card from selection:', error);
         showToast({
-          message: t("notifications.phrases.createCardGenericError"),
+          message: t('notifications.phrases.createCardGenericError'),
         });
         return false;
       }
     },
-    [
-      allPhrases,
-      categories,
-      updateAndSavePhrases,
-      showToast,
-      callApiWithFallback,
-      apiProvider,
-    ]
+    [allPhrases, categories, updateAndSavePhrases, showToast, callApiWithFallback, apiProvider]
   );
 
   const handleOpenImproveModal = (phrase: Phrase) => {
@@ -2100,28 +1705,24 @@ const App: React.FC = () => {
     setIsImproveModalOpen(false);
     setPhraseToDiscuss(phraseForDiscussion);
     setDiscussInitialMessage(
-      "Давай обсудим, можно ли эту фразу улучшить и правильно, если она звучит с точки зрения носителя языка"
+      'Давай обсудим, можно ли эту фразу улучшить и правильно, если она звучит с точки зрения носителя языка'
     );
     setIsDiscussModalOpen(true);
   };
 
   const handleGenerateImprovement = useCallback(
     (originalNative: string, currentLearning: string) =>
-      callApiWithFallback((provider) =>
-        provider.improvePhrase(originalNative, currentLearning)
-      ),
+      callApiWithFallback((provider) => provider.improvePhrase(originalNative, currentLearning)),
     [callApiWithFallback]
   );
 
   const handleTranslatePhrase = useCallback(
-    (native: string) =>
-      callApiWithFallback((provider) => provider.translatePhrase(native)),
+    (native: string) => callApiWithFallback((provider) => provider.translatePhrase(native)),
     [callApiWithFallback]
   );
 
   const handleDiscussTranslation = useCallback(
-    (request: any) =>
-      callApiWithFallback((provider) => provider.discussTranslation(request)),
+    (request: any) => callApiWithFallback((provider) => provider.discussTranslation(request)),
     [callApiWithFallback]
   );
   const handleUpdateDiscussHistory = useCallback(
@@ -2129,12 +1730,9 @@ const App: React.FC = () => {
       setDiscussCache((prev) => {
         const newCache = { ...prev, [phraseId]: messages };
         try {
-          localStorage.setItem(
-            DISCUSS_CHAT_CACHE_KEY(userId, languageProfile),
-            JSON.stringify(newCache)
-          );
+          localStorage.setItem(DISCUSS_CHAT_CACHE_KEY(userId, languageProfile), JSON.stringify(newCache));
         } catch (error) {
-          console.error("Failed to save discuss cache", error);
+          console.error('Failed to save discuss cache', error);
         }
         return newCache;
       });
@@ -2143,18 +1741,11 @@ const App: React.FC = () => {
   );
 
   const handleFindDuplicates = useCallback(
-    () =>
-      callApiWithFallback((provider) =>
-        provider.findDuplicatePhrases(allPhrases)
-      ),
+    () => callApiWithFallback((provider) => provider.findDuplicatePhrases(allPhrases)),
     [callApiWithFallback, allPhrases]
   );
 
-  const handlePhraseImproved = async (
-    phraseId: string,
-    newLearning: string,
-    newNative?: string
-  ) => {
+  const handlePhraseImproved = async (phraseId: string, newLearning: string, newNative?: string) => {
     const originalPhrase = allPhrases.find((p) => p.id === phraseId);
     if (!originalPhrase) return;
     // FIX: Use nested text object to match Phrase type
@@ -2167,33 +1758,26 @@ const App: React.FC = () => {
     };
     try {
       await backendService.updatePhrase(updatedPhrase);
-      updateAndSavePhrases((prev) =>
-        prev.map((p) => (p.id === phraseId ? updatedPhrase : p))
-      );
+      updateAndSavePhrases((prev) => prev.map((p) => (p.id === phraseId ? updatedPhrase : p)));
     } catch (err) {
       showToast({
-        message: t("notifications.updateError", {
+        message: t('notifications.updateError', {
           message: (err as Error).message,
         }),
       });
     }
   };
 
-  const handleSavePhraseEdits = async (
-    phraseId: string,
-    updates: Partial<Omit<Phrase, "id">>
-  ) => {
+  const handleSavePhraseEdits = async (phraseId: string, updates: Partial<Omit<Phrase, 'id'>>) => {
     const originalPhrase = allPhrases.find((p) => p.id === phraseId);
     if (!originalPhrase) return;
     const updatedPhrase = { ...originalPhrase, ...updates };
     try {
       await backendService.updatePhrase(updatedPhrase);
-      updateAndSavePhrases((prev) =>
-        prev.map((p) => (p.id === phraseId ? updatedPhrase : p))
-      );
+      updateAndSavePhrases((prev) => prev.map((p) => (p.id === phraseId ? updatedPhrase : p)));
     } catch (err) {
       showToast({
-        message: t("notifications.saveError", {
+        message: t('notifications.saveError', {
           message: (err as Error).message,
         }),
       });
@@ -2220,15 +1804,13 @@ const App: React.FC = () => {
     if (phraseToDelete) {
       try {
         await backendService.deletePhrase(phraseToDelete.id);
-        updateAndSavePhrases((prev) =>
-          prev.filter((p) => p.id !== phraseToDelete.id)
-        );
+        updateAndSavePhrases((prev) => prev.filter((p) => p.id !== phraseToDelete.id));
         if (currentPracticePhrase?.id === phraseToDelete.id) {
           setCurrentPracticePhrase(null); // Clear from practice view if it was active
         }
       } catch (err) {
         showToast({
-          message: t("notifications.deleteError", {
+          message: t('notifications.deleteError', {
             message: (err as Error).message,
           }),
         });
@@ -2244,37 +1826,30 @@ const App: React.FC = () => {
     setCurrentPracticePhrase(phraseToPractice);
     setIsPracticeAnswerRevealed(false);
     setCardHistory([]);
-    setView("practice");
+    setView('practice');
   };
 
   const handleStartPracticeWithCategory = (categoryId: PhraseCategory) => {
     setPracticeCategoryFilter(categoryId);
-    setView("practice");
+    setView('practice');
   };
 
   const handleGoToListFromPractice = (phrase: Phrase) => {
-    setView("list");
+    setView('list');
     setHighlightedPhraseId(phrase.id);
   };
 
   const handleOpenDiscussModal = (phrase: Phrase) => {
     setPhraseToDiscuss(phrase);
     setDiscussInitialMessage(
-      "Проанализируй, пожалуйста, текущий перевод. Насколько он точен и естественен? Есть ли более удачные альтернативы?"
+      'Проанализируй, пожалуйста, текущий перевод. Насколько он точен и естественен? Есть ли более удачные альтернативы?'
     );
     setIsDiscussModalOpen(true);
   };
 
-  const handleDiscussionAccept = (suggestion: {
-    native: string;
-    learning: string;
-  }) => {
+  const handleDiscussionAccept = (suggestion: { native: string; learning: string }) => {
     if (phraseToDiscuss) {
-      handlePhraseImproved(
-        phraseToDiscuss.id,
-        suggestion.learning,
-        suggestion.native
-      );
+      handlePhraseImproved(phraseToDiscuss.id, suggestion.learning, suggestion.native);
     }
     setIsDiscussModalOpen(false);
     setDiscussInitialMessage(undefined);
@@ -2290,7 +1865,7 @@ const App: React.FC = () => {
     async (phrase: Phrase) => {
       if (settings.soundEffects) playCorrectSound();
       // FIX: Await the async function to get the updated phrase before setting state.
-      const updatedPhrase = await updatePhraseMasteryAndCache(phrase, "know");
+      const updatedPhrase = await updatePhraseMasteryAndCache(phrase, 'know');
       if (currentPracticePhrase?.id === phrase.id) {
         setCurrentPracticePhrase(updatedPhrase);
       }
@@ -2323,12 +1898,10 @@ const App: React.FC = () => {
       const updatedPhrase = { ...originalPhrase, category: newCategoryId };
       try {
         await backendService.updatePhrase(updatedPhrase);
-        updateAndSavePhrases((prev) =>
-          prev.map((p) => (p.id === phraseId ? updatedPhrase : p))
-        );
+        updateAndSavePhrases((prev) => prev.map((p) => (p.id === phraseId ? updatedPhrase : p)));
       } catch (err) {
         showToast({
-          message: t("notifications.moveError", {
+          message: t('notifications.moveError', {
             message: (err as Error).message,
           }),
         });
@@ -2356,23 +1929,17 @@ const App: React.FC = () => {
     setIsCategoryFormModalOpen(true);
   };
 
-  const handleSaveCategory = async (categoryData: {
-    name: string;
-    color: string;
-  }): Promise<boolean> => {
+  const handleSaveCategory = async (categoryData: { name: string; color: string }): Promise<boolean> => {
     const trimmedName = categoryData.name;
     const lowercasedName = trimmedName.toLowerCase();
-    const capitalizedName =
-      trimmedName.charAt(0).toUpperCase() + trimmedName.slice(1);
+    const capitalizedName = trimmedName.charAt(0).toUpperCase() + trimmedName.slice(1);
     const finalCategoryData = { ...categoryData, name: capitalizedName };
 
     try {
       if (categoryToEdit) {
         // Editing existing category
         const isDuplicate = categories.some(
-          (c) =>
-            c.id !== categoryToEdit.id &&
-            c.name.trim().toLowerCase() === lowercasedName
+          (c) => c.id !== categoryToEdit.id && c.name.trim().toLowerCase() === lowercasedName
         );
         if (isDuplicate) {
           return false;
@@ -2382,28 +1949,22 @@ const App: React.FC = () => {
           ...categoryToEdit,
           ...finalCategoryData,
         });
-        updateAndSaveCategories((prev) =>
-          prev.map((c) => (c.id === updatedCategory.id ? updatedCategory : c))
-        );
+        updateAndSaveCategories((prev) => prev.map((c) => (c.id === updatedCategory.id ? updatedCategory : c)));
         setIsCategoryFormModalOpen(false);
         setCategoryToEdit(null);
         setIsCategoryManagerModalOpen(true);
       } else {
         // Adding new category
-        const isDuplicate = categories.some(
-          (c) => c.name.trim().toLowerCase() === lowercasedName
-        );
+        const isDuplicate = categories.some((c) => c.name.trim().toLowerCase() === lowercasedName);
         if (isDuplicate) {
           return false;
         }
 
-        const newCategoryData: Omit<Category, "id"> = {
+        const newCategoryData: Omit<Category, 'id'> = {
           ...finalCategoryData,
           isFoundational: false,
         };
-        const newCategory = await backendService.createCategory(
-          newCategoryData
-        );
+        const newCategory = await backendService.createCategory(newCategoryData);
 
         updateAndSaveCategories((prev) => [...prev, newCategory]);
         handleSettingsChange({
@@ -2415,13 +1976,12 @@ const App: React.FC = () => {
         setIsCategoryFormModalOpen(false);
         setCategoryToEdit(null);
         setCategoryToAutoFill(newCategory);
-        if (isAddingCategoryFromPractice)
-          setIsAddingCategoryFromPractice(false);
+        if (isAddingCategoryFromPractice) setIsAddingCategoryFromPractice(false);
       }
       return true; // Signal success
     } catch (err) {
       showToast({
-        message: t("notifications.categories.saveError", {
+        message: t('notifications.categories.saveError', {
           message: (err as Error).message,
         }),
       });
@@ -2429,16 +1989,10 @@ const App: React.FC = () => {
     }
   };
 
-  const handleConfirmDeleteCategory = async ({
-    migrationTargetId,
-  }: {
-    migrationTargetId: string | null;
-  }) => {
+  const handleConfirmDeleteCategory = async ({ migrationTargetId }: { migrationTargetId: string | null }) => {
     if (!categoryToDelete) return;
 
-    const phrasesToProcess = allPhrases.filter(
-      (p) => p.category === categoryToDelete.id
-    );
+    const phrasesToProcess = allPhrases.filter((p) => p.category === categoryToDelete.id);
     const delay = 250; // ms between API calls to avoid rate limiting
 
     // Immediately close the confirmation modal and show progress in toasts
@@ -2451,7 +2005,7 @@ const App: React.FC = () => {
         if (migrationTargetId) {
           // --- Move phrases ---
           showToast({
-            message: t("notifications.cards.moving", {
+            message: t('notifications.cards.moving', {
               count: phrasesToProcess.length,
             }),
           });
@@ -2464,17 +2018,13 @@ const App: React.FC = () => {
             if (i < phrasesToProcess.length - 1) await sleep(delay);
           }
           updateAndSavePhrases((prev) =>
-            prev.map((p) =>
-              p.category === categoryIdToDelete
-                ? { ...p, category: migrationTargetId }
-                : p
-            )
+            prev.map((p) => (p.category === categoryIdToDelete ? { ...p, category: migrationTargetId } : p))
           );
-          showToast({ message: t("notifications.cards.moveSuccess") });
+          showToast({ message: t('notifications.cards.moveSuccess') });
         } else {
           // --- Delete phrases ---
           showToast({
-            message: t("notifications.cards.deleting", {
+            message: t('notifications.cards.deleting', {
               count: phrasesToProcess.length,
             }),
           });
@@ -2483,10 +2033,8 @@ const App: React.FC = () => {
             await backendService.deletePhrase(phrase.id);
             if (i < phrasesToProcess.length - 1) await sleep(delay);
           }
-          updateAndSavePhrases((prev) =>
-            prev.filter((p) => p.category !== categoryIdToDelete)
-          );
-          showToast({ message: t("notifications.cards.deleteSuccess") });
+          updateAndSavePhrases((prev) => prev.filter((p) => p.category !== categoryIdToDelete));
+          showToast({ message: t('notifications.cards.deleteSuccess') });
         }
       }
 
@@ -2494,21 +2042,19 @@ const App: React.FC = () => {
       await backendService.deleteCategory(categoryIdToDelete, null);
 
       // Update local state for categories and settings
-      updateAndSaveCategories((prev) =>
-        prev.filter((c) => c.id !== categoryIdToDelete)
-      );
+      updateAndSaveCategories((prev) => prev.filter((c) => c.id !== categoryIdToDelete));
       const newEnabled = { ...settings.enabledCategories };
       delete newEnabled[categoryIdToDelete];
       handleSettingsChange({ enabledCategories: newEnabled });
 
       showToast({
-        message: t("notifications.categories.deleteSuccess", {
+        message: t('notifications.categories.deleteSuccess', {
           name: categoryName,
         }),
       });
     } catch (err) {
       showToast({
-        message: t("notifications.deleteError", {
+        message: t('notifications.deleteError', {
           message: (err as Error).message,
         }),
       });
@@ -2516,7 +2062,7 @@ const App: React.FC = () => {
   };
 
   const handleAddPhraseFromCategoryDetail = () => {
-    handleOpenAddPhraseModal({ language: "ru", autoSubmit: true });
+    handleOpenAddPhraseModal({ language: 'ru', autoSubmit: true });
   };
 
   const handleOpenCategoryAssistant = (category: Category) => {
@@ -2532,17 +2078,12 @@ const App: React.FC = () => {
     setAutoFillingCategory(category);
 
     try {
-      const proposedCards = await handleGenerateTopicCards(
-        category.name.replace(/^!/, "").trim()
-      );
+      const proposedCards = await handleGenerateTopicCards(category.name.replace(/^!/, '').trim());
       setProposedCardsForFill(proposedCards);
       setIsAutoFillPreviewOpen(true);
     } catch (err) {
       showToast({
-        message:
-          err instanceof Error
-            ? err.message
-            : t("notifications.cards.generateError"),
+        message: err instanceof Error ? err.message : t('notifications.cards.generateError'),
       });
       setAutoFillingCategory(null);
     }
@@ -2553,16 +2094,13 @@ const App: React.FC = () => {
     setIsRefining(true);
     try {
       const proposedCards = await handleGenerateTopicCards(
-        autoFillingCategory.name.replace(/^!/, "").trim(),
+        autoFillingCategory.name.replace(/^!/, '').trim(),
         refinement
       );
       setProposedCardsForFill(proposedCards);
     } catch (err) {
       showToast({
-        message:
-          err instanceof Error
-            ? err.message
-            : t("notifications.cards.generateError"),
+        message: err instanceof Error ? err.message : t('notifications.cards.generateError'),
       });
     } finally {
       setIsRefining(false);
@@ -2570,18 +2108,13 @@ const App: React.FC = () => {
   };
 
   const addCardsToCategory = useCallback(
-    async (
-      cards: ProposedCard[],
-      targetCategory: Category
-    ): Promise<number> => {
+    async (cards: ProposedCard[], targetCategory: Category): Promise<number> => {
       let addedCount = 0;
       // FIX: Map ProposedCard to the correct Phrase structure before creating
       const phrasesToAdd = cards.map((p) => ({
         text: { native: p.native, learning: p.learning },
         category: targetCategory.id,
-        ...(p.romanization
-          ? { romanization: { learning: p.romanization } }
-          : {}),
+        ...(p.romanization ? { romanization: { learning: p.romanization } } : {}),
       }));
       const createdPhrases: Phrase[] = [];
 
@@ -2594,22 +2127,19 @@ const App: React.FC = () => {
           addedCount++;
         } catch (err) {
           const errorMessage = (err as Error).message;
-          console.error(
-            "Failed to create a card during bulk add:",
-            errorMessage
-          );
+          console.error('Failed to create a card during bulk add:', errorMessage);
           // FIX: Use `phrase.text.learning` to display the correct property in the toast message
           // Use `phrase.text.learning` to display the correct property in the toast message
           showToast({
-            message: t("notifications.cards.addFailed", {
+            message: t('notifications.cards.addFailed', {
               phrase: phrase.text.learning,
               error: errorMessage,
             }),
           });
 
           // If rate-limited, stop trying to add more cards.
-          if (errorMessage.toLowerCase().includes("too many requests")) {
-            showToast({ message: t("notifications.cards.rateLimit") });
+          if (errorMessage.toLowerCase().includes('too many requests')) {
+            showToast({ message: t('notifications.cards.rateLimit') });
             break;
           }
         }
@@ -2641,13 +2171,9 @@ const App: React.FC = () => {
       selectedCards.forEach((proposed) => {
         // FIX: Use `proposed.learning` instead of `proposed.learning`
         const normalizedProposed = proposed.learning.trim().toLowerCase();
-        const existingPhrase =
-          normalizedExistingPhrases.get(normalizedProposed);
+        const existingPhrase = normalizedExistingPhrases.get(normalizedProposed);
 
-        if (
-          existingPhrase &&
-          existingPhrase.category !== autoFillingCategory.id
-        ) {
+        if (existingPhrase && existingPhrase.category !== autoFillingCategory.id) {
           duplicatesFound.push({ existingPhrase, proposedCard: proposed });
         } else if (!existingPhrase) {
           newCards.push(proposed);
@@ -2664,12 +2190,9 @@ const App: React.FC = () => {
         setIsAutoFillPreviewOpen(false);
         setAutoFillingCategory(null);
       } else {
-        const addedCount = await addCardsToCategory(
-          newCards,
-          autoFillingCategory
-        );
+        const addedCount = await addCardsToCategory(newCards, autoFillingCategory);
         showToast({
-          message: t("notifications.cards.addedToCategory", {
+          message: t('notifications.cards.addedToCategory', {
             count: addedCount,
             category: autoFillingCategory.name,
           }),
@@ -2693,7 +2216,7 @@ const App: React.FC = () => {
       }
       const addedCount = await addCardsToCategory(newCards, targetCategory);
       showToast({
-        message: t("notifications.cards.movedAndAdded", {
+        message: t('notifications.cards.movedAndAdded', {
           moved: phraseIdsToMove.length,
           added: addedCount,
           category: targetCategory.name,
@@ -2701,7 +2224,7 @@ const App: React.FC = () => {
       });
     } catch (err) {
       showToast({
-        message: t("notifications.genericError", {
+        message: t('notifications.genericError', {
           message: (err as Error).message,
         }),
       });
@@ -2712,13 +2235,10 @@ const App: React.FC = () => {
     }
   };
 
-  const handleAddOnlyNewFromReview = async (
-    newCards: ProposedCard[],
-    targetCategory: Category
-  ) => {
+  const handleAddOnlyNewFromReview = async (newCards: ProposedCard[], targetCategory: Category) => {
     const addedCount = await addCardsToCategory(newCards, targetCategory);
     showToast({
-      message: t("notifications.cards.addedWithDuplicatesSkipped", {
+      message: t('notifications.cards.addedWithDuplicatesSkipped', {
         count: addedCount,
         category: targetCategory.name,
       }),
@@ -2730,10 +2250,7 @@ const App: React.FC = () => {
   };
 
   // New handler for opening the modal
-  const handleOpenConfirmDeletePhrases = (
-    phrases: Phrase[],
-    sourceCategory: Category
-  ) => {
+  const handleOpenConfirmDeletePhrases = (phrases: Phrase[], sourceCategory: Category) => {
     setPhrasesForDeletion({ phrases, sourceCategory });
     setIsConfirmDeletePhrasesModalOpen(true);
     setIsCategoryAssistantModalOpen(false); // Close assistant modal
@@ -2754,14 +2271,12 @@ const App: React.FC = () => {
     }
 
     if (deletedCount > 0) {
-      updateAndSavePhrases((prev) =>
-        prev.filter((p) => !phraseIdsSet.has(p.id))
-      );
+      updateAndSavePhrases((prev) => prev.filter((p) => !phraseIdsSet.has(p.id)));
       if (currentPracticePhrase && phraseIdsSet.has(currentPracticePhrase.id)) {
         setCurrentPracticePhrase(null);
       }
       showToast({
-        message: t("notifications.cards.deletedCount", { count: deletedCount }),
+        message: t('notifications.cards.deletedCount', { count: deletedCount }),
       });
     }
 
@@ -2770,10 +2285,7 @@ const App: React.FC = () => {
   };
 
   // New handler for moving multiple phrases
-  const handleConfirmMoveMultiplePhrases = async (
-    phraseIds: string[],
-    targetCategoryId: string
-  ) => {
+  const handleConfirmMoveMultiplePhrases = async (phraseIds: string[], targetCategoryId: string) => {
     let movedCount = 0;
     for (const phraseId of phraseIds) {
       try {
@@ -2788,10 +2300,9 @@ const App: React.FC = () => {
     if (movedCount > 0) {
       const targetCategory = categories.find((c) => c.id === targetCategoryId);
       showToast({
-        message: t("notifications.cards.movedToCategory", {
+        message: t('notifications.cards.movedToCategory', {
           count: movedCount,
-          category:
-            targetCategory?.name ?? t("notifications.cards.otherCategory"),
+          category: targetCategory?.name ?? t('notifications.cards.otherCategory'),
         }),
       });
     }
@@ -2802,50 +2313,41 @@ const App: React.FC = () => {
 
   // --- Practice Page Logic ---
   const unmasteredPhrases = useMemo(
-    () =>
-      allPhrases.filter(
-        (p) => p && !p.isMastered && settings.enabledCategories[p.category]
-      ),
+    () => allPhrases.filter((p) => p && !p.isMastered && settings.enabledCategories[p.category]),
     [allPhrases, settings.enabledCategories]
   );
 
   const unmasteredCountsByCategory = useMemo(() => {
-    return unmasteredPhrases.reduce((acc, phrase) => {
-      acc[phrase.category] = (acc[phrase.category] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    return unmasteredPhrases.reduce(
+      (acc, phrase) => {
+        acc[phrase.category] = (acc[phrase.category] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
   }, [unmasteredPhrases]);
 
   const practicePool = useMemo(() => {
-    if (practiceCategoryFilter === "all") {
+    if (practiceCategoryFilter === 'all') {
       return unmasteredPhrases;
     }
-    return unmasteredPhrases.filter(
-      (p) => p.category === practiceCategoryFilter
-    );
+    return unmasteredPhrases.filter((p) => p.category === practiceCategoryFilter);
   }, [unmasteredPhrases, practiceCategoryFilter]);
 
   const practiceAnalyticsSummary = useMemo(() => {
-    return buildPracticeAnalyticsSummary(
-      allPhrases,
-      categories,
-      practiceReviewLog
-    );
+    return buildPracticeAnalyticsSummary(allPhrases, categories, practiceReviewLog);
   }, [allPhrases, categories, practiceReviewLog]);
 
-  const changePracticePhrase = useCallback(
-    (nextPhrase: Phrase | null, direction: AnimationDirection) => {
-      setIsPracticeAnswerRevealed(false);
-      setPracticeCardEvaluated(false);
-      if (!nextPhrase) {
-        setCurrentPracticePhrase(null);
-        return;
-      }
-      setPracticeAnimationState({ key: nextPhrase.id, direction });
-      setCurrentPracticePhrase(nextPhrase);
-    },
-    []
-  );
+  const changePracticePhrase = useCallback((nextPhrase: Phrase | null, direction: AnimationDirection) => {
+    setIsPracticeAnswerRevealed(false);
+    setPracticeCardEvaluated(false);
+    if (!nextPhrase) {
+      setCurrentPracticePhrase(null);
+      return;
+    }
+    setPracticeAnimationState({ key: nextPhrase.id, direction });
+    setCurrentPracticePhrase(nextPhrase);
+  }, []);
 
   const isInitialFilterChange = useRef(true);
   useEffect(() => {
@@ -2853,21 +2355,19 @@ const App: React.FC = () => {
       return;
     }
 
-    if (view !== "practice" || isInitialFilterChange.current) {
+    if (view !== 'practice' || isInitialFilterChange.current) {
       isInitialFilterChange.current = false;
       return;
     }
 
     // A change in the filter should immediately present a new card from that category.
     const newPool =
-      practiceCategoryFilter === "all"
+      practiceCategoryFilter === 'all'
         ? unmasteredPhrases
-        : unmasteredPhrases.filter(
-          (p) => p.category === practiceCategoryFilter
-        );
+        : unmasteredPhrases.filter((p) => p.category === practiceCategoryFilter);
 
     const nextPhrase = srsService.selectNextPhrase(newPool, null); // Get a fresh card from the new pool
-    changePracticePhrase(nextPhrase, "right");
+    changePracticePhrase(nextPhrase, 'right');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [practiceCategoryFilter, view]);
 
@@ -2881,17 +2381,14 @@ const App: React.FC = () => {
       });
     }
 
-    const nextPhrase = srsService.selectNextPhrase(
-      practicePool,
-      currentPracticePhrase?.id ?? null
-    );
+    const nextPhrase = srsService.selectNextPhrase(practicePool, currentPracticePhrase?.id ?? null);
 
     if (nextPhrase) {
-      changePracticePhrase(nextPhrase, "right");
+      changePracticePhrase(nextPhrase, 'right');
     } else {
       // No due or new cards. Clear view to show loading/empty state.
       // Automatic phrase generation was removed as per user request.
-      changePracticePhrase(null, "right");
+      changePracticePhrase(null, 'right');
     }
   }, [practicePool, currentPracticePhrase, changePracticePhrase]);
 
@@ -2900,27 +2397,13 @@ const App: React.FC = () => {
       specificPhraseRequestedRef.current = false;
       return;
     }
-    if (
-      !isLoading &&
-      allPhrases.length > 0 &&
-      !currentPracticePhrase &&
-      view === "practice"
-    ) {
+    if (!isLoading && allPhrases.length > 0 && !currentPracticePhrase && view === 'practice') {
       selectNextPracticePhrase();
     }
-  }, [
-    isLoading,
-    allPhrases,
-    currentPracticePhrase,
-    selectNextPracticePhrase,
-    view,
-  ]);
+  }, [isLoading, allPhrases, currentPracticePhrase, selectNextPracticePhrase, view]);
 
   useEffect(() => {
-    if (
-      currentPracticePhrase &&
-      !allPhrases.some((p) => p && p.id === currentPracticePhrase.id)
-    ) {
+    if (currentPracticePhrase && !allPhrases.some((p) => p && p.id === currentPracticePhrase.id)) {
       selectNextPracticePhrase();
     }
   }, [allPhrases, currentPracticePhrase, selectNextPracticePhrase]);
@@ -2932,12 +2415,12 @@ const App: React.FC = () => {
   }, [currentPracticePhrase, isVoiceWorkspaceModalOpen]);
 
   const transitionToNext = useCallback(
-    (direction: AnimationDirection = "right") => {
+    (direction: AnimationDirection = 'right') => {
       if (practiceIsExitingRef.current) return;
 
       practiceIsExitingRef.current = true;
       setTimeout(() => {
-        if (direction === "right") {
+        if (direction === 'right') {
           selectNextPracticePhrase();
         }
         practiceIsExitingRef.current = false;
@@ -2947,26 +2430,19 @@ const App: React.FC = () => {
   );
 
   const handlePracticeUpdateMastery = useCallback(
-    async (action: "know" | "forgot" | "dont_know"): Promise<boolean> => {
+    async (action: 'know' | 'forgot' | 'dont_know'): Promise<boolean> => {
       if (!currentPracticePhrase || practiceIsExitingRef.current) return false;
 
       handleLogMasteryButtonUsage(action);
       const originalPhrase = currentPracticePhrase;
-      const srsUpdatedPhrase = srsService.updatePhraseMastery(
-        originalPhrase,
-        action,
-        categories
-      );
+      const srsUpdatedPhrase = srsService.updatePhraseMastery(originalPhrase, action, categories);
 
-      if (action === "forgot" || action === "dont_know") {
+      if (action === 'forgot' || action === 'dont_know') {
         const wasLeech = srsService.isLeech(originalPhrase);
         const isNowLeech = srsService.isLeech(srsUpdatedPhrase);
 
         if (!wasLeech && isNowLeech) {
-          const backendUpdatedPhrase = await updatePhraseMasteryAndCache(
-            originalPhrase,
-            action
-          );
+          const backendUpdatedPhrase = await updatePhraseMasteryAndCache(originalPhrase, action);
           if (settings.soundEffects) playIncorrectSound();
           setLeechPhrase(backendUpdatedPhrase);
           setIsLeechModalOpen(true);
@@ -2974,19 +2450,16 @@ const App: React.FC = () => {
         }
       }
 
-      const finalPhraseState = await updatePhraseMasteryAndCache(
-        originalPhrase,
-        action
-      );
+      const finalPhraseState = await updatePhraseMasteryAndCache(originalPhrase, action);
 
       // При "Знаю" не переворачиваем карточку - пользователь и так знает ответ
-      if (action !== "know") {
+      if (action !== 'know') {
         setIsPracticeAnswerRevealed(true);
       }
-      setPracticeCardEvaluated(action === "know");
+      setPracticeCardEvaluated(action === 'know');
       setCurrentPracticePhrase(finalPhraseState);
 
-      if (action === "know") {
+      if (action === 'know') {
         if (settings.soundEffects) playCorrectSound();
       } else {
         if (settings.soundEffects) playIncorrectSound();
@@ -3004,13 +2477,13 @@ const App: React.FC = () => {
   );
 
   const handleLeechAction = useCallback(
-    async (phrase: Phrase, action: "continue" | "reset" | "postpone") => {
+    async (phrase: Phrase, action: 'continue' | 'reset' | 'postpone') => {
       let updatedPhrase = { ...phrase };
       const now = Date.now();
 
-      if (action === "continue") {
+      if (action === 'continue') {
         updatedPhrase.nextReviewAt = now + 10 * 60 * 1000; // 10 minutes
-      } else if (action === "reset") {
+      } else if (action === 'reset') {
         updatedPhrase = {
           ...phrase,
           masteryLevel: 0,
@@ -3028,12 +2501,10 @@ const App: React.FC = () => {
 
       try {
         await backendService.updatePhrase(updatedPhrase);
-        updateAndSavePhrases((prev) =>
-          prev.map((p) => (p.id === updatedPhrase.id ? updatedPhrase : p))
-        );
+        updateAndSavePhrases((prev) => prev.map((p) => (p.id === updatedPhrase.id ? updatedPhrase : p)));
       } catch (err) {
         showToast({
-          message: t("notifications.genericError", {
+          message: t('notifications.genericError', {
             message: (err as Error).message,
           }),
         });
@@ -3054,38 +2525,31 @@ const App: React.FC = () => {
       const prevPhrase = allPhrases.find((p) => p.id === lastPhraseId);
       if (prevPhrase) {
         setCardHistory((prev) => prev.slice(0, -1));
-        changePracticePhrase(prevPhrase, "left");
+        changePracticePhrase(prevPhrase, 'left');
       }
       practiceIsExitingRef.current = false;
     }, 250);
   }, [allPhrases, cardHistory, changePracticePhrase]);
   // --- End Practice Page Logic ---
 
-
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't interfere with typing in inputs
       const target = e.target as HTMLElement;
-      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") {
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
         return;
       }
 
       // Check if any modal is open by looking for a modal backdrop
-      const isModalOpen = !!document.querySelector(
-        ".fixed.inset-0.bg-black\\/60, .fixed.inset-0.bg-black\\/70"
-      );
+      const isModalOpen = !!document.querySelector('.fixed.inset-0.bg-black\\/60, .fixed.inset-0.bg-black\\/70');
       if (isModalOpen) return;
 
-      if (
-        view === "practice" &&
-        currentPracticePhrase &&
-        !practiceIsExitingRef.current
-      ) {
-        if (e.key === "ArrowRight") {
-          transitionToNext("right");
-        } else if (e.key === "ArrowLeft") {
+      if (view === 'practice' && currentPracticePhrase && !practiceIsExitingRef.current) {
+        if (e.key === 'ArrowRight') {
+          transitionToNext('right');
+        } else if (e.key === 'ArrowLeft') {
           handlePracticeSwipeRight();
-        } else if (e.key === " ") {
+        } else if (e.key === ' ') {
           // Space bar to flip
           e.preventDefault();
           if (!isPracticeAnswerRevealed) {
@@ -3095,30 +2559,24 @@ const App: React.FC = () => {
       }
     };
 
-    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown);
     return () => {
-      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [
-    view,
-    currentPracticePhrase,
-    isPracticeAnswerRevealed,
-    transitionToNext,
-    handlePracticeSwipeRight,
-  ]);
+  }, [view, currentPracticePhrase, isPracticeAnswerRevealed, transitionToNext, handlePracticeSwipeRight]);
 
   const getProviderDisplayName = () => {
-    if (!apiProvider) return "";
+    if (!apiProvider) return '';
     const name = apiProvider.getProviderName();
-    if (name.toLowerCase().includes("gemini")) return "Google Gemini";
-    if (name.toLowerCase().includes("deepseek")) return "DeepSeek";
+    if (name.toLowerCase().includes('gemini')) return 'Google Gemini';
+    if (name.toLowerCase().includes('deepseek')) return 'DeepSeek';
     return name;
   };
 
-  const handleOpenLibrary = () => setView("library");
+  const handleOpenLibrary = () => setView('library');
   const handleOpenBook = (bookId: number) => {
     setActiveBookId(bookId);
-    setView("reader");
+    setView('reader');
   };
 
   const handleOpenAccountDrawer = () => setIsAccountDrawerOpen(true);
@@ -3146,7 +2604,7 @@ const App: React.FC = () => {
         try {
           await backendService.updatePhrase(phrase);
         } catch (error) {
-          console.error("[AutoFix] Failed to update phrase:", phrase.id, error);
+          console.error('[AutoFix] Failed to update phrase:', phrase.id, error);
         }
       }
       // Update local state
@@ -3163,7 +2621,7 @@ const App: React.FC = () => {
 
   const renderCurrentView = () => {
     switch (view) {
-      case "practice":
+      case 'practice':
         return (
           <PracticePage
             currentPhrase={currentPracticePhrase}
@@ -3181,7 +2639,7 @@ const App: React.FC = () => {
             apiProviderAvailable={!!apiProvider}
             onUpdateMastery={handlePracticeUpdateMastery}
             onUpdateMasteryWithoutUI={handleUpdateMasteryWithoutUI}
-            onContinue={() => transitionToNext("right")}
+            onContinue={() => transitionToNext('right')}
             onSwipeRight={handlePracticeSwipeRight}
             onOpenChat={openChatForPhrase}
             onOpenDeepDive={handleOpenDeepDive}
@@ -3217,7 +2675,7 @@ const App: React.FC = () => {
             onOpenSmartImport={() => setIsSmartImportModalOpen(true)}
           />
         );
-      case "list":
+      case 'list':
         return (
           <PhraseListPage
             phrases={allPhrases}
@@ -3238,15 +2696,10 @@ const App: React.FC = () => {
             onOpenWordAnalysis={handleOpenWordAnalysis}
           />
         );
-      case "library":
+      case 'library':
         return <LibraryPage onOpenBook={handleOpenBook} />;
-      case "reader":
-        return activeBookId ? (
-          <ReaderPage
-            bookId={activeBookId}
-            onClose={() => setView("library")}
-          />
-        ) : null;
+      case 'reader':
+        return activeBookId ? <ReaderPage bookId={activeBookId} onClose={() => setView('library')} /> : null;
       default:
         return null;
     }
@@ -3261,17 +2714,15 @@ const App: React.FC = () => {
         onOpenAccountDrawer={handleOpenAccountDrawer}
       />
       <main
-        className={`overflow-hidden w-full flex-grow flex flex-col items-center  ${view === "practice" ? "justify-center" : ""
-          }`}
+        className={`overflow-hidden w-full flex-grow flex flex-col items-center  ${
+          view === 'practice' ? 'justify-center' : ''
+        }`}
       >
         {renderCurrentView()}
       </main>
-      {view === "practice" && !isLoading && (
+      {view === 'practice' && !isLoading && (
         <>
-          <PracticeChatFab
-            onClick={() => setIsPracticeChatModalOpen(true)}
-            disabled={!apiProvider}
-          />
+          <PracticeChatFab onClick={() => setIsPracticeChatModalOpen(true)} disabled={!apiProvider} />
           <ExpandingFab
             onAddPhrase={handleOpenAddPhraseModal}
             onSmartImport={() => setIsSmartImportModalOpen(true)}
@@ -3280,16 +2731,12 @@ const App: React.FC = () => {
           />
         </>
       )}
-      {view === "practice" ? (
+      {view === 'practice' ? (
         <footer className="text-center text-slate-500 py-4 text-sm h-6">
-          {isGenerating
-            ? "Идет генерация новых фраз..."
-            : apiProvider
-              ? ``
-              : ""}
+          {isGenerating ? 'Идет генерация новых фраз...' : apiProvider ? `` : ''}
         </footer>
       ) : (
-        ""
+        ''
       )}
       <Toast toast={toast} onDismiss={() => setToast(null)} />
       {chatContextPhrase && apiProviderType && (
@@ -3483,16 +2930,16 @@ const App: React.FC = () => {
           isOpen={isLeechModalOpen}
           phrase={leechPhrase}
           onImprove={(phrase) => {
-            handleLeechAction(phrase, "postpone");
+            handleLeechAction(phrase, 'postpone');
             handleOpenImproveModal(phrase);
           }}
           onDiscuss={(phrase) => {
-            handleLeechAction(phrase, "postpone");
+            handleLeechAction(phrase, 'postpone');
             handleOpenDiscussModal(phrase);
           }}
-          onContinue={(phrase) => handleLeechAction(phrase, "continue")}
-          onReset={(phrase) => handleLeechAction(phrase, "reset")}
-          onPostpone={(phrase) => handleLeechAction(phrase, "postpone")}
+          onContinue={(phrase) => handleLeechAction(phrase, 'continue')}
+          onReset={(phrase) => handleLeechAction(phrase, 'reset')}
+          onPostpone={(phrase) => handleLeechAction(phrase, 'postpone')}
         />
       )}
       <VoiceWorkspaceModal
@@ -3507,8 +2954,7 @@ const App: React.FC = () => {
           transitionToNext();
         }}
         onGeneratePhraseBuilderOptions={useCallback(
-          (phrase: Phrase) =>
-            callApiWithFallback((p) => p.generatePhraseBuilderOptions(phrase)),
+          (phrase: Phrase) => callApiWithFallback((p) => p.generatePhraseBuilderOptions(phrase)),
           [callApiWithFallback]
         )}
         onPracticeNext={() => selectNextPracticePhrase()}
@@ -3530,8 +2976,7 @@ const App: React.FC = () => {
 
               if (didSucceed && learningAssistantPhrase) {
                 const finalPhraseState =
-                  allPhrases.find((p) => p.id === learningAssistantPhrase.id) ||
-                  learningAssistantPhrase;
+                  allPhrases.find((p) => p.id === learningAssistantPhrase.id) || learningAssistantPhrase;
                 handleOpenVoiceWorkspace(finalPhraseState);
               } else if (shouldReturnToWorkspace && learningAssistantPhrase) {
                 handleOpenVoiceWorkspace(learningAssistantPhrase);
@@ -3640,17 +3085,14 @@ const App: React.FC = () => {
         onConfirm={handleStartAutoFill}
         category={categoryToAutoFill}
       />
-      <AutoFillLoadingModal
-        isOpen={!!autoFillingCategory && !isAutoFillPreviewOpen}
-        category={autoFillingCategory}
-      />
+      <AutoFillLoadingModal isOpen={!!autoFillingCategory && !isAutoFillPreviewOpen} category={autoFillingCategory} />
       <AutoFillPreviewModal
         isOpen={isAutoFillPreviewOpen}
         onClose={() => {
           setIsAutoFillPreviewOpen(false);
           setAutoFillingCategory(null);
         }}
-        categoryName={autoFillingCategory?.name || ""}
+        categoryName={autoFillingCategory?.name || ''}
         proposedCards={proposedCardsForFill}
         onConfirm={handleConfirmAutoFill}
         onRefine={handleRefineAutoFill}
@@ -3675,9 +3117,7 @@ const App: React.FC = () => {
               }
             }}
             category={assistantCategory}
-            phrases={allPhrases.filter(
-              (p) => p.category === assistantCategory.id
-            )}
+            phrases={allPhrases.filter((p) => p.category === assistantCategory.id)}
             onGetAssistantResponse={handleGetCategoryAssistantResponse}
             onAddCards={handleCreateProposedCards}
             cache={assistantCache}
@@ -3690,7 +3130,7 @@ const App: React.FC = () => {
             onOpenNounDeclension={handleOpenNounDeclension}
             onOpenAdjectiveDeclension={handleOpenAdjectiveDeclension}
             onTranslateLearningToNative={handleTranslateLearningToNative}
-            onGoToList={() => setView("list")}
+            onGoToList={() => setView('list')}
             onOpenConfirmDeletePhrases={handleOpenConfirmDeletePhrases}
           />
         </AiErrorBoundary>
@@ -3709,13 +3149,10 @@ const App: React.FC = () => {
           onConfirmMove={handleConfirmMoveMultiplePhrases}
         />
       )}
-      <AccountDrawer
-        isOpen={isAccountDrawerOpen}
-        onClose={() => setIsAccountDrawerOpen(false)}
-      />
+      <AccountDrawer isOpen={isAccountDrawerOpen} onClose={() => setIsAccountDrawerOpen(false)} />
       {(() => {
         const shouldShowModal = needsOnboarding && !isOnboardingLoading;
-        console.log("🎭 [App] LanguageOnboardingModal render:", {
+        console.log('🎭 [App] LanguageOnboardingModal render:', {
           needsOnboarding,
           isOnboardingLoading,
           shouldShowModal,

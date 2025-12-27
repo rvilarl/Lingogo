@@ -1,19 +1,9 @@
-﻿import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
-import type { Session, User } from '@supabase/supabase-js';
+﻿import type { Session, User } from '@supabase/supabase-js';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+
 import * as authService from '../services/authService.ts';
+import { clearAccessToken, setAccessToken, setUnauthorizedHandler } from '../services/authTokenStore.ts';
 import * as backendService from '../services/backendService.ts';
-import {
-  clearAccessToken,
-  setAccessToken,
-  setUnauthorizedHandler,
-} from '../services/authTokenStore.ts';
 import { clearAppCaches } from '../services/storageService.ts';
 
 interface AuthContextValue {
@@ -222,26 +212,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUserChanged(false);
   }, []);
 
-  const value = useMemo<AuthContextValue>(() => ({
-    user,
-    session,
-    token,
-    loading,
-    initializing,
-    error,
-    signIn,
-    signUp,
-    signOut,
-    refreshSession,
-    userChanged,
-    resetUserChanged,
-  }), [user, session, token, loading, initializing, error, userChanged, resetUserChanged]);
-
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
+  const value = useMemo<AuthContextValue>(
+    () => ({
+      user,
+      session,
+      token,
+      loading,
+      initializing,
+      error,
+      signIn,
+      signUp,
+      signOut,
+      refreshSession,
+      userChanged,
+      resetUserChanged,
+    }),
+    [user, session, token, loading, initializing, error, userChanged, resetUserChanged]
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = (): AuthContextValue => {

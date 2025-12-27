@@ -1,4 +1,5 @@
 ﻿import { createClient, Session, SupabaseClient, User } from '@supabase/supabase-js';
+
 import { getSupabaseAnonKey, getSupabaseUrl } from './env.ts';
 
 let client: SupabaseClient | null = null;

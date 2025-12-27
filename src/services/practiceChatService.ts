@@ -13,15 +13,17 @@
  */
 
 import { GoogleGenAI, Type } from '@google/genai';
+
+import { getLanguageName } from '@/src/i18n/languageMeta';
+
 import i18n from '../i18n/config';
 import type {
-  Phrase,
   LanguageProfile,
-  PracticeChatMessage,
+  Phrase,
   PracticeChatAIResponse,
+  PracticeChatMessage,
   PracticeChatMessageType,
 } from '../types.ts';
-import { getLanguageName } from '@/src/i18n/languageMeta';
 
 // Retry helper (from geminiService.ts)
 async function retryWithExponentialBackoff<T>(
@@ -51,7 +53,7 @@ async function retryWithExponentialBackoff<T>(
       const delayMs = initialDelayMs * Math.pow(2, attempt);
       console.log(`[retryWithExponentialBackoff] Waiting ${delayMs}ms before retry...`);
 
-      await new Promise(resolve => setTimeout(resolve, delayMs));
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
     }
   }
 
@@ -68,40 +70,40 @@ const practiceChatResponseSchema = {
     messageType: {
       type: Type.STRING,
       enum: ['greeting', 'question', 'correction', 'explanation', 'encouragement', 'suggestion'],
-      description: 'Type of AI response'
+      description: 'Type of AI response',
     },
     primaryText: {
       type: Type.STRING,
-      description: 'Main text in learning language'
+      description: 'Main text in learning language',
     },
     translation: {
       type: Type.STRING,
-      description: 'Translation of primaryText in native language'
+      description: 'Translation of primaryText in native language',
     },
     secondaryText: {
       type: Type.STRING,
       description: 'Additional explanation in native language (optional)',
-      nullable: true
+      nullable: true,
     },
     suggestions: {
       type: Type.ARRAY,
       items: { type: Type.STRING },
-      description: '2-3 quick reply suggestions in learning language'
+      description: '2-3 quick reply suggestions in learning language',
     },
     hints: {
       type: Type.ARRAY,
       items: { type: Type.STRING },
       description: 'Hints if user is stuck (optional)',
-      nullable: true
+      nullable: true,
     },
     vocabularyUsed: {
       type: Type.ARRAY,
       items: { type: Type.STRING },
       description: 'IDs of phrases from vocabulary used (optional)',
-      nullable: true
-    }
+      nullable: true,
+    },
   },
-  required: ['messageType', 'primaryText', 'translation', 'suggestions']
+  required: ['messageType', 'primaryText', 'translation', 'suggestions'],
 };
 
 /**
@@ -138,14 +140,10 @@ function validateAIResponse(response: any): response is PracticeChatAIResponse {
 /**
  * Create fallback response when AI fails
  */
-function createFallbackResponse(
-  errorMessage: string,
-  lang: LanguageProfile
-): PracticeChatMessage {
+function createFallbackResponse(errorMessage: string, lang: LanguageProfile): PracticeChatMessage {
   const fallbackPrimary = i18n.t('practice.chat.fallback.primary', { lng: lang.learning });
   const fallbackTranslation = i18n.t('practice.chat.fallback.translation', { lng: lang.native });
   const retry = i18n.t('practice.chat.fallback.retry', { lng: lang.learning });
-
 
   return {
     role: 'assistant',
@@ -160,10 +158,7 @@ function createFallbackResponse(
       },
     },
     actions: {
-      suggestions: [
-        'OK',
-        retry,
-      ],
+      suggestions: ['OK', retry],
     },
     metadata: {
       timestamp: Date.now(),
@@ -173,9 +168,7 @@ function createFallbackResponse(
 /**
  * Convert AI response to PracticeChatMessage
  */
-function convertAIResponseToMessage(
-  aiResponse: PracticeChatAIResponse
-): PracticeChatMessage {
+function convertAIResponseToMessage(aiResponse: PracticeChatAIResponse): PracticeChatMessage {
   const correctnessMap: Record<PracticeChatMessageType, 'correct' | 'partial' | 'incorrect' | undefined> = {
     greeting: undefined,
     question: 'correct',
@@ -193,22 +186,25 @@ function convertAIResponseToMessage(
     content: {
       primary: {
         text: aiResponse.primaryText,
-        translation: aiResponse.translation
+        translation: aiResponse.translation,
       },
-      secondary: (aiResponse.secondaryText !== undefined && aiResponse.secondaryText !== null && aiResponse.secondaryText !== '') ? {
-        text: aiResponse.secondaryText
-      } : undefined
+      secondary:
+        aiResponse.secondaryText !== undefined && aiResponse.secondaryText !== null && aiResponse.secondaryText !== ''
+          ? {
+              text: aiResponse.secondaryText,
+            }
+          : undefined,
     },
     actions: {
       suggestions: aiResponse.suggestions,
       hints: aiResponse.hints,
-      phraseUsed: aiResponse.vocabularyUsed?.[0] // Take first phrase ID
+      phraseUsed: aiResponse.vocabularyUsed?.[0], // Take first phrase ID
     },
     metadata: {
       timestamp: Date.now(),
       vocabulary: aiResponse.vocabularyUsed,
-      correctness
-    }
+      correctness,
+    },
   };
 }
 
@@ -216,13 +212,16 @@ function convertAIResponseToMessage(
  * Format conversation history for Gemini API
  */
 function formatHistoryForAPI(history: PracticeChatMessage[]): Array<{ role: string; parts: Array<{ text: string }> }> {
-  return history.map(msg => ({
+  return history.map((msg) => ({
     role: msg.role === 'assistant' ? 'model' : 'user',
-    parts: [{
-      text: msg.role === 'user'
-        ? msg.content.primary.text
-        : `${msg.content.primary.text}${msg.content.secondary ? `\n${msg.content.secondary.text}` : ''}`
-    }]
+    parts: [
+      {
+        text:
+          msg.role === 'user'
+            ? msg.content.primary.text
+            : `${msg.content.primary.text}${msg.content.secondary ? `\n${msg.content.secondary.text}` : ''}`,
+      },
+    ],
   }));
 }
 
@@ -255,7 +254,7 @@ export async function sendPracticeChatMessage(
   // Build vocabulary list (limit to 30 phrases for context window)
   const vocabList = userVocabulary
     .slice(0, 30)
-    .map(p => `- "${p.text.learning}" (${p.text.native}) [id: ${p.id}]`)
+    .map((p) => `- "${p.text.learning}" (${p.text.native}) [id: ${p.id}]`)
     .join('\n');
 
   // Determine if this is first message
@@ -361,86 +360,74 @@ Encouragement:
 - ALL required fields must be present`;
 
   // Wrap in retry logic
-  return retryWithExponentialBackoff(async () => {
-    try {
-      // Format history
-      const formattedHistory = formatHistoryForAPI(history);
-
-      // Add user message
-      const userMsg = {
-        role: 'user',
-        parts: [{ text: userMessage || '(Start the conversation)' }]
-      };
-
-      // Call Gemini API
-      const response = await api.models.generateContent({
-        model,
-        contents: [...formattedHistory, userMsg],
-        config: {
-          systemInstruction,
-          responseMimeType: 'application/json',
-          responseSchema: practiceChatResponseSchema,
-          temperature: 0.7,
-        },
-      });
-
-      const jsonText = response.text.trim();
-
-      // Log for debugging
-      console.log('[sendPracticeChatMessage] Raw response:', jsonText.substring(0, 200));
-
-      // Check empty response
-      if (!jsonText) {
-        console.error('[sendPracticeChatMessage] Empty response from Gemini');
-        return createFallbackResponse(
-          'I received an empty response. Please try again.',
-          languageProfile
-        );
-      }
-
-      // Parse JSON
-      let parsed: any;
+  return retryWithExponentialBackoff(
+    async () => {
       try {
-        parsed = JSON.parse(jsonText);
-      } catch (parseError) {
-        console.error('[sendPracticeChatMessage] JSON parse failed:', parseError);
-        console.error('[sendPracticeChatMessage] Raw text:', jsonText);
-        return createFallbackResponse(
-          'I had trouble parsing the response. Please try again.',
-          languageProfile
-        );
+        // Format history
+        const formattedHistory = formatHistoryForAPI(history);
+
+        // Add user message
+        const userMsg = {
+          role: 'user',
+          parts: [{ text: userMessage || '(Start the conversation)' }],
+        };
+
+        // Call Gemini API
+        const response = await api.models.generateContent({
+          model,
+          contents: [...formattedHistory, userMsg],
+          config: {
+            systemInstruction,
+            responseMimeType: 'application/json',
+            responseSchema: practiceChatResponseSchema,
+            temperature: 0.7,
+          },
+        });
+
+        const jsonText = response.text.trim();
+
+        // Log for debugging
+        console.log('[sendPracticeChatMessage] Raw response:', jsonText.substring(0, 200));
+
+        // Check empty response
+        if (!jsonText) {
+          console.error('[sendPracticeChatMessage] Empty response from Gemini');
+          return createFallbackResponse('I received an empty response. Please try again.', languageProfile);
+        }
+
+        // Parse JSON
+        let parsed: any;
+        try {
+          parsed = JSON.parse(jsonText);
+        } catch (parseError) {
+          console.error('[sendPracticeChatMessage] JSON parse failed:', parseError);
+          console.error('[sendPracticeChatMessage] Raw text:', jsonText);
+          return createFallbackResponse('I had trouble parsing the response. Please try again.', languageProfile);
+        }
+
+        // Validate structure
+        if (!validateAIResponse(parsed)) {
+          console.error('[sendPracticeChatMessage] Invalid response structure:', parsed);
+          return createFallbackResponse('The response structure was invalid. Please try again.', languageProfile);
+        }
+
+        // Convert to PracticeChatMessage
+        return convertAIResponseToMessage(parsed);
+      } catch (error) {
+        console.error('[sendPracticeChatMessage] Error:', error);
+        const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+        return createFallbackResponse(`Error: ${errorMsg}. Please try again.`, languageProfile);
       }
-
-      // Validate structure
-      if (!validateAIResponse(parsed)) {
-        console.error('[sendPracticeChatMessage] Invalid response structure:', parsed);
-        return createFallbackResponse(
-          'The response structure was invalid. Please try again.',
-          languageProfile
-        );
-      }
-
-      // Convert to PracticeChatMessage
-      return convertAIResponseToMessage(parsed);
-
-    } catch (error) {
-      console.error('[sendPracticeChatMessage] Error:', error);
-      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-      return createFallbackResponse(
-        `Error: ${errorMsg}. Please try again.`,
-        languageProfile
-      );
-    }
-  }, 3, 1000); // 3 retries, exponential backoff
+    },
+    3,
+    1000
+  ); // 3 retries, exponential backoff
 }
 
 /**
  * Create initial greeting message
  */
-export function createInitialGreeting(
-  languageProfile: LanguageProfile,
-  userVocabulary: Phrase[]
-): PracticeChatMessage {
+export function createInitialGreeting(languageProfile: LanguageProfile, userVocabulary: Phrase[]): PracticeChatMessage {
   const learningLang = getLanguageName(languageProfile.learning);
   const nativeLang = getLanguageName(languageProfile.native);
 
@@ -448,11 +435,11 @@ export function createInitialGreeting(
   const greetingText = i18n.t('practice.chat.greeting.text', { lng: languageProfile.learning });
   const greetingTranslation = i18n.t('practice.chat.greeting.translation', {
     lng: languageProfile.native,
-    language: learningLang
+    language: learningLang,
   });
   const suggestions = i18n.t('practice.chat.greeting.suggestions', {
     lng: languageProfile.learning,
-    returnObjects: true
+    returnObjects: true,
   }) as string[];
   const explanation = i18n.t('practice.chat.greeting.explanation', { lng: languageProfile.native });
 
@@ -462,17 +449,17 @@ export function createInitialGreeting(
     content: {
       primary: {
         text: greetingText,
-        translation: greetingTranslation
+        translation: greetingTranslation,
       },
       secondary: {
-        text: explanation
-      }
+        text: explanation,
+      },
     },
     actions: {
-      suggestions
+      suggestions,
     },
     metadata: {
-      timestamp: Date.now()
-    }
+      timestamp: Date.now(),
+    },
   };
 }

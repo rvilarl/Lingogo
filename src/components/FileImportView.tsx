@@ -1,17 +1,18 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { useTranslation } from '../hooks/useTranslation';
-import { SpeechRecognition, SpeechRecognitionErrorEvent } from '../types.ts';
 import Cropper from 'cropperjs';
-import FilePlusIcon from './icons/FilePlusIcon';
-import XCircleIcon from './icons/XCircleIcon';
-import WandIcon from './icons/WandIcon';
-import MicrophoneIcon from './icons/MicrophoneIcon';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+
+import { useLanguage } from '../contexts/languageContext';
+import { useTranslation } from '../hooks/useTranslation';
+import { getNativeSpeechLocale } from '../services/speechService';
+import { SpeechRecognition, SpeechRecognitionErrorEvent } from '../types.ts';
+import CameraCaptureModal from './CameraCaptureModal';
+import CameraIcon from './icons/CameraIcon';
 import CheckIcon from './icons/CheckIcon';
 import CloseIcon from './icons/CloseIcon';
-import CameraIcon from './icons/CameraIcon';
-import CameraCaptureModal from './CameraCaptureModal';
-import { useLanguage } from '../contexts/languageContext';
-import { getNativeSpeechLocale } from '../services/speechService';
+import FilePlusIcon from './icons/FilePlusIcon';
+import MicrophoneIcon from './icons/MicrophoneIcon';
+import WandIcon from './icons/WandIcon';
+import XCircleIcon from './icons/XCircleIcon';
 
 interface ImageCropperModalProps {
   isOpen: boolean;
@@ -49,14 +50,16 @@ const ImageCropperModal: React.FC<ImageCropperModalProps> = ({ isOpen, src, onCo
 
   const handleConfirm = () => {
     if (cropperRef.current) {
-      const dataUrl = cropperRef.current.getCroppedCanvas({
-        minWidth: 256,
-        minHeight: 256,
-        maxWidth: 4096,
-        maxHeight: 4096,
-        imageSmoothingEnabled: true,
-        imageSmoothingQuality: 'high',
-      }).toDataURL('image/jpeg', 0.9);
+      const dataUrl = cropperRef.current
+        .getCroppedCanvas({
+          minWidth: 256,
+          minHeight: 256,
+          maxWidth: 4096,
+          maxHeight: 4096,
+          imageSmoothingEnabled: true,
+          imageSmoothingQuality: 'high',
+        })
+        .toDataURL('image/jpeg', 0.9);
       onConfirm(dataUrl);
     }
   };
@@ -88,7 +91,6 @@ const ImageCropperModal: React.FC<ImageCropperModalProps> = ({ isOpen, src, onCo
   );
 };
 
-
 interface FileImportViewProps {
   onProcessFile: (fileData: { mimeType: string; data: string }, refinement?: string) => void;
 }
@@ -107,7 +109,7 @@ const FileImportView: React.FC<FileImportViewProps> = ({ onProcessFile }) => {
   const [isCropperOpen, setIsCropperOpen] = useState(false);
   const [imageToCrop, setImageToCrop] = useState<string | null>(null);
   const [croppedImageSrc, setCroppedImageSrc] = useState<string | null>(null);
-  const [croppedImageData, setCroppedImageData] = useState<{ mimeType: string, data: string } | null>(null);
+  const [croppedImageData, setCroppedImageData] = useState<{ mimeType: string; data: string } | null>(null);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
 
   useEffect(() => {
@@ -125,7 +127,7 @@ const FileImportView: React.FC<FileImportViewProps> = ({ onProcessFile }) => {
       };
       recognition.onresult = (event) => {
         const transcript = Array.from(event.results)
-          .map(result => result[0].transcript)
+          .map((result) => result[0].transcript)
           .join('');
         setRefinement(transcript);
       };
@@ -146,7 +148,7 @@ const FileImportView: React.FC<FileImportViewProps> = ({ onProcessFile }) => {
     setCroppedImageSrc(null);
     setCroppedImageData(null);
     if (fileInputRef.current) {
-      fileInputRef.current.value = "";
+      fileInputRef.current.value = '';
     }
   }, []);
 
@@ -159,7 +161,8 @@ const FileImportView: React.FC<FileImportViewProps> = ({ onProcessFile }) => {
       return;
     }
 
-    if (selectedFile.size > 10 * 1024 * 1024) { // 10MB limit
+    if (selectedFile.size > 10 * 1024 * 1024) {
+      // 10MB limit
       setError(t('modals.fileImport.errors.tooLarge'));
       return;
     }
@@ -222,7 +225,6 @@ const FileImportView: React.FC<FileImportViewProps> = ({ onProcessFile }) => {
     setIsCropperOpen(true);
   };
 
-
   return (
     <>
       <div className="flex flex-col items-center justify-center h-full text-center">
@@ -264,7 +266,10 @@ const FileImportView: React.FC<FileImportViewProps> = ({ onProcessFile }) => {
         ) : (
           <div className="w-full flex flex-col items-center">
             <div className="w-full h-48 bg-slate-700/50 rounded-lg p-1 flex items-center justify-center relative mb-4">
-              <button onClick={clearFile} className="absolute top-2 right-2 p-1 rounded-full bg-black/50 text-white/70 hover:text-white transition-colors z-10">
+              <button
+                onClick={clearFile}
+                className="absolute top-2 right-2 p-1 rounded-full bg-black/50 text-white/70 hover:text-white transition-colors z-10"
+              >
                 <XCircleIcon className="w-6 h-6" />
               </button>
               <img
@@ -290,7 +295,11 @@ const FileImportView: React.FC<FileImportViewProps> = ({ onProcessFile }) => {
                 <MicrophoneIcon className={`w-5 h-5 ${isRefineListening ? 'text-purple-400' : ''}`} />
               </button>
             </div>
-            <button onClick={handleSubmit} disabled={!croppedImageData} className="mt-4 w-full max-w-xs px-6 py-3 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-bold transition-colors shadow-md flex items-center justify-center disabled:opacity-50">
+            <button
+              onClick={handleSubmit}
+              disabled={!croppedImageData}
+              className="mt-4 w-full max-w-xs px-6 py-3 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-bold transition-colors shadow-md flex items-center justify-center disabled:opacity-50"
+            >
               <WandIcon className="w-5 h-5 mr-2" />
               <span>{t('modals.fileImport.submit')}</span>
             </button>
@@ -304,11 +313,7 @@ const FileImportView: React.FC<FileImportViewProps> = ({ onProcessFile }) => {
         onConfirm={handleCropConfirm}
         onCancel={handleCropCancel}
       />
-      <CameraCaptureModal
-        isOpen={isCameraOpen}
-        onClose={() => setIsCameraOpen(false)}
-        onCapture={handleCapture}
-      />
+      <CameraCaptureModal isOpen={isCameraOpen} onClose={() => setIsCameraOpen(false)} onCapture={handleCapture} />
     </>
   );
 };

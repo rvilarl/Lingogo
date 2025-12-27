@@ -1,27 +1,16 @@
-﻿import React, {
-  createContext,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
-} from 'react';
+﻿import React, { createContext, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { I18nextProvider } from 'react-i18next';
-import i18n, { DEFAULT_LANG, LOCALE_SCHEMA_VERSION, SUPPORTED_LANGS } from '../i18n/config.ts';
-import * as configService from '../services/configService.ts';
-import * as backendService from '../services/backendService.ts';
-import type { LanguageProfile, LanguageCode } from '../types.ts';
-import { useAuth } from './authContext.tsx';
-import {
-  hasLocaleGaps,
-  loadLocaleResources,
-  validateLocaleShape,
-} from '../services/languageService.ts';
-import { readLocaleCache } from '../services/localeCache.ts';
-import LocalizationOverlay from '../components/LocalizationOverlay.tsx';
+
 import DevLanguageSelector from '../components/DevLanguageSelector.tsx';
+import LocalizationOverlay from '../components/LocalizationOverlay.tsx';
+import i18n, { DEFAULT_LANG, LOCALE_SCHEMA_VERSION, SUPPORTED_LANGS } from '../i18n/config.ts';
 import type { LocalizationPhase } from '../i18n/localizationPhases.ts';
+import * as backendService from '../services/backendService.ts';
+import * as configService from '../services/configService.ts';
+import { hasLocaleGaps, loadLocaleResources, validateLocaleShape } from '../services/languageService.ts';
+import { readLocaleCache } from '../services/localeCache.ts';
+import type { LanguageCode, LanguageProfile } from '../types.ts';
+import { useAuth } from './authContext.tsx';
 
 const DEV_OVERRIDE_KEY = 'devLanguageOverride';
 
@@ -114,7 +103,6 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
           console.log('❌ AI generation test FAILED - generated only empty strings');
           return { success: false, translatedCount, emptyCount, generated };
         }
-
       } catch (error) {
         console.error('❌ AI generation test FAILED with error:', error);
         return { success: false, error: error.message };
@@ -160,7 +148,9 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [isLocalizing, setIsLocalizing] = useState<boolean>(false);
   const [localizationLanguage, setLocalizationLanguage] = useState<LanguageCode>(profile.ui as LanguageCode);
   const [overlayVisible, setOverlayVisible] = useState<boolean>(false);
-  const [showDevSelector, setShowDevSelector] = useState<boolean>(() => isDev && !localStorage.getItem(DEV_OVERRIDE_KEY));
+  const [showDevSelector, setShowDevSelector] = useState<boolean>(
+    () => isDev && !localStorage.getItem(DEV_OVERRIDE_KEY)
+  );
 
   const activeController = useRef<AbortController | null>(null);
   const hideOverlayTimeout = useRef<number | null>(null);
@@ -246,10 +236,10 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
           signal: controller.signal,
           onPhase: overlayNeeded
             ? (phase) => {
-              if (!controller.signal.aborted) {
-                setLocalizationPhase(phase);
+                if (!controller.signal.aborted) {
+                  setLocalizationPhase(phase);
+                }
               }
-            }
             : undefined,
         });
 
@@ -279,7 +269,7 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
           console.error('Localization error details:', {
             message: error.message,
             name: error.name,
-            stack: error.stack
+            stack: error.stack,
           });
         }
 
@@ -345,7 +335,7 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
           (shouldSyncUI && dbProfile.ui !== profile.ui)
         ) {
           console.log('[LanguageContext] Syncing profile from database');
-          setProfileState(prev => ({
+          setProfileState((prev) => ({
             ui: shouldSyncUI ? dbProfile.ui : prev.ui,
             native: dbProfile.native,
             learning: dbProfile.learning,
@@ -376,7 +366,8 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
       const { lockUi = true } = options;
       const detected = detectBrowserLanguage();
       setProfileState((prev) => {
-        const next = typeof update === 'function' ? (update as (value: LanguageProfile) => LanguageProfile)(prev) : update;
+        const next =
+          typeof update === 'function' ? (update as (value: LanguageProfile) => LanguageProfile)(prev) : update;
         configService.saveLanguageProfile(next);
         configService.saveLanguageProfileMeta({
           uiLocked: lockUi,
@@ -385,7 +376,8 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
 
         // Sync with database if authenticated
         if (isAuthenticated) {
-          backendService.upsertUserProfile(next)
+          backendService
+            .upsertUserProfile(next)
             .then(() => {
               console.log('[LanguageContext] Profile synced to database');
             })
@@ -439,18 +431,23 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
       isDev,
       openDevLanguageSelector: isDev ? openDevLanguageSelector : undefined,
     }),
-    [profile, setProfile, currentLanguage, isLocalizing, localizationPhase, localizationLanguage, isDev, openDevLanguageSelector]
+    [
+      profile,
+      setProfile,
+      currentLanguage,
+      isLocalizing,
+      localizationPhase,
+      localizationLanguage,
+      isDev,
+      openDevLanguageSelector,
+    ]
   );
 
   return (
     <LanguageContext.Provider value={value}>
       <I18nextProvider i18n={i18n}>
         {children}
-        <LocalizationOverlay
-          visible={overlayVisible}
-          phase={localizationPhase}
-          languageCode={localizationLanguage}
-        />
+        <LocalizationOverlay visible={overlayVisible} phase={localizationPhase} languageCode={localizationLanguage} />
         {isDev && (
           <DevLanguageSelector
             visible={showDevSelector}
@@ -471,4 +468,3 @@ export const useLanguage = () => {
   }
   return context;
 };
-

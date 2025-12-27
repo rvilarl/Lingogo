@@ -6,7 +6,7 @@
   'learningAppMasteryButtonUsage',
   'learningAppHabitTracker',
   'learningAppCardActionUsage',
-  'learningAppPracticeChatHistory'
+  'learningAppPracticeChatHistory',
 ];
 
 export const clearAppCaches = (): void => {

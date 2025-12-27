@@ -1,4 +1,5 @@
 import React, { FormEvent, useState } from 'react';
+
 import { useAuth } from '../contexts/authContext.tsx';
 import { useTranslation } from '../hooks/useTranslation.ts';
 
@@ -37,13 +38,18 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToSignUp }) => {
         <h1 className="text-2xl font-semibold mb-2 text-center">{t('auth.login.title')}</h1>
         <p className="text-sm text-slate-400 text-center mb-6">{t('auth.login.subtitle')}</p>
         {effectiveError && (
-          <div className="mb-4 rounded-lg border border-red-500/40 bg-red-500/10 text-red-300 px-4 py-3 text-sm" role="alert">
+          <div
+            className="mb-4 rounded-lg border border-red-500/40 bg-red-500/10 text-red-300 px-4 py-3 text-sm"
+            role="alert"
+          >
             {effectiveError}
           </div>
         )}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1" htmlFor="email">{t('common.field.email')}</label>
+            <label className="block text-sm font-medium mb-1" htmlFor="email">
+              {t('common.field.email')}
+            </label>
             <input
               id="email"
               type="email"
@@ -56,7 +62,9 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToSignUp }) => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1" htmlFor="password">{t('auth.login.field.passwordLabel')}</label>
+            <label className="block text-sm font-medium mb-1" htmlFor="password">
+              {t('auth.login.field.passwordLabel')}
+            </label>
             <input
               id="password"
               type="password"

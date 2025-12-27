@@ -1,9 +1,10 @@
 import React, { useMemo } from 'react';
+
+import { useTranslation } from '../hooks/useTranslation';
 import { Phrase } from '../types.ts';
+import AudioPlayer from './AudioPlayer';
 import CloseIcon from './icons/CloseIcon';
 import QuestionMarkCircleIcon from './icons/QuestionMarkCircleIcon';
-import AudioPlayer from './AudioPlayer';
-import { useTranslation } from '../hooks/useTranslation';
 
 interface WFragenModalProps {
   isOpen: boolean;
@@ -33,8 +34,8 @@ const WFragenModal: React.FC<WFragenModalProps> = ({ isOpen, onClose, onOpenWord
   const wFragenItems = useMemo(() => {
     const raw = t('modals.wFragen.items', { returnObjects: true }) as unknown;
     if (Array.isArray(raw)) {
-      const parsed = raw.filter((item): item is WFrageItem =>
-        item && typeof item.learning === 'string' && typeof item.translation === 'string'
+      const parsed = raw.filter(
+        (item): item is WFrageItem => item && typeof item.learning === 'string' && typeof item.translation === 'string'
       );
       return parsed.length ? parsed : FALLBACK_ITEMS;
     }
@@ -131,4 +132,3 @@ const WFragenModal: React.FC<WFragenModalProps> = ({ isOpen, onClose, onOpenWord
 };
 
 export default WFragenModal;
-

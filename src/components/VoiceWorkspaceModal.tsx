@@ -1,18 +1,19 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import type { Phrase, PhraseEvaluation, PhraseBuilderOptions } from '../types.ts';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
+import { useLanguage } from '../contexts/languageContext';
+import { useTranslation } from '../hooks/useTranslation';
+import * as cacheService from '../services/cacheService';
+import { getLearningSpeechLocale } from '../services/speechService';
+import type { Phrase, PhraseBuilderOptions, PhraseEvaluation } from '../types.ts';
+import AudioPlayer from './AudioPlayer';
+import FeedbackMessage from './FeedbackMessage';
+import ArrowRightIcon from './icons/ArrowRightIcon';
+import BackspaceIcon from './icons/BackspaceIcon';
+import BookOpenIcon from './icons/BookOpenIcon';
+import CheckIcon from './icons/CheckIcon';
 import CloseIcon from './icons/CloseIcon';
 import MicrophoneIcon from './icons/MicrophoneIcon';
-import CheckIcon from './icons/CheckIcon';
 import XCircleIcon from './icons/XCircleIcon';
-import AudioPlayer from './AudioPlayer';
-import BackspaceIcon from './icons/BackspaceIcon';
-import ArrowRightIcon from './icons/ArrowRightIcon';
-import * as cacheService from '../services/cacheService';
-import BookOpenIcon from './icons/BookOpenIcon';
-import FeedbackMessage from './FeedbackMessage';
-import { useTranslation } from '../hooks/useTranslation';
-import { useLanguage } from '../contexts/languageContext';
-import { getLearningSpeechLocale } from '../services/speechService';
 
 interface VoiceWorkspaceModalProps {
   isOpen: boolean;
@@ -28,12 +29,14 @@ interface VoiceWorkspaceModalProps {
     automation: {
       autoCheckShortPhrases: boolean;
       learnNextPhraseHabit: boolean;
-    }
+    };
   };
   buttonUsage: { close: number; continue: number; next: number };
   onLogButtonUsage: (button: 'close' | 'continue' | 'next') => void;
-  habitTracker: { quickNextCount: number, quickBuilderNextCount?: number };
-  onHabitTrackerChange: (updater: React.SetStateAction<{ quickNextCount: number, quickBuilderNextCount?: number }>) => void;
+  habitTracker: { quickNextCount: number; quickBuilderNextCount?: number };
+  onHabitTrackerChange: (
+    updater: React.SetStateAction<{ quickNextCount: number; quickBuilderNextCount?: number }>
+  ) => void;
   showToast: (config: { message: string; type?: 'default' | 'automationSuccess' }) => void;
   onOpenLearningAssistant: (phrase: Phrase) => void;
 }
@@ -51,7 +54,7 @@ type DraggedItem = {
   word: Word;
   from: 'constructed' | 'available';
   index: number;
-}
+};
 
 const WordBankSkeleton = () => (
   <div className="flex flex-wrap justify-center gap-2 w-full animate-pulse">
@@ -61,12 +64,30 @@ const WordBankSkeleton = () => (
   </div>
 );
 
-const normalizeString = (str: string) => str.toLowerCase().replace(/[.,!?]/g, '').trim();
+const normalizeString = (str: string) =>
+  str
+    .toLowerCase()
+    .replace(/[.,!?]/g, '')
+    .trim();
 
 // FIX: Changed to a named export to resolve "no default export" error.
 export const VoiceWorkspaceModal: React.FC<VoiceWorkspaceModalProps> = ({
-  isOpen, onClose, phrase, onEvaluate, onSuccess, onFailure, onNextPhrase, onGeneratePhraseBuilderOptions, onPracticeNext,
-  settings, buttonUsage, onLogButtonUsage, habitTracker, onHabitTrackerChange, showToast, onOpenLearningAssistant
+  isOpen,
+  onClose,
+  phrase,
+  onEvaluate,
+  onSuccess,
+  onFailure,
+  onNextPhrase,
+  onGeneratePhraseBuilderOptions,
+  onPracticeNext,
+  settings,
+  buttonUsage,
+  onLogButtonUsage,
+  habitTracker,
+  onHabitTrackerChange,
+  showToast,
+  onOpenLearningAssistant,
 }) => {
   const [allWordOptions, setAllWordOptions] = useState<AvailableWord[]>([]);
   const [constructedWords, setConstructedWords] = useState<Word[]>([]);
@@ -86,7 +107,7 @@ export const VoiceWorkspaceModal: React.FC<VoiceWorkspaceModalProps> = ({
   // Drag & Drop State
   const [draggedItem, setDraggedItem] = useState<DraggedItem | null>(null);
   const [dropIndex, setDropIndex] = useState<number | null>(null);
-  const [ghostPosition, setGhostPosition] = useState<{ x: number, y: number } | null>(null);
+  const [ghostPosition, setGhostPosition] = useState<{ x: number; y: number } | null>(null);
 
   // Automation State
   const [successTimestamp, setSuccessTimestamp] = useState<number | null>(null);
@@ -104,8 +125,11 @@ export const VoiceWorkspaceModal: React.FC<VoiceWorkspaceModalProps> = ({
   const recognitionRef = useRef<any>(null);
   const constructedPhraseRef = useRef<HTMLDivElement>(null);
 
-  const constructedWordIds = useMemo(() => new Set(constructedWords.map(w => w.id)), [constructedWords]);
-  const availableWords = useMemo(() => allWordOptions.filter(w => !constructedWordIds.has(w.id)), [allWordOptions, constructedWordIds]);
+  const constructedWordIds = useMemo(() => new Set(constructedWords.map((w) => w.id)), [constructedWords]);
+  const availableWords = useMemo(
+    () => allWordOptions.filter((w) => !constructedWordIds.has(w.id)),
+    [allWordOptions, constructedWordIds]
+  );
 
   const resetState = useCallback(() => {
     setConstructedWords([]);
@@ -153,11 +177,11 @@ export const VoiceWorkspaceModal: React.FC<VoiceWorkspaceModalProps> = ({
       setAllWordOptions(options.words.map((w, i) => ({ text: w, id: `avail-${i}`, originalIndex: i })));
     } catch (err) {
       let displayError = t('modals.voiceWorkspace.errors.unexpected');
-      console.error("Failed to load phrase builder options:", err);
+      console.error('Failed to load phrase builder options:', err);
       if (err instanceof Error) {
-        if (err.message.includes("500") || err.message.includes("Internal Server Error")) {
+        if (err.message.includes('500') || err.message.includes('Internal Server Error')) {
           displayError = t('modals.voiceWorkspace.errors.serviceUnavailable');
-        } else if (err.message.includes("API key")) {
+        } else if (err.message.includes('API key')) {
           displayError = t('modals.voiceWorkspace.errors.apiKey');
         } else {
           displayError = t('modals.voiceWorkspace.errors.requestFailed');
@@ -168,7 +192,6 @@ export const VoiceWorkspaceModal: React.FC<VoiceWorkspaceModalProps> = ({
       setIsLoadingOptions(false);
     }
   }, [phrase, onGeneratePhraseBuilderOptions]);
-
 
   // Effect to handle modal opening and closing.
   useEffect(() => {
@@ -228,7 +251,7 @@ export const VoiceWorkspaceModal: React.FC<VoiceWorkspaceModalProps> = ({
     }
 
     const handleTimeout = () => {
-      const constructedPhrase = constructedWords.map(w => w.text).join(' ');
+      const constructedPhrase = constructedWords.map((w) => w.text).join(' ');
       if (constructedWords.length === 0) {
         setIsStuck(true);
       } else {
@@ -239,10 +262,12 @@ export const VoiceWorkspaceModal: React.FC<VoiceWorkspaceModalProps> = ({
             const learningWords = phrase.text.learning.split(' ');
             if (nextWordIndex < learningWords.length) {
               const nextCorrectWord = learningWords[nextWordIndex];
-              const hintedWord = availableWords.find(aw => normalizeString(aw.text) === normalizeString(nextCorrectWord));
+              const hintedWord = availableWords.find(
+                (aw) => normalizeString(aw.text) === normalizeString(nextCorrectWord)
+              );
               if (hintedWord) {
                 setHintWordId(hintedWord.id);
-                setHintCount(prev => prev + 1);
+                setHintCount((prev) => prev + 1);
                 setTimeout(() => setHintWordId(null), 6000); // Reset after 3*2s animation
               }
             }
@@ -253,17 +278,27 @@ export const VoiceWorkspaceModal: React.FC<VoiceWorkspaceModalProps> = ({
       }
     };
 
-    const delay = (constructedWords.length === 0) ? 5000 : 5000;
+    const delay = constructedWords.length === 0 ? 5000 : 5000;
     inactivityTimerRef.current = window.setTimeout(handleTimeout, delay);
 
     return () => {
       if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
     };
-  }, [isOpen, phrase, isChecking, evaluation, isListening, isLoadingOptions, constructedWords, hintCount, availableWords]);
+  }, [
+    isOpen,
+    phrase,
+    isChecking,
+    evaluation,
+    isListening,
+    isLoadingOptions,
+    constructedWords,
+    hintCount,
+    availableWords,
+  ]);
 
   const handleCheck = useCallback(async () => {
     if (!phrase) return;
-    const userAttempt = constructedWords.map(w => w.text).join(' ');
+    const userAttempt = constructedWords.map((w) => w.text).join(' ');
     if (!userAttempt) return;
 
     setSuccessTimestamp(null);
@@ -271,7 +306,8 @@ export const VoiceWorkspaceModal: React.FC<VoiceWorkspaceModalProps> = ({
 
     const isCorrectLocally = normalizeString(userAttempt) === normalizeString(phrase.text.learning);
     const habitLearned = (habitTracker.quickBuilderNextCount || 0) >= 5;
-    const shouldAutoAdvance = isCorrectLocally && settings.automation.learnNextPhraseHabit && habitLearned && !hasUserPausedInSession;
+    const shouldAutoAdvance =
+      isCorrectLocally && settings.automation.learnNextPhraseHabit && habitLearned && !hasUserPausedInSession;
 
     if (shouldAutoAdvance) {
       onSuccess(phrase);
@@ -306,13 +342,28 @@ export const VoiceWorkspaceModal: React.FC<VoiceWorkspaceModalProps> = ({
           onFailure(phrase);
         }
       } catch (err) {
-        setEvaluation({ isCorrect: false, feedback: err instanceof Error ? err.message : t('modals.voiceWorkspace.errors.check') });
+        setEvaluation({
+          isCorrect: false,
+          feedback: err instanceof Error ? err.message : t('modals.voiceWorkspace.errors.check'),
+        });
         onFailure(phrase);
       } finally {
         setIsChecking(false);
       }
     }
-  }, [phrase, constructedWords, onSuccess, onFailure, onEvaluate, attemptNumber, habitTracker.quickBuilderNextCount, settings.automation.learnNextPhraseHabit, hasUserPausedInSession, onPracticeNext, showToast]);
+  }, [
+    phrase,
+    constructedWords,
+    onSuccess,
+    onFailure,
+    onEvaluate,
+    attemptNumber,
+    habitTracker.quickBuilderNextCount,
+    settings.automation.learnNextPhraseHabit,
+    hasUserPausedInSession,
+    onPracticeNext,
+    showToast,
+  ]);
 
   // Effect for intelligent auto-checking
   useEffect(() => {
@@ -323,7 +374,7 @@ export const VoiceWorkspaceModal: React.FC<VoiceWorkspaceModalProps> = ({
         return;
       }
 
-      const userAttempt = constructedWords.map(w => w.text).join(' ');
+      const userAttempt = constructedWords.map((w) => w.text).join(' ');
       if (!userAttempt) {
         return;
       }
@@ -346,7 +397,17 @@ export const VoiceWorkspaceModal: React.FC<VoiceWorkspaceModalProps> = ({
 
     const cleanup = autoCheck();
     return cleanup;
-  }, [constructedWords, phrase, isOpen, isLoadingOptions, isChecking, evaluation, isListening, handleCheck, settings.automation.autoCheckShortPhrases]);
+  }, [
+    constructedWords,
+    phrase,
+    isOpen,
+    isLoadingOptions,
+    isChecking,
+    evaluation,
+    isListening,
+    handleCheck,
+    settings.automation.autoCheckShortPhrases,
+  ]);
 
   useEffect(() => {
     const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -378,8 +439,11 @@ export const VoiceWorkspaceModal: React.FC<VoiceWorkspaceModalProps> = ({
         if (result.isFinal) {
           const finalTranscript = result[0].transcript;
           if (finalTranscript.trim()) {
-            const newWords = finalTranscript.trim().split(' ').map((text, index) => ({ text, id: `spoken-${Date.now()}-${index}` }));
-            setConstructedWords(prev => [...prev, ...newWords]);
+            const newWords = finalTranscript
+              .trim()
+              .split(' ')
+              .map((text, index) => ({ text, id: `spoken-${Date.now()}-${index}` }));
+            setConstructedWords((prev) => [...prev, ...newWords]);
           }
         }
       };
@@ -396,29 +460,38 @@ export const VoiceWorkspaceModal: React.FC<VoiceWorkspaceModalProps> = ({
     callback();
   };
 
-  const handleMicClick = () => handleUserInteraction(() => {
-    if (isListening) {
-      recognitionRef.current?.stop();
-    } else {
-      setSpeechError(null);
-      recognitionRef.current?.start();
-    }
-  });
+  const handleMicClick = () =>
+    handleUserInteraction(() => {
+      if (isListening) {
+        recognitionRef.current?.stop();
+      } else {
+        setSpeechError(null);
+        recognitionRef.current?.start();
+      }
+    });
 
-  const handleDeselectWord = (word: Word) => handleUserInteraction(() => {
-    setConstructedWords(prev => prev.filter(w => w.id !== word.id));
-  });
+  const handleDeselectWord = (word: Word) =>
+    handleUserInteraction(() => {
+      setConstructedWords((prev) => prev.filter((w) => w.id !== word.id));
+    });
 
-  const handleReset = () => handleUserInteraction(() => {
-    setConstructedWords([]);
-  });
+  const handleReset = () =>
+    handleUserInteraction(() => {
+      setConstructedWords([]);
+    });
 
-  const handleSelectWord = (word: AvailableWord) => handleUserInteraction(() => {
-    if (!!evaluation) return;
-    setConstructedWords(prev => [...prev, word]);
-  });
+  const handleSelectWord = (word: AvailableWord) =>
+    handleUserInteraction(() => {
+      if (!!evaluation) return;
+      setConstructedWords((prev) => [...prev, word]);
+    });
 
-  const handleDragStart = (e: React.DragEvent<HTMLButtonElement>, word: Word, from: 'available' | 'constructed', index: number) => {
+  const handleDragStart = (
+    e: React.DragEvent<HTMLButtonElement>,
+    word: Word,
+    from: 'available' | 'constructed',
+    index: number
+  ) => {
     setDraggedItem({ word, from, index });
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', word.id);
@@ -433,7 +506,9 @@ export const VoiceWorkspaceModal: React.FC<VoiceWorkspaceModalProps> = ({
     if (ghostPosition) setGhostPosition({ x: e.clientX, y: e.clientY });
     const dropZone = constructedPhraseRef.current;
     if (!dropZone) return;
-    const children = Array.from(dropZone.children).filter(child => (child as Element).hasAttribute('data-word-id')) as HTMLElement[];
+    const children = Array.from(dropZone.children).filter((child) =>
+      (child as Element).hasAttribute('data-word-id')
+    ) as HTMLElement[];
     let newIndex = children.length;
     for (let i = 0; i < children.length; i++) {
       const child = children[i];
@@ -446,32 +521,41 @@ export const VoiceWorkspaceModal: React.FC<VoiceWorkspaceModalProps> = ({
     setDropIndex(newIndex);
   };
 
-  const handleDrop = () => handleUserInteraction(() => {
-    if (!draggedItem || dropIndex === null) return;
-    const { word, from, index } = draggedItem;
-    let newConstructed = [...constructedWords];
-    if (from === 'constructed') newConstructed.splice(index, 1);
-    newConstructed.splice(dropIndex, 0, word);
-    setConstructedWords(newConstructed);
-    setDraggedItem(null); setDropIndex(null); setGhostPosition(null);
-  });
+  const handleDrop = () =>
+    handleUserInteraction(() => {
+      if (!draggedItem || dropIndex === null) return;
+      const { word, from, index } = draggedItem;
+      let newConstructed = [...constructedWords];
+      if (from === 'constructed') newConstructed.splice(index, 1);
+      newConstructed.splice(dropIndex, 0, word);
+      setConstructedWords(newConstructed);
+      setDraggedItem(null);
+      setDropIndex(null);
+      setGhostPosition(null);
+    });
 
   const handleDragEnd = () => {
-    setDraggedItem(null); setDropIndex(null); setGhostPosition(null);
+    setDraggedItem(null);
+    setDropIndex(null);
+    setGhostPosition(null);
   };
 
-  const handleActionButtonClick = useCallback((key: 'close' | 'continue' | 'next', action: () => void) => {
-    onLogButtonUsage(key);
-    if (successTimestamp) {
-      const timeSinceSuccess = Date.now() - successTimestamp;
-      if (timeSinceSuccess < 2000) { // 2 seconds threshold
-        onHabitTrackerChange(prev => ({ ...prev, quickBuilderNextCount: (prev.quickBuilderNextCount || 0) + 1 }));
-      } else {
-        onHabitTrackerChange(prev => ({ ...prev, quickBuilderNextCount: 0 }));
+  const handleActionButtonClick = useCallback(
+    (key: 'close' | 'continue' | 'next', action: () => void) => {
+      onLogButtonUsage(key);
+      if (successTimestamp) {
+        const timeSinceSuccess = Date.now() - successTimestamp;
+        if (timeSinceSuccess < 2000) {
+          // 2 seconds threshold
+          onHabitTrackerChange((prev) => ({ ...prev, quickBuilderNextCount: (prev.quickBuilderNextCount || 0) + 1 }));
+        } else {
+          onHabitTrackerChange((prev) => ({ ...prev, quickBuilderNextCount: 0 }));
+        }
       }
-    }
-    action();
-  }, [onLogButtonUsage, successTimestamp, onHabitTrackerChange]);
+      action();
+    },
+    [onLogButtonUsage, successTimestamp, onHabitTrackerChange]
+  );
 
   const buttons = useMemo(() => {
     const buttonData = [
@@ -520,19 +604,26 @@ export const VoiceWorkspaceModal: React.FC<VoiceWorkspaceModalProps> = ({
 
   if (!isOpen || !phrase) return null;
 
-  const userAttempt = constructedWords.map(w => w.text).join(' ');
+  const userAttempt = constructedWords.map((w) => w.text).join(' ');
 
   return (
     <>
       {draggedItem && ghostPosition && (
-        <div className="drag-ghost" style={{ left: ghostPosition.x, top: ghostPosition.y, transform: 'translate(-50%, -50%) rotate(-5deg) scale(1.1)' }}>
+        <div
+          className="drag-ghost"
+          style={{
+            left: ghostPosition.x,
+            top: ghostPosition.y,
+            transform: 'translate(-50%, -50%) rotate(-5deg) scale(1.1)',
+          }}
+        >
           {draggedItem.word.text}
         </div>
       )}
       <div className="fixed inset-0 bg-black/60 z-50 flex justify-center items-end" onClick={onClose}>
         <div
           className={`bg-slate-800 w-full max-w-3xl h-[90%] max-h-[90vh] rounded-t-2xl shadow-2xl flex flex-col transition-transform duration-300 ease-out ${isOpen ? 'translate-y-0' : 'translate-y-full'}`}
-          onClick={e => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
         >
           <header className="flex-shrink-0 flex items-center justify-between p-4 border-b border-slate-700">
             <h2 className="text-xl font-bold text-purple-300 text-center flex-grow">{phrase.text.native}</h2>
@@ -551,7 +642,9 @@ export const VoiceWorkspaceModal: React.FC<VoiceWorkspaceModalProps> = ({
                 onDragLeave={() => setDropIndex(null)}
                 className="flex-grow bg-slate-700/50 p-4 rounded-lg min-h-[80px] flex flex-wrap items-center justify-start gap-2 border-2 border-dashed border-slate-600"
               >
-                {constructedWords.length === 0 && dropIndex === null && <p className="text-slate-500 w-full text-center">{t('modals.voiceWorkspace.instructions')}</p>}
+                {constructedWords.length === 0 && dropIndex === null && (
+                  <p className="text-slate-500 w-full text-center">{t('modals.voiceWorkspace.instructions')}</p>
+                )}
 
                 {constructedWords.map((word, index) => (
                   <React.Fragment key={word.id}>
@@ -583,7 +676,9 @@ export const VoiceWorkspaceModal: React.FC<VoiceWorkspaceModalProps> = ({
 
             <div className="flex-grow my-4 flex flex-col justify-end min-h-0 relative">
               {transientFeedback && (
-                <div className={`absolute top-0 left-1/2 -translate-x-1/2 z-10 transition-all duration-500 ${isFeedbackFading ? 'opacity-0 -translate-y-4' : 'opacity-100 translate-y-0'}`}>
+                <div
+                  className={`absolute top-0 left-1/2 -translate-x-1/2 z-10 transition-all duration-500 ${isFeedbackFading ? 'opacity-0 -translate-y-4' : 'opacity-100 translate-y-0'}`}
+                >
                   <FeedbackMessage type="warning" message={transientFeedback.message} />
                 </div>
               )}
@@ -629,11 +724,17 @@ export const VoiceWorkspaceModal: React.FC<VoiceWorkspaceModalProps> = ({
                       disabled={constructedWords.length === 0 || isChecking}
                       className="relative px-8 py-3 rounded-lg bg-green-600 hover:bg-green-700 transition-colors font-semibold text-white shadow-md disabled:bg-slate-600 disabled:cursor-not-allowed flex items-center justify-center min-w-[150px] h-[48px]"
                     >
-                      <span className={`flex items-center transition-opacity ${isChecking ? 'opacity-0' : 'opacity-100'}`}>
+                      <span
+                        className={`flex items-center transition-opacity ${isChecking ? 'opacity-0' : 'opacity-100'}`}
+                      >
                         <CheckIcon className="w-5 h-5 mr-2" />
                         <span>{t('modals.voiceWorkspace.actions.check')}</span>
                       </span>
-                      {isChecking && <div className="absolute inset-0 flex items-center justify-center"><div className="w-6 h-6 border-2 border-white/50 border-t-white rounded-full animate-spin"></div></div>}
+                      {isChecking && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="w-6 h-6 border-2 border-white/50 border-t-white rounded-full animate-spin"></div>
+                        </div>
+                      )}
                     </button>
                     <button
                       onClick={handleMicClick}
@@ -646,30 +747,48 @@ export const VoiceWorkspaceModal: React.FC<VoiceWorkspaceModalProps> = ({
 
                   {(isStuck || showPostHintButtons) && (
                     <div className="flex items-center gap-x-2 animate-fade-in">
-                      <button onClick={handleLearn} className="flex items-center gap-x-2 px-3 py-1.5 rounded-full bg-slate-700 hover:bg-slate-600 transition-colors text-sm text-purple-300 font-medium"><BookOpenIcon className="w-4 h-4" /> {t('modals.voiceWorkspace.actions.learnWithAI')}</button>
-                      <button onClick={handleFailureAndReveal} className="px-3 py-1.5 rounded-full bg-slate-700 hover:bg-slate-600 transition-colors text-sm text-slate-300 font-medium">{t('modals.voiceWorkspace.actions.showAnswer')}</button>
+                      <button
+                        onClick={handleLearn}
+                        className="flex items-center gap-x-2 px-3 py-1.5 rounded-full bg-slate-700 hover:bg-slate-600 transition-colors text-sm text-purple-300 font-medium"
+                      >
+                        <BookOpenIcon className="w-4 h-4" /> {t('modals.voiceWorkspace.actions.learnWithAI')}
+                      </button>
+                      <button
+                        onClick={handleFailureAndReveal}
+                        className="px-3 py-1.5 rounded-full bg-slate-700 hover:bg-slate-600 transition-colors text-sm text-slate-300 font-medium"
+                      >
+                        {t('modals.voiceWorkspace.actions.showAnswer')}
+                      </button>
                     </div>
                   )}
                 </div>
               )}
               {evaluation && (
                 <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-4 animate-fade-in">
-                  <div className={`flex-grow w-full sm:w-auto p-3 rounded-lg ${evaluation.isCorrect ? 'bg-green-500/20' : 'bg-red-500/20'} flex items-start space-x-3`}>
+                  <div
+                    className={`flex-grow w-full sm:w-auto p-3 rounded-lg ${evaluation.isCorrect ? 'bg-green-500/20' : 'bg-red-500/20'} flex items-start space-x-3`}
+                  >
                     <div className="flex-shrink-0 mt-0.5">
-                      {evaluation.isCorrect ? <CheckIcon className="w-5 h-5 text-green-400" /> : <XCircleIcon className="w-5 h-5 text-red-400" />}
+                      {evaluation.isCorrect ? (
+                        <CheckIcon className="w-5 h-5 text-green-400" />
+                      ) : (
+                        <XCircleIcon className="w-5 h-5 text-red-400" />
+                      )}
                     </div>
                     <div>
                       <p className="text-slate-200 text-sm">{evaluation.feedback}</p>
                       {evaluation.correctedPhrase && (
                         <div className="mt-2 flex items-center gap-x-2 text-sm bg-slate-800/50 p-1.5 rounded-md">
                           <AudioPlayer textToSpeak={evaluation.correctedPhrase} />
-                          <p className="text-slate-300"><strong className="font-semibold text-slate-100">{evaluation.correctedPhrase}</strong></p>
+                          <p className="text-slate-300">
+                            <strong className="font-semibold text-slate-100">{evaluation.correctedPhrase}</strong>
+                          </p>
                         </div>
                       )}
                     </div>
                   </div>
                   <div className="w-full sm:w-auto flex-shrink-0 flex items-center justify-center gap-3">
-                    {buttons.map(btn => (
+                    {buttons.map((btn) => (
                       <button
                         key={btn.key}
                         onClick={btn.action}

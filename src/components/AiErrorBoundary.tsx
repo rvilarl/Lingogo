@@ -77,12 +77,7 @@ export class AiErrorBoundary extends Component<Props, State> {
           <div className="bg-slate-800 border border-red-700 rounded-lg max-w-md w-full p-6">
             <div className="flex items-start gap-3 mb-4">
               <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-900/50 flex items-center justify-center">
-                <svg
-                  className="w-6 h-6 text-red-300"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
+                <svg className="w-6 h-6 text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -92,19 +87,13 @@ export class AiErrorBoundary extends Component<Props, State> {
                 </svg>
               </div>
               <div className="flex-1">
-                <h3 className="text-lg font-bold text-red-300 mb-1">
-                  ⚠️ {componentName} Error
-                </h3>
-                <p className="text-sm text-red-200 mb-3">
-                  Something went wrong with the AI service.
-                </p>
+                <h3 className="text-lg font-bold text-red-300 mb-1">⚠️ {componentName} Error</h3>
+                <p className="text-sm text-red-200 mb-3">Something went wrong with the AI service.</p>
               </div>
             </div>
 
             <div className="bg-red-900/20 border border-red-800 rounded p-3 mb-4">
-              <p className="text-xs text-red-200 font-mono break-words">
-                {errorMessage}
-              </p>
+              <p className="text-xs text-red-200 font-mono break-words">{errorMessage}</p>
             </div>
 
             <div className="space-y-2">
@@ -125,9 +114,7 @@ export class AiErrorBoundary extends Component<Props, State> {
 
             {process.env.NODE_ENV === 'development' && this.state.errorInfo && (
               <details className="mt-4 text-xs">
-                <summary className="cursor-pointer text-slate-400 hover:text-slate-300">
-                  Developer Info
-                </summary>
+                <summary className="cursor-pointer text-slate-400 hover:text-slate-300">Developer Info</summary>
                 <pre className="mt-2 p-2 bg-slate-900 rounded text-slate-300 overflow-auto max-h-32">
                   {this.state.errorInfo.componentStack}
                 </pre>

@@ -1,9 +1,10 @@
 import React, { useRef } from 'react';
-import type { Phrase, DeepDiveAnalysis } from '../types.ts';
-import CloseIcon from './icons/CloseIcon';
-import AnalysisIcon from './icons/AnalysisIcon';
-import Spinner from './Spinner';
+
 import { useTranslation } from '../hooks/useTranslation';
+import type { DeepDiveAnalysis, Phrase } from '../types.ts';
+import AnalysisIcon from './icons/AnalysisIcon';
+import CloseIcon from './icons/CloseIcon';
+import Spinner from './Spinner';
 
 interface DeepDiveModalProps {
   isOpen: boolean;
@@ -16,16 +17,16 @@ interface DeepDiveModalProps {
 }
 
 const chunkColorMap: { [key: string]: string } = {
-  'Noun': 'bg-blue-500/20 text-blue-300 ring-blue-500/30',
-  'Verb': 'bg-green-500/20 text-green-300 ring-green-500/30',
-  'Adjective': 'bg-yellow-500/20 text-yellow-300 ring-yellow-500/30',
-  'Adverb': 'bg-orange-500/20 text-orange-300 ring-orange-500/30',
-  'Pronoun': 'bg-teal-500/20 text-teal-300 ring-teal-500/30',
-  'Preposition': 'bg-purple-500/20 text-purple-300 ring-purple-500/30',
-  'Article': 'bg-pink-500/20 text-pink-300 ring-pink-500/30',
-  'Conjunction': 'bg-indigo-500/20 text-indigo-300 ring-indigo-500/30',
-  'Particle': 'bg-gray-500/20 text-gray-300 ring-gray-500/30',
-  'Default': 'bg-slate-600/50 text-slate-200 ring-slate-500/30',
+  Noun: 'bg-blue-500/20 text-blue-300 ring-blue-500/30',
+  Verb: 'bg-green-500/20 text-green-300 ring-green-500/30',
+  Adjective: 'bg-yellow-500/20 text-yellow-300 ring-yellow-500/30',
+  Adverb: 'bg-orange-500/20 text-orange-300 ring-orange-500/30',
+  Pronoun: 'bg-teal-500/20 text-teal-300 ring-teal-500/30',
+  Preposition: 'bg-purple-500/20 text-purple-300 ring-purple-500/30',
+  Article: 'bg-pink-500/20 text-pink-300 ring-pink-500/30',
+  Conjunction: 'bg-indigo-500/20 text-indigo-300 ring-indigo-500/30',
+  Particle: 'bg-gray-500/20 text-gray-300 ring-gray-500/30',
+  Default: 'bg-slate-600/50 text-slate-200 ring-slate-500/30',
 };
 
 const DeepDiveSkeleton: React.FC = () => (
@@ -70,15 +71,26 @@ const DeepDiveSkeleton: React.FC = () => (
   </div>
 );
 
-
-const DeepDiveModal: React.FC<DeepDiveModalProps> = ({ isOpen, onClose, phrase, analysis, isLoading, error, onOpenWordAnalysis }) => {
+const DeepDiveModal: React.FC<DeepDiveModalProps> = ({
+  isOpen,
+  onClose,
+  phrase,
+  analysis,
+  isLoading,
+  error,
+  onOpenWordAnalysis,
+}) => {
   const { t } = useTranslation();
   const wordLongPressTimer = useRef<number | null>(null);
 
   if (!isOpen) return null;
 
   const handleWordClick = (contextText: string, word: string) => {
-    const proxyPhrase: Phrase = { ...phrase, id: `proxy_deep_dive_${phrase.id}`, text: { ...phrase.text, learning: contextText } };
+    const proxyPhrase: Phrase = {
+      ...phrase,
+      id: `proxy_deep_dive_${phrase.id}`,
+      text: { ...phrase.text, learning: contextText },
+    };
     onOpenWordAnalysis(proxyPhrase, word);
   };
 
@@ -123,21 +135,32 @@ const DeepDiveModal: React.FC<DeepDiveModalProps> = ({ isOpen, onClose, phrase, 
         }}
         className="cursor-pointer hover:bg-white/20 px-1 py-0.5 rounded-md transition-colors"
       >
-        {word}{i < arr.length - 1 ? ' ' : ''}
+        {word}
+        {i < arr.length - 1 ? ' ' : ''}
       </span>
     ));
   };
-
 
   const renderContent = () => {
     if (isLoading) {
       return <DeepDiveSkeleton />;
     }
     if (error) {
-      return <div className="flex justify-center items-center h-full"><div className="text-center bg-red-900/50 border border-red-700 text-red-300 p-4 rounded-lg"><p className="font-semibold">{t('modals.deepDive.errors.analysis')}</p><p className="text-sm">{error}</p></div></div>;
+      return (
+        <div className="flex justify-center items-center h-full">
+          <div className="text-center bg-red-900/50 border border-red-700 text-red-300 p-4 rounded-lg">
+            <p className="font-semibold">{t('modals.deepDive.errors.analysis')}</p>
+            <p className="text-sm">{error}</p>
+          </div>
+        </div>
+      );
     }
     if (!analysis) {
-      return <div className="flex justify-center items-center h-full"><p className="text-slate-400">{t('modals.deepDive.errors.noData')}</p></div>;
+      return (
+        <div className="flex justify-center items-center h-full">
+          <p className="text-slate-400">{t('modals.deepDive.errors.noData')}</p>
+        </div>
+      );
     }
 
     return (
@@ -148,7 +171,10 @@ const DeepDiveModal: React.FC<DeepDiveModalProps> = ({ isOpen, onClose, phrase, 
           <div className="bg-slate-700/50 p-4 rounded-lg">
             <div className="text-lg font-semibold text-slate-100 mb-4 leading-relaxed flex flex-wrap items-center gap-x-1 gap-y-2">
               {analysis.chunks.map((chunk, index) => (
-                <div key={index} className={`px-2 py-1 rounded-md ring-1 ring-inset ${chunkColorMap[chunk.type] || chunkColorMap.Default}`}>
+                <div
+                  key={index}
+                  className={`px-2 py-1 rounded-md ring-1 ring-inset ${chunkColorMap[chunk.type] || chunkColorMap.Default}`}
+                >
                   {renderClickableLearning(chunk.text)}
                 </div>
               ))}
@@ -156,9 +182,12 @@ const DeepDiveModal: React.FC<DeepDiveModalProps> = ({ isOpen, onClose, phrase, 
             <div className="space-y-3 border-t border-slate-600/50 pt-4">
               {analysis.chunks.map((chunk, index) => (
                 <div key={index} className="flex items-start text-sm">
-                  <span className={`w-2 h-2 rounded-full mt-1.5 mr-3 flex-shrink-0 ${chunkColorMap[chunk.type]?.replace('text-', 'bg-').split(' ')[0] || chunkColorMap.Default.replace('text-', 'bg-').split(' ')[0]}`}></span>
+                  <span
+                    className={`w-2 h-2 rounded-full mt-1.5 mr-3 flex-shrink-0 ${chunkColorMap[chunk.type]?.replace('text-', 'bg-').split(' ')[0] || chunkColorMap.Default.replace('text-', 'bg-').split(' ')[0]}`}
+                  ></span>
                   <div>
-                    <strong className="text-slate-200">{chunk.text}</strong> <span className="text-slate-400">({chunk.type})</span>: {chunk.explanation}
+                    <strong className="text-slate-200">{chunk.text}</strong>{' '}
+                    <span className="text-slate-400">({chunk.type})</span>: {chunk.explanation}
                   </div>
                 </div>
               ))}
@@ -181,7 +210,12 @@ const DeepDiveModal: React.FC<DeepDiveModalProps> = ({ isOpen, onClose, phrase, 
             <p className="text-slate-200 mb-4">{analysis.mnemonicImage.description}</p>
             <div className="flex flex-wrap gap-2">
               {analysis.mnemonicImage.keywords.map((keyword, index) => (
-                <span key={index} className="px-2 py-0.5 text-xs font-medium bg-yellow-400/20 text-yellow-300 rounded-full">{keyword}</span>
+                <span
+                  key={index}
+                  className="px-2 py-0.5 text-xs font-medium bg-yellow-400/20 text-yellow-300 rounded-full"
+                >
+                  {keyword}
+                </span>
               ))}
             </div>
           </div>
@@ -194,7 +228,7 @@ const DeepDiveModal: React.FC<DeepDiveModalProps> = ({ isOpen, onClose, phrase, 
     <div className="fixed inset-0 bg-black/60 z-50 flex justify-center items-end" onClick={onClose}>
       <div
         className={`bg-slate-800 w-full max-w-2xl h-[90%] max-h-[90vh] rounded-t-2xl shadow-2xl flex flex-col transition-transform duration-300 ease-out ${isOpen ? 'translate-y-0' : 'translate-y-full'}`}
-        onClick={e => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
       >
         <header className="flex items-center justify-between p-4 border-b border-slate-700 flex-shrink-0">
           <div className="flex items-center space-x-3">
@@ -205,9 +239,7 @@ const DeepDiveModal: React.FC<DeepDiveModalProps> = ({ isOpen, onClose, phrase, 
             <CloseIcon className="w-6 h-6 text-slate-400" />
           </button>
         </header>
-        <div className="flex-grow p-2 overflow-y-auto hide-scrollbar">
-          {renderContent()}
-        </div>
+        <div className="flex-grow p-2 overflow-y-auto hide-scrollbar">{renderContent()}</div>
       </div>
     </div>
   );

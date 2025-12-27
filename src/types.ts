@@ -1,8 +1,8 @@
 // FIX: Moved View type from App.tsx and exported it to be shared across components.
 export type View = 'practice' | 'list' | 'library' | 'reader';
 
-import { SUPPORTED_LANGUAGE_CODES, type LanguageCode } from './i18n/languageMeta';
-export { SUPPORTED_LANGUAGE_CODES, type LanguageCode };
+import { type LanguageCode, SUPPORTED_LANGUAGE_CODES } from './i18n/languageMeta';
+export { type LanguageCode, SUPPORTED_LANGUAGE_CODES };
 
 export interface LanguageProfile {
   ui: LanguageCode;
@@ -225,7 +225,12 @@ export interface CategoryAssistantResponse {
   phrasesForDeletion?: { learning: string; reason: string }[];
 }
 
-export type CategoryAssistantRequestType = 'initial' | 'add_similar' | 'check_homogeneity' | 'create_dialogue' | 'user_text';
+export type CategoryAssistantRequestType =
+  | 'initial'
+  | 'add_similar'
+  | 'check_homogeneity'
+  | 'create_dialogue'
+  | 'user_text';
 
 export interface CategoryAssistantRequest {
   type: CategoryAssistantRequestType;
@@ -240,12 +245,12 @@ export interface CategoryAssistantRequest {
  * Type of AI message in Practice Chat
  */
 export type PracticeChatMessageType =
-  | 'greeting'      // Welcome and session start
-  | 'question'      // Question from AI to user
-  | 'correction'    // Correction of user's mistake
-  | 'explanation'   // Grammar/word explanation
+  | 'greeting' // Welcome and session start
+  | 'question' // Question from AI to user
+  | 'correction' // Correction of user's mistake
+  | 'explanation' // Grammar/word explanation
   | 'encouragement' // Praise and motivation
-  | 'suggestion';   // Suggestion to use a phrase
+  | 'suggestion'; // Suggestion to use a phrase
 
 /**
  * Simplified Practice Chat Message structure
@@ -258,28 +263,28 @@ export interface PracticeChatMessage {
   content: {
     // Primary text in learning language
     primary: {
-      text: string;           // e.g., "Wie geht es dir?"
-      translation?: string;   // e.g., "How are you?" (for assistant messages)
+      text: string; // e.g., "Wie geht es dir?"
+      translation?: string; // e.g., "How are you?" (for assistant messages)
     };
 
     // Additional explanation in native language (optional)
     secondary?: {
-      text: string;           // e.g., "Это вежливый способ спросить как дела"
+      text: string; // e.g., "Это вежливый способ спросить как дела"
     };
   };
 
   // Interactive elements (only for assistant)
   actions?: {
-    suggestions?: string[];   // Quick reply buttons ["Gut, danke", "Sehr gut"]
-    hints?: string[];         // Hints if user is stuck
-    phraseUsed?: string;      // ID of phrase from vocabulary
+    suggestions?: string[]; // Quick reply buttons ["Gut, danke", "Sehr gut"]
+    hints?: string[]; // Hints if user is stuck
+    phraseUsed?: string; // ID of phrase from vocabulary
   };
 
   // Metadata
   metadata?: {
     timestamp: number;
-    correctness?: 'correct' | 'partial' | 'incorrect';  // For user messages
-    vocabulary?: string[];    // New words introduced
+    correctness?: 'correct' | 'partial' | 'incorrect'; // For user messages
+    vocabulary?: string[]; // New words introduced
   };
 }
 
@@ -287,19 +292,19 @@ export interface PracticeChatMessage {
  * Practice Chat Session Statistics
  */
 export interface PracticeChatSessionStats {
-  phrasesUsedIds: string[];       // IDs of phrases practiced
-  correctCount: number;            // Number of correct responses
-  incorrectCount: number;          // Number of mistakes
-  partialCount: number;            // Number of partially correct responses
-  hintsUsed: number;               // Number of hints requested
-  duration: number;                // Session duration in ms
-  messagesExchanged: number;       // Total message count
-  sessionStartTime: number;        // Timestamp of session start
+  phrasesUsedIds: string[]; // IDs of phrases practiced
+  correctCount: number; // Number of correct responses
+  incorrectCount: number; // Number of mistakes
+  partialCount: number; // Number of partially correct responses
+  hintsUsed: number; // Number of hints requested
+  duration: number; // Session duration in ms
+  messagesExchanged: number; // Total message count
+  sessionStartTime: number; // Timestamp of session start
 }
 
 export interface PracticeChatSessionRecord extends PracticeChatSessionStats {
-  sessionEndTime: number;          // Timestamp of session end
-  sessionId: string;               // Unique session identifier
+  sessionEndTime: number; // Timestamp of session end
+  sessionId: string; // Unique session identifier
 }
 
 export type PracticeReviewAction = 'know' | 'forgot' | 'dont_know';

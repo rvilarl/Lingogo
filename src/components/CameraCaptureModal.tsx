@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
-import CloseIcon from './icons/CloseIcon';
+import React, { useEffect, useRef, useState } from 'react';
+
+import { useTranslation } from '../hooks/useTranslation';
 import CameraIcon from './icons/CameraIcon';
+import CloseIcon from './icons/CloseIcon';
 import RefreshIcon from './icons/RefreshIcon';
 import Spinner from './Spinner';
-import { useTranslation } from '../hooks/useTranslation';
 
 interface CameraCaptureModalProps {
   isOpen: boolean;
@@ -22,7 +23,7 @@ const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({ isOpen, onClose
 
   const stopStream = () => {
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     }
   };
@@ -35,7 +36,7 @@ const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({ isOpen, onClose
         try {
           // Prefer back camera on mobile devices
           const constraints = {
-            video: { facingMode: 'environment' }
+            video: { facingMode: 'environment' },
           };
           const stream = await navigator.mediaDevices.getUserMedia(constraints);
           streamRef.current = stream;
@@ -44,7 +45,7 @@ const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({ isOpen, onClose
           }
           setIsLoading(false);
         } catch (err) {
-          console.error("Error accessing camera:", err);
+          console.error('Error accessing camera:', err);
           if (err instanceof DOMException && (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError')) {
             setError(t('modals.cameraCapture.errors.permission'));
           } else if (err instanceof DOMException && err.name === 'NotFoundError') {

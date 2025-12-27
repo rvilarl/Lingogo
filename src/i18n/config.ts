@@ -1,6 +1,7 @@
 import i18n from 'i18next';
-import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
+import { initReactI18next } from 'react-i18next';
+
 import { SUPPORTED_LANGUAGE_CODES } from '../types.ts';
 
 export const SUPPORTED_LANGS = [...SUPPORTED_LANGUAGE_CODES];
@@ -11,18 +12,15 @@ const localeModules = import.meta.glob<{ default: Record<string, unknown> }>('./
 
 export type LocaleResources = Record<string, { translation: Record<string, unknown> }>;
 
-const resources = Object.entries(localeModules).reduce<LocaleResources>(
-  (acc, [path, module]) => {
-    const match = path.match(/\.\/(.+?)\.json$/);
-    if (!match) {
-      return acc;
-    }
-    const lang = match[1];
-    acc[lang] = { translation: module.default };
+const resources = Object.entries(localeModules).reduce<LocaleResources>((acc, [path, module]) => {
+  const match = path.match(/\.\/(.+?)\.json$/);
+  if (!match) {
     return acc;
-  },
-  {}
-);
+  }
+  const lang = match[1];
+  acc[lang] = { translation: module.default };
+  return acc;
+}, {});
 
 export const STATIC_RESOURCES: LocaleResources = resources;
 

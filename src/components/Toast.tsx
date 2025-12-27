@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+
 import CheckIcon from './icons/CheckIcon';
 
 interface ToastProps {
-  toast: { message: string, id: number, type?: 'default' | 'automationSuccess' } | null;
+  toast: { message: string; id: number; type?: 'default' | 'automationSuccess' } | null;
   onDismiss: () => void;
 }
 
@@ -63,7 +64,11 @@ const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
             <CheckIcon className="w-5 h-5 text-white" />
           ) : (
             <div className="relative w-full h-full flex items-center justify-center">
-               <span className={`text-white text-sm font-medium text-nowrap transition-opacity duration-200 ${isInitial ? 'opacity-0' : 'opacity-100 delay-300'}`}>{toast.message}</span>
+              <span
+                className={`text-white text-sm font-medium text-nowrap transition-opacity duration-200 ${isInitial ? 'opacity-0' : 'opacity-100 delay-300'}`}
+              >
+                {toast.message}
+              </span>
               {isTransformed && <div className="automation-toast-shine"></div>}
             </div>
           )}

@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
+
 import App from './App.tsx';
-import LoginPage from './pages/LoginPage.tsx';
-import SignUpPage from './pages/SignUpPage.tsx';
 import { useAuth } from './contexts/authContext.tsx';
 import { useTranslation } from './hooks/useTranslation.ts';
+import LoginPage from './pages/LoginPage.tsx';
+import SignUpPage from './pages/SignUpPage.tsx';
 
 const LoadingScreen: React.FC = () => {
   const { t } = useTranslation();

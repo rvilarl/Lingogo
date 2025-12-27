@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+
+import { useTranslation } from '../hooks/useTranslation.ts';
 import { Category } from '../types.ts';
 import CloseIcon from './icons/CloseIcon';
-import { useTranslation } from '../hooks/useTranslation.ts';
 
 interface CategoryFormModalProps {
   isOpen: boolean;
@@ -11,11 +12,24 @@ interface CategoryFormModalProps {
 }
 
 const colors = [
-  'bg-slate-500', 'bg-red-500', 'bg-orange-500', 'bg-amber-500',
-  'bg-yellow-500', 'bg-lime-500', 'bg-green-500', 'bg-emerald-500',
-  'bg-teal-500', 'bg-cyan-500', 'bg-sky-500', 'bg-blue-500',
-  'bg-indigo-500', 'bg-violet-500', 'bg-purple-500', 'bg-fuchsia-500',
-  'bg-pink-500', 'bg-rose-500'
+  'bg-slate-500',
+  'bg-red-500',
+  'bg-orange-500',
+  'bg-amber-500',
+  'bg-yellow-500',
+  'bg-lime-500',
+  'bg-green-500',
+  'bg-emerald-500',
+  'bg-teal-500',
+  'bg-cyan-500',
+  'bg-sky-500',
+  'bg-blue-500',
+  'bg-indigo-500',
+  'bg-violet-500',
+  'bg-purple-500',
+  'bg-fuchsia-500',
+  'bg-pink-500',
+  'bg-rose-500',
 ];
 
 const CategoryFormModal: React.FC<CategoryFormModalProps> = ({ isOpen, onClose, onSubmit, initialData }) => {
@@ -47,14 +61,19 @@ const CategoryFormModal: React.FC<CategoryFormModalProps> = ({ isOpen, onClose, 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/70 z-[70] flex justify-center items-center backdrop-blur-sm p-0 animate-fade-in" onClick={onClose}>
+    <div
+      className="fixed inset-0 bg-black/70 z-[70] flex justify-center items-center backdrop-blur-sm p-0 animate-fade-in"
+      onClick={onClose}
+    >
       <form
         onSubmit={handleSubmit}
         className="bg-slate-800 rounded-lg shadow-2xl w-full max-w-sm m-4"
-        onClick={e => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
       >
         <header className="flex items-center justify-between px-2 py-2 border-b border-slate-700">
-          <h2 className="text-lg font-bold text-slate-100">{initialData ? t('categories.form.editTitle') : t('categories.form.createTitle')}</h2>
+          <h2 className="text-lg font-bold text-slate-100">
+            {initialData ? t('categories.form.editTitle') : t('categories.form.createTitle')}
+          </h2>
           <button type="button" onClick={onClose} className="p-2 rounded-full hover:bg-slate-700">
             <CloseIcon className="w-6 h-6 text-slate-400" />
           </button>
@@ -62,12 +81,14 @@ const CategoryFormModal: React.FC<CategoryFormModalProps> = ({ isOpen, onClose, 
 
         <div className="p-2 space-y-2">
           <div>
-            <label htmlFor="category-name" className="block text-sm font-medium text-slate-300 mb-2">{t('categories.form.fields.nameLabel')}</label>
+            <label htmlFor="category-name" className="block text-sm font-medium text-slate-300 mb-2">
+              {t('categories.form.fields.nameLabel')}
+            </label>
             <input
               id="category-name"
               type="text"
               value={name}
-              onChange={e => setName(e.target.value)}
+              onChange={(e) => setName(e.target.value)}
               placeholder={t('categories.form.fields.namePlaceholder')}
               className="w-full bg-slate-700 border border-slate-600 rounded-md p-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
               required
@@ -77,9 +98,11 @@ const CategoryFormModal: React.FC<CategoryFormModalProps> = ({ isOpen, onClose, 
             {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">{t('categories.form.fields.colorLabel')}</label>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              {t('categories.form.fields.colorLabel')}
+            </label>
             <div className="grid grid-cols-6 gap-2">
-              {colors.map(c => (
+              {colors.map((c) => (
                 <button
                   type="button"
                   key={c}

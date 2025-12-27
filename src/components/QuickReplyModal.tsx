@@ -1,9 +1,9 @@
+import React, { useEffect, useState } from 'react';
 
-import React, { useState, useEffect } from 'react';
+import { useTranslation } from '../hooks/useTranslation';
 import type { Phrase } from '../types.ts';
 import CheckIcon from './icons/CheckIcon';
 import XCircleIcon from './icons/XCircleIcon';
-import { useTranslation } from '../hooks/useTranslation';
 
 interface QuickReplyModalProps {
   isOpen: boolean;
@@ -17,7 +17,17 @@ interface QuickReplyModalProps {
   error: string | null;
 }
 
-const QuickReplyModal: React.FC<QuickReplyModalProps> = ({ isOpen, onClose, phrase, options, correctAnswer, onCorrect, onIncorrect, isLoading, error }) => {
+const QuickReplyModal: React.FC<QuickReplyModalProps> = ({
+  isOpen,
+  onClose,
+  phrase,
+  options,
+  correctAnswer,
+  onCorrect,
+  onIncorrect,
+  isLoading,
+  error,
+}) => {
   const { t } = useTranslation();
   const [selection, setSelection] = useState<{ value: string; isCorrect: boolean } | null>(null);
 
@@ -107,7 +117,7 @@ const QuickReplyModal: React.FC<QuickReplyModalProps> = ({ isOpen, onClose, phra
       <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <div
         className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-800/90 border border-slate-700 rounded-xl shadow-2xl p-6 w-72 animate-fade-in-center"
-        onClick={e => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-center text-lg font-semibold text-slate-200 mb-4">{phrase.text.native}</h2>
         {renderContent()}

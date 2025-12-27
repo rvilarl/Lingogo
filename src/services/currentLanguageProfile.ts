@@ -1,4 +1,4 @@
-import type { LanguageProfile, LanguageCode } from '../types.ts';
+import type { LanguageCode, LanguageProfile } from '../types.ts';
 
 /**
  * Global language profile storage for AI services

@@ -35,7 +35,6 @@ export const setCache = (key: string, value: unknown): void => {
   }
 };
 
-
 /**
  * Get language pair prefix for cache keys
  * Format: {native}_{learning}_
@@ -86,19 +85,19 @@ export const clearCacheForPhrase = (phraseId: string): void => {
     `chat_initial_${phraseId}`,
     `quick_reply_options_${phraseId}`,
     `sentence_chain_api_cache_${phraseId}`,
-    `sentence_chain_history_${phraseId}`
+    `sentence_chain_history_${phraseId}`,
   ];
 
   const keysToRemove: string[] = [];
   try {
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key && prefixes.some(prefix => key.startsWith(prefix))) {
+      if (key && prefixes.some((prefix) => key.startsWith(prefix))) {
         keysToRemove.push(key);
       }
     }
 
-    keysToRemove.forEach(key => {
+    keysToRemove.forEach((key) => {
       localStorage.removeItem(key);
     });
 
@@ -127,7 +126,7 @@ export const clearLanguagePairCache = (native: LanguageCode, learning: LanguageC
       }
     }
 
-    keysToRemove.forEach(key => {
+    keysToRemove.forEach((key) => {
       localStorage.removeItem(key);
     });
 

@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Phrase, LanguageProfile, Pronoun } from '../types.ts';
+
+import { useTranslation } from '../hooks/useTranslation';
+import { LanguageProfile, Phrase, Pronoun } from '../types.ts';
+import AudioPlayer from './AudioPlayer';
 import CloseIcon from './icons/CloseIcon';
 import UsersIcon from './icons/UsersIcon';
-import AudioPlayer from './AudioPlayer';
 import Spinner from './Spinner';
-import { useTranslation } from '../hooks/useTranslation';
 
 interface PronounsModalProps {
   isOpen: boolean;
@@ -21,7 +22,7 @@ const PronounsModal: React.FC<PronounsModalProps> = ({
   onClose,
   onOpenWordAnalysis,
   languageProfile,
-  aiService
+  aiService,
 }) => {
   const { t } = useTranslation();
   const [pronouns, setPronouns] = useState<Pronoun[]>([]);
@@ -56,8 +57,12 @@ const PronounsModal: React.FC<PronounsModalProps> = ({
       id: `proxy_pronoun_${word}`,
       text: { learning: contextText, native: nativeText },
       category: 'pronouns',
-      masteryLevel: 0, lastReviewedAt: null, nextReviewAt: Date.now(),
-      knowCount: 0, knowStreak: 0, isMastered: false,
+      masteryLevel: 0,
+      lastReviewedAt: null,
+      nextReviewAt: Date.now(),
+      knowCount: 0,
+      knowStreak: 0,
+      isMastered: false,
       lapses: 0,
     };
     onOpenWordAnalysis(proxyPhrase as Phrase, word);
@@ -87,7 +92,7 @@ const PronounsModal: React.FC<PronounsModalProps> = ({
     <div className="fixed inset-0 bg-black/60 z-[70] flex justify-center items-center" onClick={onClose}>
       <div
         className="bg-slate-800 w-full max-w-sm m-4 rounded-2xl shadow-2xl flex flex-col"
-        onClick={e => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
       >
         <header className="flex items-center justify-between p-4 border-b border-slate-700 flex-shrink-0">
           <div className="flex items-center space-x-3">
@@ -104,16 +109,18 @@ const PronounsModal: React.FC<PronounsModalProps> = ({
               <Spinner />
             </div>
           ) : error ? (
-            <div className="p-4 text-center text-red-400">
-              {error}
-            </div>
+            <div className="p-4 text-center text-red-400">{error}</div>
           ) : (
             <div className="bg-slate-700/50 p-4 rounded-lg">
               <table className="w-full text-left">
                 <thead>
                   <tr className="border-b border-slate-600">
-                    <th className="p-3 w-1/6"><span className="sr-only">{t('modals.pronouns.headers.speak')}</span></th>
-                    <th className="p-3 text-sm font-semibold text-slate-400">{t('modals.pronouns.headers.learning')}</th>
+                    <th className="p-3 w-1/6">
+                      <span className="sr-only">{t('modals.pronouns.headers.speak')}</span>
+                    </th>
+                    <th className="p-3 text-sm font-semibold text-slate-400">
+                      {t('modals.pronouns.headers.learning')}
+                    </th>
                     <th className="p-3 text-sm font-semibold text-slate-400">{t('modals.pronouns.headers.native')}</th>
                   </tr>
                 </thead>

@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useRef, useContext } from 'react';
-import PlusIcon from './icons/PlusIcon';
-import CardsIcon from './icons/CardsIcon';
-import SmartToyIcon from './icons/SmartToyIcon';
-import BookIcon from './BookIcon';
-import { useTranslation } from '../hooks/useTranslation.ts';
-import { LanguageContext } from '../contexts/languageContext.tsx';
-import type { LanguageCode } from '../types.ts';
-import { BiSolidUserVoice } from "react-icons/bi";
+import React, { useContext, useEffect, useRef, useState } from 'react';
+import { BiSolidUserVoice } from 'react-icons/bi';
 
+import { LanguageContext } from '../contexts/languageContext.tsx';
+import { useTranslation } from '../hooks/useTranslation.ts';
+import type { LanguageCode } from '../types.ts';
+import BookIcon from './BookIcon';
+import CardsIcon from './icons/CardsIcon';
+import PlusIcon from './icons/PlusIcon';
+import SmartToyIcon from './icons/SmartToyIcon';
 
 interface ExpandingFabProps {
   onAddPhrase: (options: { language: LanguageCode; autoSubmit: boolean }) => void;
@@ -52,8 +52,7 @@ const ExpandingFab: React.FC<ExpandingFabProps> = ({ onAddPhrase, onSmartImport,
     setIsLangOpen((prev) => !prev);
   };
 
-  const getBadgeLabel = (code: LanguageCode) =>
-    t(`languages.badge.${code}`, { defaultValue: code.toUpperCase() });
+  const getBadgeLabel = (code: LanguageCode) => t(`languages.badge.${code}`, { defaultValue: code.toUpperCase() });
 
   const handleAddClick = (language: LanguageCode) => {
     if (!profile) return;
@@ -92,8 +91,9 @@ const ExpandingFab: React.FC<ExpandingFabProps> = ({ onAddPhrase, onSmartImport,
     <div ref={containerRef} className="fixed bottom-6 right-6 z-20 flex flex-col items-center gap-y-3">
       {/* Language Options */}
       <div
-        className={`transition-all duration-200 ease-out flex flex-col items-center gap-y-3 ${isLangOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
-          }`}
+        className={`transition-all duration-200 ease-out flex flex-col items-center gap-y-3 ${
+          isLangOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
+        }`}
       >
         {languageButtons.map(({ code, label }) => (
           <button
@@ -109,8 +109,9 @@ const ExpandingFab: React.FC<ExpandingFabProps> = ({ onAddPhrase, onSmartImport,
 
       {/* Main Options */}
       <div
-        className={`transition-all duration-200 ease-out flex flex-col items-center gap-y-3 ${isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
-          }`}
+        className={`transition-all duration-200 ease-out flex flex-col items-center gap-y-3 ${
+          isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
+        }`}
       >
         <button
           onClick={handleLibraryClick}

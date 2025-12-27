@@ -1,8 +1,8 @@
 import { DEFAULT_LANG, LOCALE_SCHEMA_VERSION, STATIC_RESOURCES, SUPPORTED_LANGS } from '../i18n/config.ts';
-import type { LanguageCode } from '../types.ts';
-import { translateLocaleTemplate } from '../services/geminiService.ts';
-import { readLocaleCache, writeLocaleCache } from './localeCache.ts';
 import { LOCALIZATION_STEPS, type LocalizationPhase } from '../i18n/localizationPhases.ts';
+import { translateLocaleTemplate } from '../services/geminiService.ts';
+import type { LanguageCode } from '../types.ts';
+import { readLocaleCache, writeLocaleCache } from './localeCache.ts';
 
 export type TranslationKey = string;
 export type TranslationRecord = Record<string, unknown>;
@@ -96,13 +96,9 @@ export const assessLocale = (candidate: TranslationRecord): LocaleAssessment => 
   return { missingKeys, emptyKeys, placeholderMismatches };
 };
 
-export const resolveLanguage = (lang: LanguageCode): string => (
-  SUPPORTED_LANGS.includes(lang) ? lang : DEFAULT_LANG
-);
+export const resolveLanguage = (lang: LanguageCode): string => (SUPPORTED_LANGS.includes(lang) ? lang : DEFAULT_LANG);
 
-export const getStaticLocale = (lang: string): TranslationRecord => (
-  STATIC_RESOURCES[lang]?.translation ?? {}
-);
+export const getStaticLocale = (lang: string): TranslationRecord => STATIC_RESOURCES[lang]?.translation ?? {};
 
 export const hasLocaleGaps = (lang: string): boolean => {
   const candidate = getStaticLocale(lang);
@@ -136,7 +132,10 @@ const notify = (cb: LoadLocaleOptions['onPhase'], phase: LocalizationPhase) => {
   }
 };
 
-export const loadLocaleResources = async (lang: LanguageCode, options: LoadLocaleOptions = {}): Promise<LocaleLoadResult> => {
+export const loadLocaleResources = async (
+  lang: LanguageCode,
+  options: LoadLocaleOptions = {}
+): Promise<LocaleLoadResult> => {
   const { onPhase, signal } = options;
   const resolvedLang = resolveLanguage(lang);
 
@@ -149,7 +148,9 @@ export const loadLocaleResources = async (lang: LanguageCode, options: LoadLocal
   notify(onPhase, 'checkingStatic');
   const staticLocale = getStaticLocale(resolvedLang);
   const staticAssessment = assessLocale(staticLocale);
-  console.log(`[Localization] Static locale assessment - Missing: ${staticAssessment.missingKeys.length}, Empty: ${staticAssessment.emptyKeys.length}, Placeholder mismatches: ${staticAssessment.placeholderMismatches.length}`);
+  console.log(
+    `[Localization] Static locale assessment - Missing: ${staticAssessment.missingKeys.length}, Empty: ${staticAssessment.emptyKeys.length}, Placeholder mismatches: ${staticAssessment.placeholderMismatches.length}`
+  );
 
   if (validateLocaleShape(staticLocale)) {
     console.log(`[Localization] Using static locale for ${resolvedLang}`);
@@ -166,7 +167,9 @@ export const loadLocaleResources = async (lang: LanguageCode, options: LoadLocal
     const cached = await readLocaleCache(resolvedLang, LOCALE_SCHEMA_VERSION);
     if (cached) {
       const cacheAssessment = assessLocale(cached);
-      console.log(`[Localization] Cache assessment - Missing: ${cacheAssessment.missingKeys.length}, Empty: ${cacheAssessment.emptyKeys.length}, Placeholder mismatches: ${cacheAssessment.placeholderMismatches.length}`);
+      console.log(
+        `[Localization] Cache assessment - Missing: ${cacheAssessment.missingKeys.length}, Empty: ${cacheAssessment.emptyKeys.length}, Placeholder mismatches: ${cacheAssessment.placeholderMismatches.length}`
+      );
 
       if (validateLocaleShape(cached)) {
         console.log(`[Localization] Using cached locale for ${resolvedLang}`);
@@ -222,20 +225,34 @@ export const loadLocaleResources = async (lang: LanguageCode, options: LoadLocal
 
   notify(onPhase, 'validating');
   const assessment = assessLocale(generatedLocale);
-  console.log(`[Localization] Generated locale assessment - Missing: ${assessment.missingKeys.length}, Empty: ${assessment.emptyKeys.length}, Placeholder mismatches: ${assessment.placeholderMismatches.length}`);
+  console.log(
+    `[Localization] Generated locale assessment - Missing: ${assessment.missingKeys.length}, Empty: ${assessment.emptyKeys.length}, Placeholder mismatches: ${assessment.placeholderMismatches.length}`
+  );
 
-  if (assessment.missingKeys.length > 0 || assessment.emptyKeys.length > 0 || assessment.placeholderMismatches.length > 0) {
+  if (
+    assessment.missingKeys.length > 0 ||
+    assessment.emptyKeys.length > 0 ||
+    assessment.placeholderMismatches.length > 0
+  ) {
     console.error(`[Localization] Generated locale is invalid for ${resolvedLang}`);
     if (assessment.missingKeys.length > 0) {
-      console.error(`[Localization] Missing keys (${assessment.missingKeys.length}):`, assessment.missingKeys.slice(0, 5));
+      console.error(
+        `[Localization] Missing keys (${assessment.missingKeys.length}):`,
+        assessment.missingKeys.slice(0, 5)
+      );
     }
     if (assessment.emptyKeys.length > 0) {
       console.error(`[Localization] Empty keys (${assessment.emptyKeys.length}):`, assessment.emptyKeys.slice(0, 5));
     }
     if (assessment.placeholderMismatches.length > 0) {
-      console.error(`[Localization] Placeholder mismatches (${assessment.placeholderMismatches.length}):`, assessment.placeholderMismatches.slice(0, 5));
+      console.error(
+        `[Localization] Placeholder mismatches (${assessment.placeholderMismatches.length}):`,
+        assessment.placeholderMismatches.slice(0, 5)
+      );
     }
-    throw new Error(`Generated locale is invalid. Missing: ${assessment.missingKeys.length}, Empty: ${assessment.emptyKeys.length}, Placeholder mismatches: ${assessment.placeholderMismatches.length}`);
+    throw new Error(
+      `Generated locale is invalid. Missing: ${assessment.missingKeys.length}, Empty: ${assessment.emptyKeys.length}, Placeholder mismatches: ${assessment.placeholderMismatches.length}`
+    );
   }
 
   console.log(`[Localization] Generated locale is valid for ${resolvedLang}`);

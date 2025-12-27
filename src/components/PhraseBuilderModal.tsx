@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import type { Phrase, PhraseEvaluation, PhraseBuilderOptions } from '../types.ts';
-import CloseIcon from './icons/CloseIcon';
+import React, { useEffect, useState } from 'react';
+
+import { useTranslation } from '../hooks/useTranslation';
+import type { Phrase, PhraseBuilderOptions, PhraseEvaluation } from '../types.ts';
+import AudioPlayer from './AudioPlayer';
+import ArrowRightIcon from './icons/ArrowRightIcon';
+import BackspaceIcon from './icons/BackspaceIcon';
 import BlocksIcon from './icons/BlocksIcon';
 import CheckIcon from './icons/CheckIcon';
+import CloseIcon from './icons/CloseIcon';
 import XCircleIcon from './icons/XCircleIcon';
-import AudioPlayer from './AudioPlayer';
-import BackspaceIcon from './icons/BackspaceIcon';
-import ArrowRightIcon from './icons/ArrowRightIcon';
-import { useTranslation } from '../hooks/useTranslation';
 
 interface PhraseBuilderModalProps {
   isOpen: boolean;
@@ -35,7 +36,6 @@ const WordBankSkeleton = () => (
   </div>
 );
 
-
 const PhraseBuilderModal: React.FC<PhraseBuilderModalProps> = ({
   isOpen,
   onClose,
@@ -46,7 +46,7 @@ const PhraseBuilderModal: React.FC<PhraseBuilderModalProps> = ({
   onEvaluate,
   onSuccess,
   onFailure,
-  onNextPhrase
+  onNextPhrase,
 }) => {
   const { t } = useTranslation();
   const [constructedWords, setConstructedWords] = useState<WordOption[]>([]);
@@ -67,22 +67,22 @@ const PhraseBuilderModal: React.FC<PhraseBuilderModalProps> = ({
 
   const handleSelectWord = (word: WordOption) => {
     setConstructedWords([...constructedWords, word]);
-    setAvailableWords(availableWords.filter(w => w.id !== word.id));
+    setAvailableWords(availableWords.filter((w) => w.id !== word.id));
   };
 
   const handleDeselectWord = (word: WordOption) => {
     setAvailableWords([...availableWords, word].sort((a, b) => a.id - b.id));
-    setConstructedWords(constructedWords.filter(w => w.id !== word.id));
+    setConstructedWords(constructedWords.filter((w) => w.id !== word.id));
   };
 
   const handleReset = () => {
     if (evaluation || isChecking) return;
     setAvailableWords([...availableWords, ...constructedWords].sort((a, b) => a.id - b.id));
     setConstructedWords([]);
-  }
+  };
 
   const handleCheck = async () => {
-    const userAttempt = constructedWords.map(w => w.word).join(' ');
+    const userAttempt = constructedWords.map((w) => w.word).join(' ');
     if (!userAttempt) return;
 
     setIsChecking(true);
@@ -126,7 +126,7 @@ const PhraseBuilderModal: React.FC<PhraseBuilderModalProps> = ({
       );
     }
 
-    const userAttempt = constructedWords.map(w => w.word).join(' ');
+    const userAttempt = constructedWords.map((w) => w.word).join(' ');
 
     return (
       <div className="flex flex-col h-full relative">
@@ -138,7 +138,7 @@ const PhraseBuilderModal: React.FC<PhraseBuilderModalProps> = ({
               {constructedWords.length === 0 && (
                 <p className="text-slate-500">{t('modals.phraseBuilder.instructions')}</p>
               )}
-              {constructedWords.map(word => (
+              {constructedWords.map((word) => (
                 <button
                   key={word.id}
                   onClick={() => handleDeselectWord(word)}
@@ -163,7 +163,7 @@ const PhraseBuilderModal: React.FC<PhraseBuilderModalProps> = ({
         {/* Middle: Available words area */}
         <div className="flex-grow my-4 flex flex-col justify-end min-h-0">
           <div className="w-full bg-slate-900/50 flex flex-wrap items-start content-start justify-center gap-2 p-4 rounded-lg overflow-y-auto hide-scrollbar">
-            {availableWords.map(word => (
+            {availableWords.map((word) => (
               <button
                 key={word.id}
                 onClick={() => handleSelectWord(word)}
@@ -192,8 +192,14 @@ const PhraseBuilderModal: React.FC<PhraseBuilderModalProps> = ({
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="flex space-x-1 items-center justify-center text-white">
                     <div className="w-2 h-2 bg-current rounded-full animate-pulse"></div>
-                    <div className="w-2 h-2 bg-current rounded-full animate-pulse" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="w-2 h-2 bg-current rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                    <div
+                      className="w-2 h-2 bg-current rounded-full animate-pulse"
+                      style={{ animationDelay: '0.1s' }}
+                    ></div>
+                    <div
+                      className="w-2 h-2 bg-current rounded-full animate-pulse"
+                      style={{ animationDelay: '0.2s' }}
+                    ></div>
                   </div>
                 </div>
               )}
@@ -202,20 +208,30 @@ const PhraseBuilderModal: React.FC<PhraseBuilderModalProps> = ({
         </div>
 
         {/* Absolutely Positioned Feedback Panel */}
-        <div className={`absolute bottom-[-24px] left-[-24px] right-[-24px] p-6 pt-4 bg-slate-800 border-t border-slate-700/50 shadow-[0_-10px_20px_-5px_rgba(0,0,0,0.2)] transition-transform duration-300 ease-out ${evaluation ? 'translate-y-0' : 'translate-y-full'}`}>
+        <div
+          className={`absolute bottom-[-24px] left-[-24px] right-[-24px] p-6 pt-4 bg-slate-800 border-t border-slate-700/50 shadow-[0_-10px_20px_-5px_rgba(0,0,0,0.2)] transition-transform duration-300 ease-out ${evaluation ? 'translate-y-0' : 'translate-y-full'}`}
+        >
           {evaluation && (
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
               {/* Feedback Message */}
-              <div className={`flex-grow w-full sm:w-auto p-3 rounded-lg ${evaluation.isCorrect ? 'bg-green-500/20' : 'bg-red-500/20'} flex items-start space-x-3`}>
+              <div
+                className={`flex-grow w-full sm:w-auto p-3 rounded-lg ${evaluation.isCorrect ? 'bg-green-500/20' : 'bg-red-500/20'} flex items-start space-x-3`}
+              >
                 <div className="flex-shrink-0 mt-0.5">
-                  {evaluation.isCorrect ? <CheckIcon className="w-5 h-5 text-green-400" /> : <XCircleIcon className="w-5 h-5 text-red-400" />}
+                  {evaluation.isCorrect ? (
+                    <CheckIcon className="w-5 h-5 text-green-400" />
+                  ) : (
+                    <XCircleIcon className="w-5 h-5 text-red-400" />
+                  )}
                 </div>
                 <div>
                   <p className="text-slate-200 text-sm">{evaluation.feedback}</p>
                   {evaluation.correctedPhrase && (
                     <div className="mt-2 flex items-center gap-x-2 text-sm bg-slate-800/50 p-1.5 rounded-md">
                       <AudioPlayer textToSpeak={evaluation.correctedPhrase} />
-                      <p className="text-slate-300"><strong className="font-semibold text-slate-100">{evaluation.correctedPhrase}</strong></p>
+                      <p className="text-slate-300">
+                        <strong className="font-semibold text-slate-100">{evaluation.correctedPhrase}</strong>
+                      </p>
                     </div>
                   )}
                 </div>
@@ -247,7 +263,7 @@ const PhraseBuilderModal: React.FC<PhraseBuilderModalProps> = ({
     <div className="fixed inset-0 bg-black/60 z-50 flex justify-center items-end" onClick={onClose}>
       <div
         className={`bg-slate-800 w-full max-w-2xl h-[90%] max-h-[90vh] rounded-t-2xl shadow-2xl flex flex-col transition-transform duration-300 ease-out ${isOpen ? 'translate-y-0' : 'translate-y-full'}`}
-        onClick={e => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
       >
         <header className="flex items-center justify-between p-4 border-b border-slate-700 flex-shrink-0">
           <h2 className="text-xl font-bold text-purple-300">{phrase.text.native}</h2>
@@ -255,9 +271,7 @@ const PhraseBuilderModal: React.FC<PhraseBuilderModalProps> = ({
             <CloseIcon className="w-6 h-6 text-slate-400" />
           </button>
         </header>
-        <div className="flex-grow p-6 overflow-hidden">
-          {renderContent()}
-        </div>
+        <div className="flex-grow p-6 overflow-hidden">{renderContent()}</div>
       </div>
     </div>
   );

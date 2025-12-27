@@ -1,17 +1,18 @@
+import React, { useCallback, useEffect, useState } from 'react';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import type { Phrase, WordAnalysis } from '../types.ts';
-import Spinner from './Spinner';
-import InfoIcon from './icons/InfoIcon';
-import CardPlusIcon from './icons/CardPlusIcon';
-import PlusIcon from './icons/PlusIcon';
-import WandIcon from './icons/WandIcon';
-import SoundIcon from './icons/SoundIcon';
-import TableIcon from './icons/TableIcon';
-import LanguagesIcon from './icons/LanguagesIcon';
+import { useLanguage } from '@/src/contexts/languageContext';
+
 import { useTranslation } from '../hooks/useTranslation';
 import { SpeechOptions } from '../services/speechService';
-import { useLanguage } from '@/src/contexts/languageContext';
+import type { Phrase, WordAnalysis } from '../types.ts';
+import CardPlusIcon from './icons/CardPlusIcon';
+import InfoIcon from './icons/InfoIcon';
+import LanguagesIcon from './icons/LanguagesIcon';
+import PlusIcon from './icons/PlusIcon';
+import SoundIcon from './icons/SoundIcon';
+import TableIcon from './icons/TableIcon';
+import WandIcon from './icons/WandIcon';
+import Spinner from './Spinner';
 
 interface CategoryAssistantContextMenuProps {
   target: { sentence: { learning: string; native: string }; word: string };
@@ -85,7 +86,7 @@ const CategoryAssistantContextMenu: React.FC<CategoryAssistantContextMenuProps> 
       const result = await onTranslateLearningToNative(sentence.learning);
       setTranslation(result.native);
     } catch (error) {
-      console.error("Translation failed", error);
+      console.error('Translation failed', error);
       setTranslation(t('assistant.common.translationError'));
     } finally {
       setIsTranslating(false);
@@ -101,9 +102,7 @@ const CategoryAssistantContextMenu: React.FC<CategoryAssistantContextMenuProps> 
 
   const phraseCardExists =
     !!sentence.native &&
-    allPhrases.some(
-      (p) => p.text.learning.trim().toLowerCase() === sentence.learning.trim().toLowerCase()
-    );
+    allPhrases.some((p) => p.text.learning.trim().toLowerCase() === sentence.learning.trim().toLowerCase());
 
   const wordCardExists = allPhrases.some(
     (p) => p.text.learning.trim().toLowerCase() === getCanonicalWordLearning().trim().toLowerCase()
@@ -122,37 +121,92 @@ const CategoryAssistantContextMenu: React.FC<CategoryAssistantContextMenuProps> 
   };
 
   const menuItems = [
-    { label: t('assistant.contextMenu.wordDetails'), icon: <InfoIcon />, action: () => onOpenWordAnalysis(proxyPhrase, word), condition: !!analysis },
-    { label: t('assistant.contextMenu.createWordCard'), icon: <PlusIcon />, action: () => { if (analysis) onCreateCard({ learning: getCanonicalWordLearning(), native: analysis.nativeTranslation }); }, condition: !wordCardExists && !!analysis },
-    { label: t('modals.wordAnalysis.actions.openVerb'), icon: <TableIcon />, action: () => { if (analysis?.verbDetails?.infinitive) onOpenVerbConjugation(analysis.verbDetails.infinitive); }, condition: !!analysis?.verbDetails },
-    { label: t('modals.wordAnalysis.actions.openNoun'), icon: <TableIcon />, action: () => { if (analysis?.nounDetails) onOpenNounDeclension(analysis.word, analysis.nounDetails.article); }, condition: !!analysis?.nounDetails },
-    { label: t('modals.wordAnalysis.actions.openAdjective'), icon: <TableIcon />, action: () => { if (analysis) onOpenAdjectiveDeclension(analysis.baseForm || analysis.word); }, condition: analysis?.partOfSpeech === 'Прилагательное' },
+    {
+      label: t('assistant.contextMenu.wordDetails'),
+      icon: <InfoIcon />,
+      action: () => onOpenWordAnalysis(proxyPhrase, word),
+      condition: !!analysis,
+    },
+    {
+      label: t('assistant.contextMenu.createWordCard'),
+      icon: <PlusIcon />,
+      action: () => {
+        if (analysis) onCreateCard({ learning: getCanonicalWordLearning(), native: analysis.nativeTranslation });
+      },
+      condition: !wordCardExists && !!analysis,
+    },
+    {
+      label: t('modals.wordAnalysis.actions.openVerb'),
+      icon: <TableIcon />,
+      action: () => {
+        if (analysis?.verbDetails?.infinitive) onOpenVerbConjugation(analysis.verbDetails.infinitive);
+      },
+      condition: !!analysis?.verbDetails,
+    },
+    {
+      label: t('modals.wordAnalysis.actions.openNoun'),
+      icon: <TableIcon />,
+      action: () => {
+        if (analysis?.nounDetails) onOpenNounDeclension(analysis.word, analysis.nounDetails.article);
+      },
+      condition: !!analysis?.nounDetails,
+    },
+    {
+      label: t('modals.wordAnalysis.actions.openAdjective'),
+      icon: <TableIcon />,
+      action: () => {
+        if (analysis) onOpenAdjectiveDeclension(analysis.baseForm || analysis.word);
+      },
+      condition: analysis?.partOfSpeech === 'Прилагательное',
+    },
   ];
 
   const phraseMenuItems = [
-    { label: t('assistant.contextMenu.createPhraseCard'), icon: <CardPlusIcon />, action: () => onCreateCard({ learning: sentence.learning, native: translation || sentence.native }), condition: !!translation && !phraseCardExists },
-    { label: t('assistant.contextMenu.generateSimilar'), icon: <WandIcon />, action: () => onGenerateMore(t('assistant.prompts.generateSimilar', { phrase: sentence.learning })), condition: true },
+    {
+      label: t('assistant.contextMenu.createPhraseCard'),
+      icon: <CardPlusIcon />,
+      action: () => onCreateCard({ learning: sentence.learning, native: translation || sentence.native }),
+      condition: !!translation && !phraseCardExists,
+    },
+    {
+      label: t('assistant.contextMenu.generateSimilar'),
+      icon: <WandIcon />,
+      action: () => onGenerateMore(t('assistant.prompts.generateSimilar', { phrase: sentence.learning })),
+      condition: true,
+    },
   ];
-
 
   return (
     <>
       <div className="fixed inset-0 z-[80] bg-black/60 backdrop-blur-sm" onClick={handleBackdropClick} />
       <div
         className="fixed z-[90] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-800/90 backdrop-blur-md border border-slate-700 rounded-xl shadow-2xl animate-fade-in-center text-white w-80 overflow-hidden"
-        onClick={e => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
       >
         <div className="px-4 py-3">
           <div className="flex items-center justify-between">
             <p className="text-base font-medium text-slate-200 break-words flex-grow">{sentence.learning}</p>
-            <button onClick={(e) => { e.stopPropagation(); onSpeak(sentence.learning, { lang: useLanguage().profile.learning }); }} className="p-1 rounded-full hover:bg-white/10 ml-2 flex-shrink-0">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onSpeak(sentence.learning, { lang: useLanguage().profile.learning });
+              }}
+              className="p-1 rounded-full hover:bg-white/10 ml-2 flex-shrink-0"
+            >
               <SoundIcon className="w-4 h-4 text-slate-300" />
             </button>
           </div>
           {translation ? (
             <p className="text-sm text-slate-300 italic mt-1">«{translation}»</p>
           ) : (
-            <button onClick={(e) => { e.stopPropagation(); handleTranslate(); }} disabled={isTranslating} className="w-full mt-2 flex items-center justify-center px-3 py-1.5 text-left text-sm bg-slate-600/70 hover:bg-slate-600 transition-colors rounded-md disabled:opacity-50">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleTranslate();
+              }}
+              disabled={isTranslating}
+              className="w-full mt-2 flex items-center justify-center px-3 py-1.5 text-left text-sm bg-slate-600/70 hover:bg-slate-600 transition-colors rounded-md disabled:opacity-50"
+            >
               {isTranslating ? <Spinner className="w-4 h-4 mr-2" /> : <LanguagesIcon className="w-4 h-4 mr-2" />}
               <span>{isTranslating ? t('assistant.common.translating') : t('assistant.common.translate')}</span>
             </button>
@@ -162,7 +216,13 @@ const CategoryAssistantContextMenu: React.FC<CategoryAssistantContextMenuProps> 
         <div className="px-4 py-3 border-t border-slate-700">
           <div className="flex items-center justify-between">
             <p className="text-lg font-bold text-purple-300 break-words flex-grow">{word}</p>
-            <button onClick={(e) => { e.stopPropagation(); onSpeak(word, { lang: useLanguage().profile.learning }); }} className="p-1 rounded-full hover:bg-white/10 ml-2 flex-shrink-0">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onSpeak(word, { lang: useLanguage().profile.learning });
+              }}
+              className="p-1 rounded-full hover:bg-white/10 ml-2 flex-shrink-0"
+            >
               <SoundIcon className="w-4 h-4 text-slate-300" />
             </button>
           </div>
@@ -194,7 +254,9 @@ const CategoryAssistantContextMenu: React.FC<CategoryAssistantContextMenuProps> 
               ))
           )}
 
-          {(menuItems.filter(i => i.condition && !isAnalysisLoading).length > 0) && <hr className="border-slate-700 mx-2 my-1" />}
+          {menuItems.filter((i) => i.condition && !isAnalysisLoading).length > 0 && (
+            <hr className="border-slate-700 mx-2 my-1" />
+          )}
 
           {phraseMenuItems
             .filter((item) => item.condition)

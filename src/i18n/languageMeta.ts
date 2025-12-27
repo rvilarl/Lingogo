@@ -1,7 +1,13 @@
 export const SUPPORTED_LANGUAGE_CODES = ['ar', 'de', 'en', 'es', 'fr', 'hi', 'it', 'ja', 'mr', 'pt', 'pl', 'ru', 'zh'];
-export type LanguageCode = typeof SUPPORTED_LANGUAGE_CODES[number];
+export type LanguageCode = (typeof SUPPORTED_LANGUAGE_CODES)[number];
 
-export const LANGUAGE_OPTIONS: { code: LanguageCode; name: string; nativeName: string; needsTranscription: boolean; speechLocale: string }[] = [
+export const LANGUAGE_OPTIONS: {
+  code: LanguageCode;
+  name: string;
+  nativeName: string;
+  needsTranscription: boolean;
+  speechLocale: string;
+}[] = [
   { code: 'en', name: 'English', nativeName: 'English', needsTranscription: false, speechLocale: 'en-US' },
   { code: 'ru', name: 'Russian', nativeName: 'Русский', needsTranscription: true, speechLocale: 'ru-RU' },
   { code: 'de', name: 'German', nativeName: 'Deutsch', needsTranscription: false, speechLocale: 'de-DE' },
@@ -23,7 +29,7 @@ export const LANGUAGE_OPTIONS: { code: LanguageCode; name: string; nativeName: s
  * @returns true if language needs transcription
  */
 export function needsTranscription(code: LanguageCode): boolean {
-  const language = LANGUAGE_OPTIONS.find(l => l.code === code);
+  const language = LANGUAGE_OPTIONS.find((l) => l.code === code);
   return language?.needsTranscription ?? false;
 }
 
@@ -33,16 +39,15 @@ export function needsTranscription(code: LanguageCode): boolean {
  * @returns Web Speech API locale code (e.g., 'en-US', 'de-DE')
  */
 export const getSpeechLocale = (languageCode: LanguageCode): string => {
-  const language = LANGUAGE_OPTIONS.find(l => l.code === languageCode);
+  const language = LANGUAGE_OPTIONS.find((l) => l.code === languageCode);
   return language?.speechLocale || 'en-US';
 };
 
-
 /**
- * Get language name 
+ * Get language name
  */
 export const getLanguageName = (code: LanguageCode): string => {
-  const language = LANGUAGE_OPTIONS.find(l => l.code === code);
+  const language = LANGUAGE_OPTIONS.find((l) => l.code === code);
   return language?.nativeName || code.toUpperCase();
 };
 
@@ -58,6 +63,6 @@ export function getLanguageLabel(languageCode: LanguageCode): string {
  * Get language name in English (for tooltips, etc.)
  */
 export function getLanguageNameInEnglish(code: LanguageCode): string {
-  const language = LANGUAGE_OPTIONS.find(l => l.code === code);
+  const language = LANGUAGE_OPTIONS.find((l) => l.code === code);
   return language?.name || code.toUpperCase();
 }

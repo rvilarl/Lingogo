@@ -1,7 +1,8 @@
 import React from 'react';
+
+import { useTranslation } from '../hooks/useTranslation';
 import { Category } from '../types.ts';
 import SmartToyIcon from './icons/SmartToyIcon';
-import { useTranslation } from '../hooks/useTranslation';
 
 interface ConfirmCategoryFillModalProps {
   isOpen: boolean;
@@ -10,14 +11,19 @@ interface ConfirmCategoryFillModalProps {
   category: Category | null;
 }
 
-const ConfirmCategoryFillModal: React.FC<ConfirmCategoryFillModalProps> = ({ isOpen, onClose, onConfirm, category }) => {
+const ConfirmCategoryFillModal: React.FC<ConfirmCategoryFillModalProps> = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  category,
+}) => {
   const { t } = useTranslation();
 
   if (!isOpen || !category) return null;
 
   const handleConfirmClick = () => {
     onConfirm(category);
-  }
+  };
 
   return (
     <div
@@ -26,7 +32,7 @@ const ConfirmCategoryFillModal: React.FC<ConfirmCategoryFillModalProps> = ({ isO
     >
       <div
         className="bg-slate-800 rounded-lg shadow-2xl w-full max-w-sm m-4 p-6 text-center"
-        onClick={e => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-center mb-4">
           <div className="w-12 h-12 rounded-full bg-purple-900/50 flex items-center justify-center">

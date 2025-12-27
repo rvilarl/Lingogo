@@ -1,9 +1,10 @@
 import React from 'react';
+
+import { useTranslation } from '../hooks/useTranslation';
+import * as srsService from '../services/srsService';
 import type { Phrase } from '../types.ts';
 import AlertTriangleIcon from './icons/AlertTriangleIcon';
 import ProgressBar from './ProgressBar';
-import * as srsService from '../services/srsService';
-import { useTranslation } from '../hooks/useTranslation';
 
 interface ConfirmDeleteModalProps {
   isOpen: boolean;
@@ -18,13 +19,10 @@ const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({ isOpen, onClose
   if (!isOpen || !phrase) return null;
 
   return (
-    <div
-      className="fixed inset-0 bg-black/60 z-[80] flex justify-center items-center p-4"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 bg-black/60 z-[80] flex justify-center items-center p-4" onClick={onClose}>
       <div
         className="bg-slate-800 rounded-lg shadow-2xl w-full max-w-sm m-4 p-6 text-center"
-        onClick={e => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-center mb-4">
           <div className="w-12 h-12 rounded-full bg-red-900/50 flex items-center justify-center">

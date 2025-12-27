@@ -1,5 +1,5 @@
 import { Category, Phrase, PracticeReviewLogEntry } from '../types.ts';
-import { MAX_MASTERY_LEVEL, LEECH_THRESHOLD } from './srsService';
+import { LEECH_THRESHOLD, MAX_MASTERY_LEVEL } from './srsService';
 
 const MS_IN_DAY = 24 * 60 * 60 * 1000;
 
@@ -62,7 +62,7 @@ const toDayKey = (timestamp: number): string => {
 
 const calcAccuracy = (entries: PracticeReviewLogEntry[]): number | null => {
   if (!entries.length) return null;
-  const correct = entries.filter(entry => entry.wasCorrect).length;
+  const correct = entries.filter((entry) => entry.wasCorrect).length;
   return entries.length ? (correct / entries.length) * 100 : null;
 };
 
@@ -86,27 +86,27 @@ export const buildPracticeAnalyticsSummary = (
   phrases: Phrase[],
   categories: Category[],
   reviewLog: PracticeReviewLogEntry[],
-  now: number = Date.now(),
+  now: number = Date.now()
 ): PracticeAnalyticsSummary => {
   const totalCards = phrases.length;
-  const mastered = phrases.filter(p => p.isMastered).length;
-  const newCards = phrases.filter(p => p.lastReviewedAt === null).length;
+  const mastered = phrases.filter((p) => p.isMastered).length;
+  const newCards = phrases.filter((p) => p.lastReviewedAt === null).length;
   const learning = totalCards - mastered - newCards;
 
   const startOfToday = new Date(now);
   startOfToday.setHours(0, 0, 0, 0);
   const endOfToday = new Date(startOfToday.getTime() + MS_IN_DAY - 1);
 
-  const dueToday = phrases.filter(p => p.nextReviewAt <= endOfToday.getTime()).length;
-  const overdue = phrases.filter(p => p.nextReviewAt < startOfToday.getTime()).length;
-  const dueNext7Days = phrases.filter(p => p.nextReviewAt > endOfToday.getTime() && p.nextReviewAt <= endOfToday.getTime() + 6 * MS_IN_DAY).length;
+  const dueToday = phrases.filter((p) => p.nextReviewAt <= endOfToday.getTime()).length;
+  const overdue = phrases.filter((p) => p.nextReviewAt < startOfToday.getTime()).length;
+  const dueNext7Days = phrases.filter(
+    (p) => p.nextReviewAt > endOfToday.getTime() && p.nextReviewAt <= endOfToday.getTime() + 6 * MS_IN_DAY
+  ).length;
 
-  const masteryProgressPercent = totalCards
-    ? Math.round((mastered / totalCards) * 100)
-    : 0;
+  const masteryProgressPercent = totalCards ? Math.round((mastered / totalCards) * 100) : 0;
 
   const activityByDay = new Map<string, { total: number; correct: number; incorrect: number; newCards: number }>();
-  reviewLog.forEach(entry => {
+  reviewLog.forEach((entry) => {
     const key = toDayKey(entry.timestamp);
     if (!activityByDay.has(key)) {
       activityByDay.set(key, { total: 0, correct: 0, incorrect: 0, newCards: 0 });
@@ -125,8 +125,8 @@ export const buildPracticeAnalyticsSummary = (
 
   const last7Threshold = now - 6 * MS_IN_DAY;
   const last30Threshold = now - 29 * MS_IN_DAY;
-  const last7Entries = reviewLog.filter(entry => entry.timestamp >= last7Threshold);
-  const last30Entries = reviewLog.filter(entry => entry.timestamp >= last30Threshold);
+  const last7Entries = reviewLog.filter((entry) => entry.timestamp >= last7Threshold);
+  const last30Entries = reviewLog.filter((entry) => entry.timestamp >= last30Threshold);
 
   const totalReviews = reviewLog.length;
   const overallAccuracy = calcAccuracy(reviewLog);
@@ -134,18 +134,21 @@ export const buildPracticeAnalyticsSummary = (
   const last30Accuracy = calcAccuracy(last30Entries);
   const streakDays = calcStreak(activityByDay, now);
 
-  const categoryNameById = new Map(categories.map(cat => [cat.id, cat.name]));
-  const categoryFoundational = new Map(categories.map(cat => [cat.id, cat.isFoundational]));
+  const categoryNameById = new Map(categories.map((cat) => [cat.id, cat.name]));
+  const categoryFoundational = new Map(categories.map((cat) => [cat.id, cat.isFoundational]));
 
-  const categoryStats = new Map<string, {
-    total: number;
-    mastered: number;
-    inProgress: number;
-    masterySum: number;
-    logEntries: PracticeReviewLogEntry[];
-  }>();
+  const categoryStats = new Map<
+    string,
+    {
+      total: number;
+      mastered: number;
+      inProgress: number;
+      masterySum: number;
+      logEntries: PracticeReviewLogEntry[];
+    }
+  >();
 
-  phrases.forEach(phrase => {
+  phrases.forEach((phrase) => {
     if (!categoryStats.has(phrase.category)) {
       categoryStats.set(phrase.category, {
         total: 0,
@@ -165,7 +168,7 @@ export const buildPracticeAnalyticsSummary = (
     }
   });
 
-  reviewLog.forEach(entry => {
+  reviewLog.forEach((entry) => {
     if (!categoryStats.has(entry.categoryId)) {
       categoryStats.set(entry.categoryId, {
         total: 0,
@@ -179,25 +182,27 @@ export const buildPracticeAnalyticsSummary = (
     stats.logEntries.push(entry);
   });
 
-  const categorySummary = Array.from(categoryStats.entries()).map(([categoryId, stats]) => {
-    const avgMasteryLevel = stats.total ? stats.masterySum / stats.total : 0;
-    const accuracy = calcAccuracy(stats.logEntries);
-    return {
-      id: categoryId,
-      name: categoryNameById.get(categoryId) ?? categoryId,
-      total: stats.total,
-      mastered: stats.mastered,
-      inProgress: stats.inProgress,
-      accuracy,
-      avgMasteryLevel,
-      isFoundational: categoryFoundational.get(categoryId) ?? false,
-    };
-  }).sort((a, b) => b.total - a.total);
+  const categorySummary = Array.from(categoryStats.entries())
+    .map(([categoryId, stats]) => {
+      const avgMasteryLevel = stats.total ? stats.masterySum / stats.total : 0;
+      const accuracy = calcAccuracy(stats.logEntries);
+      return {
+        id: categoryId,
+        name: categoryNameById.get(categoryId) ?? categoryId,
+        total: stats.total,
+        mastered: stats.mastered,
+        inProgress: stats.inProgress,
+        accuracy,
+        avgMasteryLevel,
+        isFoundational: categoryFoundational.get(categoryId) ?? false,
+      };
+    })
+    .sort((a, b) => b.total - a.total);
 
-  const maxLevelObserved = Math.max(MAX_MASTERY_LEVEL, ...phrases.map(p => p.masteryLevel));
+  const maxLevelObserved = Math.max(MAX_MASTERY_LEVEL, ...phrases.map((p) => p.masteryLevel));
   const levels: Array<{ level: number; count: number }> = [];
   for (let level = 0; level <= maxLevelObserved; level++) {
-    const count = phrases.filter(phrase => phrase.masteryLevel === level).length;
+    const count = phrases.filter((phrase) => phrase.masteryLevel === level).length;
     levels.push({ level, count });
   }
 
@@ -219,10 +224,10 @@ export const buildPracticeAnalyticsSummary = (
     }));
 
   const leeches = phrases
-    .filter(phrase => (phrase.lapses ?? 0) >= LEECH_THRESHOLD)
+    .filter((phrase) => (phrase.lapses ?? 0) >= LEECH_THRESHOLD)
     .sort((a, b) => (b.lapses ?? 0) - (a.lapses ?? 0))
     .slice(0, 20)
-    .map(phrase => ({
+    .map((phrase) => ({
       phraseId: phrase.id,
       learning: phrase.text.learning,
       native: phrase.text.native,

@@ -8,7 +8,7 @@ export const getAccessToken = (): string | null => currentToken;
 
 export const setAccessToken = (token: string | null): void => {
   currentToken = token;
-  listeners.forEach(listener => {
+  listeners.forEach((listener) => {
     try {
       listener(currentToken);
     } catch (error) {

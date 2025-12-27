@@ -1,4 +1,3 @@
-
 /**
  * PhraseCard.tsx
  *
@@ -7,26 +6,27 @@
  * and various context-aware actions.
  */
 
-import React, { useRef, useState, useMemo, useCallback, useEffect } from 'react';
-import type { Phrase, LanguageCode } from '../types.ts';
-import { SpeechOptions } from '../services/speechService';
-import ChatIcon from './icons/ChatIcon';
-import AnalysisIcon from './icons/AnalysisIcon';
-import FilmIcon from './icons/FilmIcon';
-import LinkIcon from './icons/LinkIcon';
-import SettingsIcon from './icons/SettingsIcon';
-import BlocksIcon from './icons/BlocksIcon';
-import BookOpenIcon from './icons/BookOpenIcon';
-import Spinner from './Spinner';
-import MoreHorizontalIcon from './icons/MoreHorizontalIcon';
-import CloseIcon from './icons/CloseIcon';
-import MoreActionsMenu from './MoreActionsMenu';
-import ProgressBar from './ProgressBar';
-import { MAX_MASTERY_LEVEL } from '../services/srsService';
-import SoundIcon from './icons/SoundIcon';
-import { useTranslation } from '../hooks/useTranslation.ts';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
 import { useLanguage } from '@/src/contexts/languageContext.tsx';
 
+import { useTranslation } from '../hooks/useTranslation.ts';
+import { SpeechOptions } from '../services/speechService';
+import { MAX_MASTERY_LEVEL } from '../services/srsService';
+import type { LanguageCode, Phrase } from '../types.ts';
+import AnalysisIcon from './icons/AnalysisIcon';
+import BlocksIcon from './icons/BlocksIcon';
+import BookOpenIcon from './icons/BookOpenIcon';
+import ChatIcon from './icons/ChatIcon';
+import CloseIcon from './icons/CloseIcon';
+import FilmIcon from './icons/FilmIcon';
+import LinkIcon from './icons/LinkIcon';
+import MoreHorizontalIcon from './icons/MoreHorizontalIcon';
+import SettingsIcon from './icons/SettingsIcon';
+import SoundIcon from './icons/SoundIcon';
+import MoreActionsMenu from './MoreActionsMenu';
+import ProgressBar from './ProgressBar';
+import Spinner from './Spinner';
 
 /**
  * Props for the PhraseCard component.
@@ -40,10 +40,14 @@ interface PhraseCardProps {
   onOpenDeepDive: (phrase: Phrase) => void;
   onOpenMovieExamples: (phrase: Phrase) => void;
   onWordClick: (phrase: Phrase, word: string) => void;
-  onGetWordTranslation: (nativePhrase: string, learningPhrase: string, nativeWord: string) => Promise<{ learningTranslation: string }>;
+  onGetWordTranslation: (
+    nativePhrase: string,
+    learningPhrase: string,
+    nativeWord: string
+  ) => Promise<{ learningTranslation: string }>;
   onOpenSentenceChain: (phrase: Phrase) => void;
   onOpenImprovePhrase: (phrase: Phrase) => void;
-  onOpenContextMenu: (target: { phrase: Phrase, word?: string }) => void;
+  onOpenContextMenu: (target: { phrase: Phrase; word?: string }) => void;
   onOpenVoicePractice: (phrase: Phrase) => void;
   onOpenLearningAssistant: (phrase: Phrase) => void;
   isWordAnalysisLoading: boolean;
@@ -75,15 +79,19 @@ const NativePhraseDisplay: React.FC<NativePhraseDisplayProps> = ({ text, as: Com
   return (
     <>
       <Component className="text-2xl font-semibold text-slate-100 flex flex-wrap justify-center items-center gap-x-1">
-        {mainText.split(/(\s+)/).map((part, index) => (
+        {mainText.split(/(\s+)/).map((part, index) =>
           part.trim() ? (
-            <span key={index} onClick={(e) => onWordClick(e, part.replace(/[.,!?]/g, ''))} className="cursor-pointer hover:bg-white/20 px-1 py-0.5 rounded-md transition-colors">
+            <span
+              key={index}
+              onClick={(e) => onWordClick(e, part.replace(/[.,!?]/g, ''))}
+              className="cursor-pointer hover:bg-white/20 px-1 py-0.5 rounded-md transition-colors"
+            >
               {part}
             </span>
           ) : (
             <span key={index}>{part}</span>
           )
-        ))}
+        )}
       </Component>
       {noteText && <p className="text-sm text-slate-300 mt-1 font-normal">({noteText})</p>}
     </>
@@ -94,12 +102,25 @@ const NativePhraseDisplay: React.FC<NativePhraseDisplayProps> = ({ text, as: Com
  * The main PhraseCard component.
  */
 const PhraseCard: React.FC<PhraseCardProps> = ({
-  phrase, onSpeak, isFlipped, onFlip, onOpenChat,
-  onOpenDeepDive, onOpenMovieExamples, onWordClick, onGetWordTranslation, onOpenSentenceChain,
-  onOpenImprovePhrase, onOpenContextMenu, onOpenVoicePractice,
-  onOpenLearningAssistant, isWordAnalysisLoading,
-  cardActionUsage, onLogCardActionUsage,
-  flash, onFlashEnd,
+  phrase,
+  onSpeak,
+  isFlipped,
+  onFlip,
+  onOpenChat,
+  onOpenDeepDive,
+  onOpenMovieExamples,
+  onWordClick,
+  onGetWordTranslation,
+  onOpenSentenceChain,
+  onOpenImprovePhrase,
+  onOpenContextMenu,
+  onOpenVoicePractice,
+  onOpenLearningAssistant,
+  isWordAnalysisLoading,
+  cardActionUsage,
+  onLogCardActionUsage,
+  flash,
+  onFlashEnd,
 }) => {
   const { t } = useTranslation();
 
@@ -140,7 +161,7 @@ const PhraseCard: React.FC<PhraseCardProps> = ({
 
       return () => {
         flashElement.removeEventListener('animationend', handleAnimationEnd);
-      }
+      };
     }
   }, [flash, onFlashEnd]);
 
@@ -177,10 +198,12 @@ const PhraseCard: React.FC<PhraseCardProps> = ({
 
     try {
       const { learningTranslation } = await onGetWordTranslation(phrase.text.native, phrase.text.learning, word);
-      setWordHint(prev => (prev?.word === word ? { ...prev, translation: learningTranslation, isLoading: false } : prev));
+      setWordHint((prev) =>
+        prev?.word === word ? { ...prev, translation: learningTranslation, isLoading: false } : prev
+      );
     } catch (error) {
-      console.error("Failed to get word translation:", error);
-      setWordHint(prev => (prev?.word === word ? { ...prev, translation: '???', isLoading: false } : prev));
+      console.error('Failed to get word translation:', error);
+      setWordHint((prev) => (prev?.word === word ? { ...prev, translation: '???', isLoading: false } : prev));
     }
   };
 
@@ -189,20 +212,65 @@ const PhraseCard: React.FC<PhraseCardProps> = ({
    * @param key - The unique key for the action (e.g., 'chat', 'deepDive').
    * @param action - The callback function to execute.
    */
-  const createLoggedAction = useCallback((key: string, action: (p: Phrase) => void) => (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onLogCardActionUsage(key);
-    action(phrase);
-  }, [phrase, onLogCardActionUsage]);
+  const createLoggedAction = useCallback(
+    (key: string, action: (p: Phrase) => void) => (e: React.MouseEvent) => {
+      e.stopPropagation();
+      onLogCardActionUsage(key);
+      action(phrase);
+    },
+    [phrase, onLogCardActionUsage]
+  );
 
-  const allButtons = useMemo(() => [
-    { key: 'learningAssistant', label: t('phraseCard.actions.learningAssistant'), icon: <BookOpenIcon className="w-5 h-5" />, action: createLoggedAction('learningAssistant', onOpenLearningAssistant) },
-    { key: 'sentenceChain', label: t('phraseCard.actions.sentenceChain'), icon: <LinkIcon className="w-5 h-5" />, action: createLoggedAction('sentenceChain', onOpenSentenceChain) },
-    { key: 'phraseBuilder', label: t('phraseCard.actions.phraseBuilder'), icon: <BlocksIcon className="w-5 h-5" />, action: createLoggedAction('phraseBuilder', onOpenVoicePractice) },
-    { key: 'chat', label: t('phraseCard.actions.chat'), icon: <ChatIcon className="w-5 h-5" />, action: createLoggedAction('chat', onOpenChat) },
-    { key: 'deepDive', label: t('phraseCard.actions.deepDive'), icon: <AnalysisIcon className="w-5 h-5" />, action: createLoggedAction('deepDive', onOpenDeepDive) },
-    { key: 'movieExamples', label: t('phraseCard.actions.movieExamples'), icon: <FilmIcon className="w-5 h-5" />, action: createLoggedAction('movieExamples', onOpenMovieExamples) },
-  ], [t, createLoggedAction, onOpenLearningAssistant, onOpenSentenceChain, onOpenVoicePractice, onOpenChat, onOpenDeepDive, onOpenMovieExamples]);
+  const allButtons = useMemo(
+    () => [
+      {
+        key: 'learningAssistant',
+        label: t('phraseCard.actions.learningAssistant'),
+        icon: <BookOpenIcon className="w-5 h-5" />,
+        action: createLoggedAction('learningAssistant', onOpenLearningAssistant),
+      },
+      {
+        key: 'sentenceChain',
+        label: t('phraseCard.actions.sentenceChain'),
+        icon: <LinkIcon className="w-5 h-5" />,
+        action: createLoggedAction('sentenceChain', onOpenSentenceChain),
+      },
+      {
+        key: 'phraseBuilder',
+        label: t('phraseCard.actions.phraseBuilder'),
+        icon: <BlocksIcon className="w-5 h-5" />,
+        action: createLoggedAction('phraseBuilder', onOpenVoicePractice),
+      },
+      {
+        key: 'chat',
+        label: t('phraseCard.actions.chat'),
+        icon: <ChatIcon className="w-5 h-5" />,
+        action: createLoggedAction('chat', onOpenChat),
+      },
+      {
+        key: 'deepDive',
+        label: t('phraseCard.actions.deepDive'),
+        icon: <AnalysisIcon className="w-5 h-5" />,
+        action: createLoggedAction('deepDive', onOpenDeepDive),
+      },
+      {
+        key: 'movieExamples',
+        label: t('phraseCard.actions.movieExamples'),
+        icon: <FilmIcon className="w-5 h-5" />,
+        action: createLoggedAction('movieExamples', onOpenMovieExamples),
+      },
+    ],
+    [
+      t,
+      createLoggedAction,
+      onOpenLearningAssistant,
+      onOpenSentenceChain,
+      onOpenVoicePractice,
+      onOpenChat,
+      onOpenDeepDive,
+      onOpenMovieExamples,
+    ]
+  );
 
   /**
    * Sorts action buttons based on usage frequency.
@@ -251,7 +319,7 @@ const PhraseCard: React.FC<PhraseCardProps> = ({
   const handleOpenImprovePhrase = (e: React.MouseEvent) => {
     e.stopPropagation();
     onOpenImprovePhrase(phrase);
-  }
+  };
 
   const handleLearningWordClick = (e: React.MouseEvent, word: string) => {
     e.stopPropagation();
@@ -260,7 +328,7 @@ const PhraseCard: React.FC<PhraseCardProps> = ({
     if (cleanedWord) {
       onWordClick(phrase, cleanedWord);
     }
-  }
+  };
 
   // Handlers for long-press on the card (to open context menu)
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -307,13 +375,12 @@ const PhraseCard: React.FC<PhraseCardProps> = ({
     const setIsMenuOpen = theme === 'front' ? setIsMoreMenuOpenFront : setIsMoreMenuOpenBack;
     const ref = theme === 'front' ? buttonContainerRefFront : buttonContainerRefBack;
 
-    const themeClasses = theme === 'front'
-      ? 'bg-black/5 hover:bg-black/10 text-slate-200'
-      : 'bg-black/10 hover:bg-black/10 text-white';
+    const themeClasses =
+      theme === 'front' ? 'bg-black/5 hover:bg-black/10 text-slate-200' : 'bg-black/10 hover:bg-black/10 text-white';
 
     return (
       <div ref={ref} className="relative w-full flex justify-center items-center flex-wrap gap-2 z-10">
-        {visibleButtons.map(button => (
+        {visibleButtons.map((button) => (
           <button
             key={button.key}
             onClick={button.action}
@@ -326,7 +393,10 @@ const PhraseCard: React.FC<PhraseCardProps> = ({
         {hiddenButtons.length > 0 && (
           <>
             <button
-              onClick={(e) => { e.stopPropagation(); setIsMenuOpen(prev => !prev); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsMenuOpen((prev) => !prev);
+              }}
               className={`p-3 rounded-full transition-colors ${themeClasses}`}
               aria-label={t('phraseCard.aria.moreActions')}
               aria-expanded={isMenuOpen}
@@ -334,11 +404,7 @@ const PhraseCard: React.FC<PhraseCardProps> = ({
               {isMenuOpen ? <CloseIcon className="w-5 h-5" /> : <MoreHorizontalIcon className="w-5 h-5" />}
             </button>
             {isMenuOpen && (
-              <MoreActionsMenu
-                buttons={hiddenButtons}
-                onClose={() => setIsMenuOpen(false)}
-                theme={theme}
-              />
+              <MoreActionsMenu buttons={hiddenButtons} onClose={() => setIsMenuOpen(false)} theme={theme} />
             )}
           </>
         )}
@@ -362,9 +428,7 @@ const PhraseCard: React.FC<PhraseCardProps> = ({
         onClick={handleCardClick}
       >
         {/* Front Side (Native) */}
-        <div
-          className={`card-face bg-slate-400/10 backdrop-blur-xl transition-colors duration-500`}
-        >
+        <div className={`card-face bg-slate-400/10 backdrop-blur-xl transition-colors duration-500`}>
           <button
             onClick={handleOpenImprovePhrase}
             className="absolute top-3 right-3 p-0 rounded-full text-slate-500 hover:bg-white/20 hover:text-white transition-colors z-10"
@@ -375,7 +439,9 @@ const PhraseCard: React.FC<PhraseCardProps> = ({
           <div className="flex-grow flex flex-col items-center justify-center w-full">
             <NativePhraseDisplay text={phrase.text.native} as="h2" onWordClick={handleNativeWordClick} />
             {phrase.context?.native && (
-              <p className="text-slate-300 mt-3 text-sm text-center font-normal italic max-w-xs">{phrase.context.native}</p>
+              <p className="text-slate-300 mt-3 text-sm text-center font-normal italic max-w-xs">
+                {phrase.context.native}
+              </p>
             )}
           </div>
           {wordHint?.position && (
@@ -405,9 +471,7 @@ const PhraseCard: React.FC<PhraseCardProps> = ({
               )}
             </div>
           )}
-          <div className="relative w-full">
-            {renderActionButtons('front')}
-          </div>
+          <div className="relative w-full">{renderActionButtons('front')}</div>
 
           <div className="absolute bottom-0 left-0 right-0 pb-1.5 px-2.5">
             <ProgressBar current={phrase.masteryLevel} max={MAX_MASTERY_LEVEL} />
@@ -444,9 +508,7 @@ const PhraseCard: React.FC<PhraseCardProps> = ({
             )}
           </div>
 
-          <div className="relative w-full">
-            {renderActionButtons('back')}
-          </div>
+          <div className="relative w-full">{renderActionButtons('back')}</div>
           <div className="absolute bottom-0 left-0 right-0 pb-1.5 px-2.5">
             <ProgressBar current={phrase.masteryLevel} max={MAX_MASTERY_LEVEL} variant="inverted" />
           </div>

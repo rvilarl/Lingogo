@@ -1,9 +1,10 @@
 import React from 'react';
-import type { Phrase, AdjectiveDeclension, AdjectiveDeclensionTable } from '../types.ts';
+
+import { useTranslation } from '../hooks/useTranslation.ts';
+import type { AdjectiveDeclension, AdjectiveDeclensionTable, Phrase } from '../types.ts';
+import AudioPlayer from './AudioPlayer';
 import CloseIcon from './icons/CloseIcon';
 import TableIcon from './icons/TableIcon';
-import AudioPlayer from './AudioPlayer';
-import { useTranslation } from '../hooks/useTranslation.ts';
 
 interface AdjectiveDeclensionModalProps {
   isOpen: boolean;
@@ -15,12 +16,7 @@ interface AdjectiveDeclensionModalProps {
   onOpenWordAnalysis: (phrase: Phrase, word: string) => void;
 }
 
-const CASE_ORDER: Array<keyof AdjectiveDeclensionTable['masculine']> = [
-  'nominativ',
-  'akkusativ',
-  'dativ',
-  'genitiv',
-];
+const CASE_ORDER: Array<keyof AdjectiveDeclensionTable['masculine']> = ['nominativ', 'akkusativ', 'dativ', 'genitiv'];
 
 const AdjectiveDeclensionSkeleton: React.FC = () => (
   <div className="space-y-8 animate-pulse">
@@ -158,18 +154,10 @@ const AdjectiveDeclensionModal: React.FC<AdjectiveDeclensionModalProps> = ({
                 <td className="p-2 align-top text-sm text-slate-300 whitespace-nowrap">
                   {t(`modals.adjectiveDeclension.cases.${caseKey}`)}
                 </td>
-                <td className="p-2 text-sm text-slate-100">
-                  {renderClickableLearning(tableData.masculine[caseKey])}
-                </td>
-                <td className="p-2 text-sm text-slate-100">
-                  {renderClickableLearning(tableData.feminine[caseKey])}
-                </td>
-                <td className="p-2 text-sm text-slate-100">
-                  {renderClickableLearning(tableData.neuter[caseKey])}
-                </td>
-                <td className="p-2 text-sm text-slate-100">
-                  {renderClickableLearning(tableData.plural[caseKey])}
-                </td>
+                <td className="p-2 text-sm text-slate-100">{renderClickableLearning(tableData.masculine[caseKey])}</td>
+                <td className="p-2 text-sm text-slate-100">{renderClickableLearning(tableData.feminine[caseKey])}</td>
+                <td className="p-2 text-sm text-slate-100">{renderClickableLearning(tableData.neuter[caseKey])}</td>
+                <td className="p-2 text-sm text-slate-100">{renderClickableLearning(tableData.plural[caseKey])}</td>
               </tr>
             ))}
           </tbody>
@@ -210,20 +198,14 @@ const AdjectiveDeclensionModal: React.FC<AdjectiveDeclensionModalProps> = ({
           </h3>
           <div className="bg-slate-700/50 p-4 rounded-lg grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
             <div>
-              <p className="text-sm text-slate-400">
-                {t('modals.adjectiveDeclension.labels.positive')}
-              </p>
+              <p className="text-sm text-slate-400">{t('modals.adjectiveDeclension.labels.positive')}</p>
               <div className="flex items-center justify-center gap-x-2">
                 <AudioPlayer textToSpeak={data.comparison.positive} />
-                <strong className="text-slate-100 text-lg">
-                  {renderClickableLearning(data.comparison.positive)}
-                </strong>
+                <strong className="text-slate-100 text-lg">{renderClickableLearning(data.comparison.positive)}</strong>
               </div>
             </div>
             <div>
-              <p className="text-sm text-slate-400">
-                {t('modals.adjectiveDeclension.labels.comparative')}
-              </p>
+              <p className="text-sm text-slate-400">{t('modals.adjectiveDeclension.labels.comparative')}</p>
               <div className="flex items-center justify-center gap-x-2">
                 <AudioPlayer textToSpeak={data.comparison.comparative} />
                 <strong className="text-slate-100 text-lg">
@@ -232,9 +214,7 @@ const AdjectiveDeclensionModal: React.FC<AdjectiveDeclensionModalProps> = ({
               </div>
             </div>
             <div>
-              <p className="text-sm text-slate-400">
-                {t('modals.adjectiveDeclension.labels.superlative')}
-              </p>
+              <p className="text-sm text-slate-400">{t('modals.adjectiveDeclension.labels.superlative')}</p>
               <div className="flex items-center justify-center gap-x-2">
                 <AudioPlayer textToSpeak={data.comparison.superlative} />
                 <strong className="text-slate-100 text-lg">
@@ -260,9 +240,7 @@ const AdjectiveDeclensionModal: React.FC<AdjectiveDeclensionModalProps> = ({
         <header className="flex items-center justify-between p-4 border-b border-slate-700 flex-shrink-0">
           <div className="flex items-center space-x-3">
             <TableIcon className="w-6 h-6 text-purple-400" />
-            <h2 className="text-lg font-bold text-slate-100">
-              {t('modals.adjectiveDeclension.title', { adjective })}
-            </h2>
+            <h2 className="text-lg font-bold text-slate-100">{t('modals.adjectiveDeclension.title', { adjective })}</h2>
           </div>
           <button
             onClick={onClose}

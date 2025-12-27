@@ -1,20 +1,20 @@
-
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Phrase, ChatMessage, WordAnalysis, ChatExamplePair } from '../types.ts';
-import { getCache, setCache } from '../services/cacheService';
+
+import { useLanguage } from '../contexts/languageContext';
+import { useTranslation } from '../hooks/useTranslation';
 import { ApiProviderType } from '../services/apiProvider';
-import GeminiLogo from './icons/GeminiLogo';
-import DeepSeekLogo from './icons/DeepSeekLogo';
+import { getCache, setCache } from '../services/cacheService';
+import { speak, SpeechOptions } from '../services/speechService';
+import { ChatExamplePair, ChatMessage, Phrase, WordAnalysis } from '../types.ts';
+import ChatContextMenu from './ChatContextMenu';
 import CloseIcon from './icons/CloseIcon';
+import DeepSeekLogo from './icons/DeepSeekLogo';
+import GeminiLogo from './icons/GeminiLogo';
+import MicrophoneIcon from './icons/MicrophoneIcon';
 import SendIcon from './icons/SendIcon';
 import SoundIcon from './icons/SoundIcon';
-import MicrophoneIcon from './icons/MicrophoneIcon';
-import ChatContextMenu from './ChatContextMenu';
-import { useTranslation } from '../hooks/useTranslation';
-import { useLanguage } from '../contexts/languageContext';
-import { speak, SpeechOptions } from '../services/speechService';
 
 interface ChatModalProps {
   isOpen: boolean;
@@ -25,7 +25,7 @@ interface ChatModalProps {
   apiProviderType: ApiProviderType;
   onOpenWordAnalysis: (phrase: Phrase, word: string) => void;
   allPhrases: Phrase[];
-  onCreateCard: (phraseData: { learning: string; native: string; }) => void;
+  onCreateCard: (phraseData: { learning: string; native: string }) => void;
   onAnalyzeWord: (phrase: Phrase, word: string) => Promise<WordAnalysis | null>;
   onOpenVerbConjugation: (infinitive: string) => void;
   onOpenNounDeclension: (noun: string, article: string) => void;
@@ -38,13 +38,17 @@ const ChatMessageContent: React.FC<{
   onSpeak: (text: string, options: SpeechOptions) => void;
   basePhrase?: Phrase;
   onOpenWordAnalysis?: (phrase: Phrase, word: string) => void;
-  onOpenContextMenu: (target: { sentence: { learning: string, native: string }, word: string }) => void;
+  onOpenContextMenu: (target: { sentence: { learning: string; native: string }; word: string }) => void;
 }> = ({ message, onSpeak, basePhrase, onOpenWordAnalysis, onOpenContextMenu }) => {
   const { t } = useTranslation();
   const { text, examples, suggestions, contentParts } = message;
   const wordLongPressTimer = useRef<number | null>(null);
 
-  const handleWordPointerDown = (e: React.PointerEvent<HTMLSpanElement>, sentence: { learning: string, native: string }, word: string) => {
+  const handleWordPointerDown = (
+    e: React.PointerEvent<HTMLSpanElement>,
+    sentence: { learning: string; native: string },
+    word: string
+  ) => {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     e.stopPropagation();
     const cleanedWord = word.replace(/[.,!?()"“”:;]/g, '');
@@ -68,12 +72,12 @@ const ChatMessageContent: React.FC<{
     const proxyPhrase: Phrase = {
       ...basePhrase,
       id: `${basePhrase.id}_proxy_${contextText.slice(0, 5)}`,
-      text: { learning: contextText, native: nativeText }
+      text: { learning: contextText, native: nativeText },
     };
     onOpenWordAnalysis(proxyPhrase, word);
   };
 
-  const renderClickableLearning = (sentence: { learning: string, native: string }) => {
+  const renderClickableLearning = (sentence: { learning: string; native: string }) => {
     if (!sentence.learning) return null;
     return sentence.learning.split(' ').map((word, i, arr) => (
       <span
@@ -94,7 +98,8 @@ const ChatMessageContent: React.FC<{
         }}
         className="cursor-pointer hover:bg-white/20 px-1 py-0.5 rounded-md transition-colors"
       >
-        {word}{i < arr.length - 1 ? ' ' : ''}
+        {word}
+        {i < arr.length - 1 ? ' ' : ''}
       </span>
     ));
   };
@@ -105,8 +110,13 @@ const ChatMessageContent: React.FC<{
       <div className="whitespace-pre-wrap leading-relaxed">
         {contentParts.map((part, index) =>
           part.type === 'learning' ? (
-            <span key={index} className="inline-flex items-center align-middle bg-slate-600/50 px-1.5 py-0.5 rounded-md mx-0.5">
-              <span className="font-medium text-purple-300">{renderClickableLearning({ learning: part.text, native: part.translation || '' })}</span>
+            <span
+              key={index}
+              className="inline-flex items-center align-middle bg-slate-600/50 px-1.5 py-0.5 rounded-md mx-0.5"
+            >
+              <span className="font-medium text-purple-300">
+                {renderClickableLearning({ learning: part.text, native: part.translation || '' })}
+              </span>
               <button
                 onClick={() => onSpeak(part.text, { lang: useLanguage().profile.learning })}
                 className="p-0.5 rounded-full hover:bg-white/20 flex-shrink-0 ml-1.5"
@@ -133,8 +143,13 @@ const ChatMessageContent: React.FC<{
             <div className="whitespace-pre-wrap leading-relaxed text-slate-300">
               {message.grammarParts.map((part, partIndex) =>
                 part.type === 'learning' ? (
-                  <span key={partIndex} className="inline-flex items-center align-middle bg-slate-500/50 px-1.5 py-0.5 rounded-md mx-0.5">
-                    <span className="font-medium text-purple-200">{renderClickableLearning({ learning: part.text, native: part.translation || '' })}</span>
+                  <span
+                    key={partIndex}
+                    className="inline-flex items-center align-middle bg-slate-500/50 px-1.5 py-0.5 rounded-md mx-0.5"
+                  >
+                    <span className="font-medium text-purple-200">
+                      {renderClickableLearning({ learning: part.text, native: part.translation || '' })}
+                    </span>
                     <button
                       onClick={() => onSpeak(part.text, { lang: useLanguage().profile.learning })}
                       className="p-0.5 rounded-full hover:bg-white/20 flex-shrink-0 ml-1.5"
@@ -158,52 +173,57 @@ const ChatMessageContent: React.FC<{
               <div key={`sug-${index}`} className="italic bg-slate-600/10 p-2 rounded-lg">
                 <h5 className="font-semibold text-purple-300 mb-1">{suggestion.title}</h5>
                 <div className="whitespace-pre-wrap leading-relaxed text-slate-400">
-                  {suggestion.contentParts && suggestion.contentParts.map((part, partIndex) =>
-                    part.type === 'learning' ? (
-                      <span key={partIndex} className="inline-flex items-center align-middle bg-slate-500/50 px-1.5 py-0.5 rounded-md mx-0.5">
-                        <span className="font-medium text-purple-200">{renderClickableLearning({ learning: part.text, native: part.translation || '' })}</span>
-                        <button
-                          onClick={() => speak(part.text, { lang: useLanguage().profile.learning })}
-                          className="p-0.5 rounded-full hover:bg-white/20 flex-shrink-0 ml-1.5"
-                          aria-label={`Speak: ${part.text}`}
+                  {suggestion.contentParts &&
+                    suggestion.contentParts.map((part, partIndex) =>
+                      part.type === 'learning' ? (
+                        <span
+                          key={partIndex}
+                          className="inline-flex items-center align-middle bg-slate-500/50 px-1.5 py-0.5 rounded-md mx-0.5"
                         >
-                          <SoundIcon className="w-3.5 h-3.5 text-slate-200" />
-                        </button>
-                      </span>
-                    ) : (
-                      <span key={partIndex}>{part.text}</span>
-                    )
-                  )}
+                          <span className="font-medium text-purple-200">
+                            {renderClickableLearning({ learning: part.text, native: part.translation || '' })}
+                          </span>
+                          <button
+                            onClick={() => speak(part.text, { lang: useLanguage().profile.learning })}
+                            className="p-0.5 rounded-full hover:bg-white/20 flex-shrink-0 ml-1.5"
+                            aria-label={`Speak: ${part.text}`}
+                          >
+                            <SoundIcon className="w-3.5 h-3.5 text-slate-200" />
+                          </button>
+                        </span>
+                      ) : (
+                        <span key={partIndex}>{part.text}</span>
+                      )
+                    )}
                 </div>
               </div>
             ))}
           </div>
-        )
-        }
+        )}
 
         {/* Examples - LAST */}
-        {
-          examples && examples.length > 0 && (
-            <div className="space-y-3 pt-2">
-              {examples.map((example, index) => (
-                <div key={`ex-${index}`}>
-                  <div className="flex items-start">
-                    <button
-                      onClick={() => onSpeak(example.learning, { lang: useLanguage().profile.learning })}
-                      className="p-1 rounded-full hover:bg-white/20 flex-shrink-0 mt-0.5 mr-2"
-                      aria-label={`Speak: ${example.learning}`}
-                    >
-                      <SoundIcon className="w-4 h-4 text-slate-300" />
-                    </button>
-                    <p className="flex-1 text-slate-100 leading-relaxed">{renderClickableLearning({ learning: example.learning, native: example.native })}</p>
-                  </div>
-                  <p className="pl-7 text-sm text-slate-400 italic">{example.native}</p>
+        {examples && examples.length > 0 && (
+          <div className="space-y-3 pt-2">
+            {examples.map((example, index) => (
+              <div key={`ex-${index}`}>
+                <div className="flex items-start">
+                  <button
+                    onClick={() => onSpeak(example.learning, { lang: useLanguage().profile.learning })}
+                    className="p-1 rounded-full hover:bg-white/20 flex-shrink-0 mt-0.5 mr-2"
+                    aria-label={`Speak: ${example.learning}`}
+                  >
+                    <SoundIcon className="w-4 h-4 text-slate-300" />
+                  </button>
+                  <p className="flex-1 text-slate-100 leading-relaxed">
+                    {renderClickableLearning({ learning: example.learning, native: example.native })}
+                  </p>
                 </div>
-              ))}
-            </div>
-          )
-        }
-      </div >
+                <p className="pl-7 text-sm text-slate-400 italic">{example.native}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     );
   }
 
@@ -227,8 +247,22 @@ const ChatSkeleton: React.FC = () => (
   </div>
 );
 
-
-const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, phrase, onGenerateInitialExamples, onContinueChat, apiProviderType, onOpenWordAnalysis, allPhrases, onCreateCard, onAnalyzeWord, onOpenVerbConjugation, onOpenNounDeclension, onOpenAdjectiveDeclension, onTranslateLearningToNative }) => {
+const ChatModal: React.FC<ChatModalProps> = ({
+  isOpen,
+  onClose,
+  phrase,
+  onGenerateInitialExamples,
+  onContinueChat,
+  apiProviderType,
+  onOpenWordAnalysis,
+  allPhrases,
+  onCreateCard,
+  onAnalyzeWord,
+  onOpenVerbConjugation,
+  onOpenNounDeclension,
+  onOpenAdjectiveDeclension,
+  onTranslateLearningToNative,
+}) => {
   const { t } = useTranslation();
   const { profile } = useLanguage();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -241,7 +275,10 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, phrase, onGenera
   const [speechSupported, setSpeechSupported] = useState(false);
   const recognitionRef = useRef<any>(null);
 
-  const [contextMenuTarget, setContextMenuTarget] = useState<{ sentence: { learning: string, native: string }, word: string } | null>(null);
+  const [contextMenuTarget, setContextMenuTarget] = useState<{
+    sentence: { learning: string; native: string };
+    word: string;
+  } | null>(null);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -267,7 +304,7 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, phrase, onGenera
       };
       recognition.onresult = (event) => {
         const transcript = event.results[0][0].transcript;
-        setInput(prev => (prev ? prev + ' ' : '') + transcript);
+        setInput((prev) => (prev ? prev + ' ' : '') + transcript);
       };
       recognitionRef.current = recognition;
     } else {
@@ -302,7 +339,14 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, phrase, onGenera
             }
             setMessages([initialMessage]);
           } catch (err) {
-            setMessages([{ role: 'model', contentParts: [{ type: 'text', text: t('modals.chat.errors.generic', { message: (err as Error).message }) }] }]);
+            setMessages([
+              {
+                role: 'model',
+                contentParts: [
+                  { type: 'text', text: t('modals.chat.errors.generic', { message: (err as Error).message }) },
+                ],
+              },
+            ]);
           } finally {
             setIsLoading(false);
           }
@@ -310,7 +354,6 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, phrase, onGenera
       };
 
       fetchInitialMessage();
-
     } else {
       document.body.style.overflow = 'auto';
       if (isListening) {
@@ -336,45 +379,56 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, phrase, onGenera
     }
   }, [input]);
 
-  const handleSendMessage = useCallback(async (messageText: string) => {
-    if (!messageText.trim() || isLoading) return;
+  const handleSendMessage = useCallback(
+    async (messageText: string) => {
+      if (!messageText.trim() || isLoading) return;
 
-    if (isListening) {
-      recognitionRef.current?.stop();
-    }
-
-    const userMessage: ChatMessage = { role: 'user', text: messageText };
-    const messagesWithUser = [...messages, userMessage];
-    setMessages(messagesWithUser);
-    setInput('');
-    setIsLoading(true);
-
-    try {
-      const modelResponse = await onContinueChat(phrase, messagesWithUser, messageText);
-      setMessages(prev => [...prev, modelResponse]);
-      if (modelResponse.promptSuggestions && modelResponse.promptSuggestions.length > 0) {
-        setPromptSuggestions(prev => {
-          const newPrompts = modelResponse.promptSuggestions || [];
-          const combined = [...newPrompts, ...prev];
-          const uniquePrompts = Array.from(new Set(combined));
-          return uniquePrompts;
-        });
+      if (isListening) {
+        recognitionRef.current?.stop();
       }
-    } catch (error) {
-      console.error("Chat error:", error);
-      setMessages(prev => [...prev, { role: 'model', contentParts: [{ type: 'text', text: t('modals.chat.errors.generic', { message: (error as Error).message }) }] }]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [isLoading, messages, phrase, isListening, onContinueChat]);
+
+      const userMessage: ChatMessage = { role: 'user', text: messageText };
+      const messagesWithUser = [...messages, userMessage];
+      setMessages(messagesWithUser);
+      setInput('');
+      setIsLoading(true);
+
+      try {
+        const modelResponse = await onContinueChat(phrase, messagesWithUser, messageText);
+        setMessages((prev) => [...prev, modelResponse]);
+        if (modelResponse.promptSuggestions && modelResponse.promptSuggestions.length > 0) {
+          setPromptSuggestions((prev) => {
+            const newPrompts = modelResponse.promptSuggestions || [];
+            const combined = [...newPrompts, ...prev];
+            const uniquePrompts = Array.from(new Set(combined));
+            return uniquePrompts;
+          });
+        }
+      } catch (error) {
+        console.error('Chat error:', error);
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: 'model',
+            contentParts: [
+              { type: 'text', text: t('modals.chat.errors.generic', { message: (error as Error).message }) },
+            ],
+          },
+        ]);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [isLoading, messages, phrase, isListening, onContinueChat]
+  );
 
   const handleSuggestionClick = (suggestion: string) => {
     handleSendMessage(suggestion);
-    setPromptSuggestions(prev => {
-      const otherSuggestions = prev.filter(s => s !== suggestion);
+    setPromptSuggestions((prev) => {
+      const otherSuggestions = prev.filter((s) => s !== suggestion);
       return [...otherSuggestions, suggestion];
     });
-    setUsedSuggestions(prev => {
+    setUsedSuggestions((prev) => {
       if (!prev.includes(suggestion)) {
         return [...prev, suggestion];
       }
@@ -397,7 +451,7 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, phrase, onGenera
     <div className="fixed inset-0 bg-black/60 z-40 flex justify-center items-end" onClick={onClose}>
       <div
         className={`bg-slate-800 w-full max-w-2xl h-[90%] max-h-[90vh] rounded-t-2xl shadow-2xl flex flex-col transition-transform duration-300 ease-out ${isOpen ? 'translate-y-0' : 'translate-y-full'}`}
-        onClick={e => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <header className="flex items-center justify-between p-4 border-b border-slate-700 flex-shrink-0">
@@ -415,8 +469,16 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, phrase, onGenera
           <div className="space-y-6">
             {messages.map((msg, index) => (
               <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[85%] px-2 py-2 rounded-2xl break-words bg l${msg.role === 'user' ? 'bg-purple-600 text-white rounded-br-lg' : 'bg-slate-700 text-slate-200 rounded-bl-lg'}`}>
-                  <ChatMessageContent message={msg} onSpeak={speak} basePhrase={phrase} onOpenWordAnalysis={onOpenWordAnalysis} onOpenContextMenu={setContextMenuTarget} />
+                <div
+                  className={`max-w-[85%] px-2 py-2 rounded-2xl break-words bg l${msg.role === 'user' ? 'bg-purple-600 text-white rounded-br-lg' : 'bg-slate-700 text-slate-200 rounded-bl-lg'}`}
+                >
+                  <ChatMessageContent
+                    message={msg}
+                    onSpeak={speak}
+                    basePhrase={phrase}
+                    onOpenWordAnalysis={onOpenWordAnalysis}
+                    onOpenContextMenu={setContextMenuTarget}
+                  />
                 </div>
               </div>
             ))}
@@ -429,9 +491,7 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, phrase, onGenera
                 </div>
               </div>
             )}
-            {isLoading && messages.length === 0 && (
-              <ChatSkeleton />
-            )}
+            {isLoading && messages.length === 0 && <ChatSkeleton />}
           </div>
           <div ref={chatEndRef} />
         </div>
@@ -440,7 +500,7 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, phrase, onGenera
         <div className="p-4 pt-2 border-t border-slate-700 flex-shrink-0 bg-slate-800/80 backdrop-blur-sm">
           {promptSuggestions.length > 0 && (
             <div className="flex space-x-2 overflow-x-auto pb-0 mb-2 -mx-4 px-4 hide-scrollbar">
-              {promptSuggestions.map(prompt => (
+              {promptSuggestions.map((prompt) => (
                 <button
                   key={prompt}
                   onClick={() => handleSuggestionClick(prompt)}
@@ -452,11 +512,17 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, phrase, onGenera
               ))}
             </div>
           )}
-          <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(input); }} className="flex items-end space-x-3">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSendMessage(input);
+            }}
+            className="flex items-end space-x-3"
+          >
             <textarea
               ref={textareaRef}
               value={input}
-              onChange={e => setInput(e.target.value)}
+              onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
@@ -479,7 +545,11 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, phrase, onGenera
                 <MicrophoneIcon className="w-6 h-6 text-white" />
               </button>
             )}
-            <button type="submit" disabled={!input.trim() || isLoading} className="p-3 bg-purple-600 rounded-lg hover:bg-purple-700 disabled:bg-slate-600 disabled:cursor-not-allowed transition-colors flex-shrink-0">
+            <button
+              type="submit"
+              disabled={!input.trim() || isLoading}
+              className="p-3 bg-purple-600 rounded-lg hover:bg-purple-700 disabled:bg-slate-600 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+            >
               <SendIcon className="w-6 h-6 text-white" />
             </button>
           </form>

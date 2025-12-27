@@ -1,12 +1,13 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+
+import { useLanguage } from '../contexts/languageContext';
+import { useTranslation } from '../hooks/useTranslation.ts';
+import { getNativeSpeechLocale } from '../services/speechService';
 import { SpeechRecognition, SpeechRecognitionErrorEvent } from '../types.ts';
-import MicrophoneIcon from './icons/MicrophoneIcon';
-import SendIcon from './icons/SendIcon';
 import CloseIcon from './icons/CloseIcon';
 import KeyboardIcon from './icons/KeyboardIcon';
-import { useTranslation } from '../hooks/useTranslation.ts';
-import { useLanguage } from '../contexts/languageContext';
-import { getNativeSpeechLocale } from '../services/speechService';
+import MicrophoneIcon from './icons/MicrophoneIcon';
+import SendIcon from './icons/SendIcon';
 
 interface AddContinuationModalProps {
   isOpen: boolean;
@@ -117,7 +118,10 @@ const AddContinuationModal: React.FC<AddContinuationModalProps> = ({ isOpen, onC
   const hasText = inputText.trim().length > 0;
 
   return (
-    <div className="fixed inset-0 bg-black/70 z-[60] flex justify-center items-center backdrop-blur-sm" onClick={onClose}>
+    <div
+      className="fixed inset-0 bg-black/70 z-[60] flex justify-center items-center backdrop-blur-sm"
+      onClick={onClose}
+    >
       <div
         className="w-full max-w-sm m-4 p-6 flex flex-col items-center justify-between h-80 relative"
         onClick={(event) => event.stopPropagation()}

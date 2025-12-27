@@ -1,4 +1,4 @@
-import { Phrase, PhraseCategory, Category } from '../types.ts';
+import { Category, Phrase, PhraseCategory } from '../types.ts';
 
 // Intervals in milliseconds
 // e.g., 1 hour, 8 hours, 1 day, 3 days, 1 week, 2 weeks
@@ -15,7 +15,7 @@ export const MAX_MASTERY_LEVEL = SRS_INTERVALS.length;
 export const LEECH_THRESHOLD = 5;
 
 export const isPhraseMastered = (phrase: Phrase, categories: Category[]): boolean => {
-  const category = categories.find(c => c.id === phrase.category);
+  const category = categories.find((c) => c.id === phrase.category);
   // Foundational categories are mastered after a streak of 10.
   if (category?.isFoundational) {
     return phrase.knowStreak >= 10;
@@ -25,8 +25,27 @@ export const isPhraseMastered = (phrase: Phrase, categories: Category[]): boolea
   return phrase.masteryLevel >= MAX_MASTERY_LEVEL;
 };
 
-const wFragenList = ["was", "wer", "wo", "wann", "wie", "warum", "woher", "wohin", "welcher", "wie viel", "wie viele"];
-const pronounList = ["ich", "du", "er", "sie", "es", "wir", "ihr", "sie", "mich", "dich", "ihn", "mir", "dir", "ihm", "ihnen", "mein", "dein", "sein"];
+const wFragenList = ['was', 'wer', 'wo', 'wann', 'wie', 'warum', 'woher', 'wohin', 'welcher', 'wie viel', 'wie viele'];
+const pronounList = [
+  'ich',
+  'du',
+  'er',
+  'sie',
+  'es',
+  'wir',
+  'ihr',
+  'sie',
+  'mich',
+  'dich',
+  'ihn',
+  'mir',
+  'dir',
+  'ihm',
+  'ihnen',
+  'mein',
+  'dein',
+  'sein',
+];
 
 /**
  * Assigns a category to a phrase that doesn't have one.
@@ -43,13 +62,11 @@ export const assignInitialCategory = (phrase: Omit<Phrase, 'category' | 'id'>): 
   return 'general';
 };
 
-
 // Helper to categorize phrases for UI or simple logic
 export const getPhraseCategory = (phrase: Phrase): string | null => {
   if (!phrase) return null;
   return phrase.category;
 };
-
 
 export const selectNextPhrase = (phrases: Phrase[], currentPhraseId: string | null = null): Phrase | null => {
   // Guard against empty or invalid input
@@ -73,7 +90,7 @@ export const selectNextPhrase = (phrases: Phrase[], currentPhraseId: string | nu
     return null;
   }
 
-  const poolWithoutCurrent = phrases.filter(p => p.id !== currentPhraseId);
+  const poolWithoutCurrent = phrases.filter((p) => p.id !== currentPhraseId);
   if (poolWithoutCurrent.length === 0) {
     return null;
   }
@@ -81,14 +98,14 @@ export const selectNextPhrase = (phrases: Phrase[], currentPhraseId: string | nu
   const now = Date.now();
 
   // Priority 1: Phrases due for review (must have been reviewed before)
-  const dueForReview = poolWithoutCurrent.filter(p => p.lastReviewedAt !== null && p.nextReviewAt <= now);
+  const dueForReview = poolWithoutCurrent.filter((p) => p.lastReviewedAt !== null && p.nextReviewAt <= now);
   if (dueForReview.length > 0) {
     // Prioritize the one with the lowest mastery level
     return dueForReview.sort((a, b) => a.masteryLevel - b.masteryLevel)[0];
   }
 
   // Priority 2: Completely new phrases
-  const newPhrases = poolWithoutCurrent.filter(p => p.lastReviewedAt === null);
+  const newPhrases = poolWithoutCurrent.filter((p) => p.lastReviewedAt === null);
   if (newPhrases.length > 0) {
     // Pick a random new phrase to avoid always showing them in the same order
     return newPhrases[Math.floor(Math.random() * newPhrases.length)];
@@ -103,7 +120,7 @@ type UserAction = 'know' | 'forgot' | 'dont_know';
 
 export const isLeech = (phrase: Phrase): boolean => {
   return phrase.lapses >= LEECH_THRESHOLD;
-}
+};
 
 export const updatePhraseMastery = (phrase: Phrase, action: UserAction, categories: Category[]): Phrase => {
   const now = Date.now();
@@ -118,7 +135,7 @@ export const updatePhraseMastery = (phrase: Phrase, action: UserAction, categori
       newKnowCount++;
       newKnowStreak++;
       // A correct answer resets the lapse count for non-foundational cards.
-      const category = categories.find(c => c.id === phrase.category);
+      const category = categories.find((c) => c.id === phrase.category);
       if (!category?.isFoundational) {
         newLapses = 0;
       }
@@ -141,9 +158,10 @@ export const updatePhraseMastery = (phrase: Phrase, action: UserAction, categori
       break;
   }
 
-  const interval = action === 'know' && newMasteryLevel > 0
-    ? SRS_INTERVALS[Math.min(newMasteryLevel - 1, SRS_INTERVALS.length - 1)]
-    : 5 * 60 * 1000; // 5 minutes for incorrect answers
+  const interval =
+    action === 'know' && newMasteryLevel > 0
+      ? SRS_INTERVALS[Math.min(newMasteryLevel - 1, SRS_INTERVALS.length - 1)]
+      : 5 * 60 * 1000; // 5 minutes for incorrect answers
 
   const updatedPhrasePartial = {
     ...phrase,
@@ -157,6 +175,6 @@ export const updatePhraseMastery = (phrase: Phrase, action: UserAction, categori
 
   return {
     ...updatedPhrasePartial,
-    isMastered: isPhraseMastered(updatedPhrasePartial, categories)
+    isMastered: isPhraseMastered(updatedPhrasePartial, categories),
   };
 };

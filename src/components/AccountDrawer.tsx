@@ -1,7 +1,8 @@
 import React from 'react';
-import CloseIcon from './icons/CloseIcon';
+
 import { useAuth } from '../contexts/authContext.tsx';
 import { useTranslation } from '../hooks/useTranslation.ts';
+import CloseIcon from './icons/CloseIcon';
 
 interface AccountDrawerProps {
   isOpen: boolean;
@@ -24,14 +25,12 @@ const AccountDrawer: React.FC<AccountDrawerProps> = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div
-      className={`fixed inset-0 z-50 ${isOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}
-      onClick={onClose}
-    >
+    <div className={`fixed inset-0 z-50 ${isOpen ? 'pointer-events-auto' : 'pointer-events-none'}`} onClick={onClose}>
       <div
-        className={`fixed top-0 right-0 h-full w-80 bg-slate-800 shadow-2xl transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'
-          }`}
-        onClick={e => e.stopPropagation()}
+        className={`fixed top-0 right-0 h-full w-80 bg-slate-800 shadow-2xl transform transition-transform duration-300 ease-in-out ${
+          isOpen ? 'translate-x-0' : 'translate-x-full'
+        }`}
+        onClick={(e) => e.stopPropagation()}
       >
         <header className="flex items-center justify-between p-4 border-b border-slate-700">
           <h2 className="text-lg font-bold text-slate-100">{t('account.title')}</h2>
@@ -42,9 +41,7 @@ const AccountDrawer: React.FC<AccountDrawerProps> = ({ isOpen, onClose }) => {
         <div className="p-6 space-y-6">
           <div>
             <label className="block text-sm font-medium text-slate-400 mb-2">{t('account.email')}</label>
-            <div className="text-slate-200 bg-slate-700/50 px-3 py-2 rounded-lg">
-              {user?.email}
-            </div>
+            <div className="text-slate-200 bg-slate-700/50 px-3 py-2 rounded-lg">{user?.email}</div>
           </div>
           <button
             type="button"

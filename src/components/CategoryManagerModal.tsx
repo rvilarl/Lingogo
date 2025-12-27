@@ -1,11 +1,12 @@
 import React from 'react';
+
+import { useTranslation } from '../hooks/useTranslation.ts';
 import { Category } from '../types.ts';
 import CloseIcon from './icons/CloseIcon';
 import FolderIcon from './icons/FolderIcon';
-import PlusIcon from './icons/PlusIcon';
 import PencilIcon from './icons/PencilIcon';
+import PlusIcon from './icons/PlusIcon';
 import TrashIcon from './icons/TrashIcon';
-import { useTranslation } from '../hooks/useTranslation.ts';
 
 interface CategoryManagerModalProps {
   isOpen: boolean;
@@ -17,14 +18,28 @@ interface CategoryManagerModalProps {
   onViewCategory: (category: Category) => void;
 }
 
-const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({ isOpen, onClose, categories, onAddCategory, onEditCategory, onDeleteCategory, onViewCategory }) => {
+const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({
+  isOpen,
+  onClose,
+  categories,
+  onAddCategory,
+  onEditCategory,
+  onDeleteCategory,
+  onViewCategory,
+}) => {
   const { t } = useTranslation();
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/70 z-[60] flex justify-center items-center backdrop-blur-sm p-0 animate-fade-in" onClick={onClose}>
-      <div className="bg-slate-800 rounded-lg shadow-2xl w-full max-w-md m-4 flex flex-col" onClick={e => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 bg-black/70 z-[60] flex justify-center items-center backdrop-blur-sm p-0 animate-fade-in"
+      onClick={onClose}
+    >
+      <div
+        className="bg-slate-800 rounded-lg shadow-2xl w-full max-w-md m-4 flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
         <header className="flex items-center justify-between p-2 border-b border-slate-700">
           <div className="flex items-center space-x-3">
             <FolderIcon className="w-6 h-6 text-purple-400" />
@@ -36,7 +51,7 @@ const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({ isOpen, onC
         </header>
 
         <div className="p-2 space-y-2 max-h-[60vh] overflow-y-auto hide-scrollbar">
-          {categories.map(category => (
+          {categories.map((category) => (
             <div
               key={category.id}
               className="group flex items-center justify-between px-3 p-1 bg-slate-700/50 hover:bg-slate-700 rounded-lg transition-colors"
@@ -46,11 +61,19 @@ const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({ isOpen, onC
                 <span className="text-slate-200">{category.name}</span>
               </button>
               <div className="flex items-center space-x-1 opacity-50 group-hover:opacity-100 transition-opacity">
-                <button onClick={() => onEditCategory(category)} className="p-2 text-slate-400 hover:text-blue-400 rounded-full transition-colors" aria-label={t('categories.manager.aria.edit', { name: category.name })}>
+                <button
+                  onClick={() => onEditCategory(category)}
+                  className="p-2 text-slate-400 hover:text-blue-400 rounded-full transition-colors"
+                  aria-label={t('categories.manager.aria.edit', { name: category.name })}
+                >
                   <PencilIcon className="w-5 h-5" />
                 </button>
                 {category.id !== 'general' && (
-                  <button onClick={() => onDeleteCategory(category)} className="p-2 text-slate-400 hover:text-red-400 rounded-full transition-colors" aria-label={t('categories.manager.aria.delete', { name: category.name })}>
+                  <button
+                    onClick={() => onDeleteCategory(category)}
+                    className="p-2 text-slate-400 hover:text-red-400 rounded-full transition-colors"
+                    aria-label={t('categories.manager.aria.delete', { name: category.name })}
+                  >
                     <TrashIcon className="w-5 h-5" />
                   </button>
                 )}

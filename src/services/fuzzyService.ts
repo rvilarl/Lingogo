@@ -47,18 +47,22 @@ const levenshteinDistance = (a: string, b: string): number => {
  * @returns True if a similar phrase is found, false otherwise.
  */
 export const isSimilar = (newPhrase: string, existingPhrases: string[], threshold: number = 0.8): boolean => {
-  const normalize = (str: string) => str.toLowerCase().replace(/[.,!?]/g, '').trim();
+  const normalize = (str: string) =>
+    str
+      .toLowerCase()
+      .replace(/[.,!?]/g, '')
+      .trim();
   const normalizedNew = normalize(newPhrase);
 
   for (const existing of existingPhrases) {
     const normalizedExisting = normalize(existing);
-    
+
     const maxLength = Math.max(normalizedNew.length, normalizedExisting.length);
     if (maxLength === 0) continue; // Both are empty, not similar in a meaningful way
 
     const distance = levenshteinDistance(normalizedNew, normalizedExisting);
     const similarity = 1 - distance / maxLength;
-    
+
     if (similarity >= threshold) {
       console.log(`Fuzzy match found: "${newPhrase}" is ${similarity.toFixed(2)} similar to "${existing}"`);
       return true;

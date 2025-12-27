@@ -1,15 +1,16 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
-import { ProposedCard, SpeechRecognition, SpeechRecognitionErrorEvent } from '../types.ts';
-import CloseIcon from './icons/CloseIcon';
-import CheckIcon from './icons/CheckIcon';
-import SmartToyIcon from './icons/SmartToyIcon';
-import RefreshIcon from './icons/RefreshIcon';
-import WandIcon from './icons/WandIcon';
-import MicrophoneIcon from './icons/MicrophoneIcon';
-import Spinner from './Spinner';
-import { useTranslation } from '../hooks/useTranslation.ts';
+﻿import React, { useEffect, useRef, useState } from 'react';
+
 import { useLanguage } from '../contexts/languageContext';
+import { useTranslation } from '../hooks/useTranslation.ts';
 import { getNativeSpeechLocale } from '../services/speechService';
+import { ProposedCard, SpeechRecognition, SpeechRecognitionErrorEvent } from '../types.ts';
+import CheckIcon from './icons/CheckIcon';
+import CloseIcon from './icons/CloseIcon';
+import MicrophoneIcon from './icons/MicrophoneIcon';
+import RefreshIcon from './icons/RefreshIcon';
+import SmartToyIcon from './icons/SmartToyIcon';
+import WandIcon from './icons/WandIcon';
+import Spinner from './Spinner';
 
 interface AutoFillPreviewModalProps {
   isOpen: boolean;
@@ -178,16 +179,14 @@ const AutoFillPreviewModal: React.FC<AutoFillPreviewModalProps> = ({
                 <li
                   key={index}
                   onClick={() => toggleSelection(index)}
-                  className={`p-3 rounded-lg flex items-start space-x-3 cursor-pointer transition-colors ${selectedIndices.has(index)
-                    ? 'bg-slate-700'
-                    : 'bg-slate-700/50 hover:bg-slate-700/80'
-                    }`}
+                  className={`p-3 rounded-lg flex items-start space-x-3 cursor-pointer transition-colors ${
+                    selectedIndices.has(index) ? 'bg-slate-700' : 'bg-slate-700/50 hover:bg-slate-700/80'
+                  }`}
                 >
                   <div
-                    className={`mt-1 w-5 h-5 rounded-md flex-shrink-0 flex items-center justify-center border-2 ${selectedIndices.has(index)
-                      ? 'bg-purple-600 border-purple-500'
-                      : 'bg-slate-800 border-slate-600'
-                      }`}
+                    className={`mt-1 w-5 h-5 rounded-md flex-shrink-0 flex items-center justify-center border-2 ${
+                      selectedIndices.has(index) ? 'bg-purple-600 border-purple-500' : 'bg-slate-800 border-slate-600'
+                    }`}
                   >
                     {selectedIndices.has(index) && <CheckIcon className="w-3 h-3 text-white" />}
                   </div>

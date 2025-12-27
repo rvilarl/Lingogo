@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import type { Phrase, VerbConjugation, TenseForms, PronounConjugation } from '../types.ts';
+import React, { useEffect, useState } from 'react';
+
+import { useTranslation } from '../hooks/useTranslation';
+import type { Phrase, PronounConjugation, TenseForms, VerbConjugation } from '../types.ts';
+import AudioPlayer from './AudioPlayer';
 import CloseIcon from './icons/CloseIcon';
 import TableIcon from './icons/TableIcon';
-import AudioPlayer from './AudioPlayer';
-import { useTranslation } from '../hooks/useTranslation';
 
 interface VerbConjugationModalProps {
   isOpen: boolean;
@@ -59,7 +60,14 @@ const VerbConjugationSkeleton: React.FC = () => (
   </div>
 );
 
-const VerbConjugationModal: React.FC<VerbConjugationModalProps> = ({ isOpen, onClose, infinitive, onConjugateSimple, onConjugateDetailed, onOpenWordAnalysis }) => {
+const VerbConjugationModal: React.FC<VerbConjugationModalProps> = ({
+  isOpen,
+  onClose,
+  infinitive,
+  onConjugateSimple,
+  onConjugateDetailed,
+  onOpenWordAnalysis,
+}) => {
   const { t } = useTranslation();
   type SimpleConjugation = { pronoun: string; form: string; pronounNative?: string };
   const [simpleData, setSimpleData] = useState<SimpleConjugation[] | null>(null);
@@ -123,8 +131,12 @@ const VerbConjugationModal: React.FC<VerbConjugationModalProps> = ({ isOpen, onC
       id: `proxy_verb_${infinitive}`,
       text: { learning: contextText, native: t('modals.verbConjugation.proxyTitle', { infinitive }) },
       category: 'general',
-      masteryLevel: 0, lastReviewedAt: null, nextReviewAt: Date.now(),
-      knowCount: 0, knowStreak: 0, isMastered: false,
+      masteryLevel: 0,
+      lastReviewedAt: null,
+      nextReviewAt: Date.now(),
+      knowCount: 0,
+      knowStreak: 0,
+      isMastered: false,
       lapses: 0,
     };
     onOpenWordAnalysis(proxyPhrase as Phrase, word);
@@ -142,7 +154,8 @@ const VerbConjugationModal: React.FC<VerbConjugationModalProps> = ({ isOpen, onC
         }}
         className="cursor-pointer hover:bg-white/20 px-1 py-0.5 rounded-md transition-colors"
       >
-        {word}{i < arr.length - 1 ? ' ' : ''}
+        {word}
+        {i < arr.length - 1 ? ' ' : ''}
       </span>
     ));
   };
@@ -150,7 +163,9 @@ const VerbConjugationModal: React.FC<VerbConjugationModalProps> = ({ isOpen, onC
   const renderSimpleView = () => (
     <>
       <section className="bg-slate-900/50 rounded-lg overflow-hidden border border-slate-700/50">
-        <h3 className="text-xl font-bold text-slate-100 p-4 bg-slate-800/50">{t('modals.verbConjugation.simple.heading')}</h3>
+        <h3 className="text-xl font-bold text-slate-100 p-4 bg-slate-800/50">
+          {t('modals.verbConjugation.simple.heading')}
+        </h3>
         <div className="p-4 space-y-3">
           {simpleData!.map((conj) => (
             <div key={conj.pronoun} className="grid grid-cols-[80px_1fr_auto] items-center gap-x-3 text-sm">
@@ -163,7 +178,10 @@ const VerbConjugationModal: React.FC<VerbConjugationModalProps> = ({ isOpen, onC
       </section>
 
       <div className="mt-6 text-center">
-        <button onClick={handleShowDetails} className="px-6 py-2 rounded-md bg-slate-600 hover:bg-slate-700 text-white font-semibold transition-colors">
+        <button
+          onClick={handleShowDetails}
+          className="px-6 py-2 rounded-md bg-slate-600 hover:bg-slate-700 text-white font-semibold transition-colors"
+        >
           {t('modals.verbConjugation.simple.button')}
         </button>
       </div>
@@ -190,14 +208,15 @@ const VerbConjugationModal: React.FC<VerbConjugationModalProps> = ({ isOpen, onC
       <section className="bg-slate-900/50 rounded-lg overflow-hidden border border-slate-700/50">
         <h3 className="text-xl font-bold text-slate-100 p-4 bg-slate-800/50">{title}</h3>
         <div className="flex border-b border-slate-700 px-4">
-          {forms.map(form => (
+          {forms.map((form) => (
             <button
               key={form.key}
-              onClick={() => setActiveTabs(prev => ({ ...prev, [tenseKey]: form.key }))}
-              className={`px-3 sm:px-4 py-2 text-sm font-semibold transition-colors focus:outline-none -mb-px ${activeTab === form.key
-                ? 'border-b-2 border-purple-400 text-purple-300'
-                : 'text-slate-400 hover:text-slate-200 border-b-2 border-transparent'
-                }`}
+              onClick={() => setActiveTabs((prev) => ({ ...prev, [tenseKey]: form.key }))}
+              className={`px-3 sm:px-4 py-2 text-sm font-semibold transition-colors focus:outline-none -mb-px ${
+                activeTab === form.key
+                  ? 'border-b-2 border-purple-400 text-purple-300'
+                  : 'text-slate-400 hover:text-slate-200 border-b-2 border-transparent'
+              }`}
             >
               {form.name}
             </button>
@@ -212,16 +231,16 @@ const VerbConjugationModal: React.FC<VerbConjugationModalProps> = ({ isOpen, onC
             const hasNative = nativeText.length > 0;
             return (
               <div key={conj.pronoun} className="grid grid-cols-[80px_1fr_auto] items-center gap-x-3 text-sm">
-                <span className="font-mono text-purple-300 text-right">{(conj as any).pronounNative ?? conj.pronoun ?? (hasNative ? nativeText.split(/\s+/)[0] : '')}</span>
+                <span className="font-mono text-purple-300 text-right">
+                  {(conj as any).pronounNative ?? conj.pronoun ?? (hasNative ? nativeText.split(/\s+/)[0] : '')}
+                </span>
                 <div className="min-w-0">
                   {hasLearning ? (
                     <p className="text-slate-100 font-medium truncate">{renderClickableLearning(learningText)}</p>
                   ) : (
                     <p className="text-slate-500 italic">—</p>
                   )}
-                  {hasNative && (
-                    <p className="text-xs text-slate-400 italic truncate">«{nativeText}»</p>
-                  )}
+                  {hasNative && <p className="text-xs text-slate-400 italic truncate">«{nativeText}»</p>}
                 </div>
                 <AudioPlayer textToSpeak={learningText} />
               </div>
@@ -242,11 +261,19 @@ const VerbConjugationModal: React.FC<VerbConjugationModalProps> = ({ isOpen, onC
         {renderTenseSection('future', t('modals.verbConjugation.tense.future'))}
       </div>
     );
-  }
+  };
 
   const renderContent = () => {
     if (isLoading && !simpleData && !detailedData) return <SimpleSkeleton />;
-    if (error) return <div className="flex justify-center items-center h-full"><div className="text-center bg-red-900/50 border border-red-700 text-red-300 p-4 rounded-lg"><p className="font-semibold">{t('common.labels.error')}</p><p className="text-sm">{error}</p></div></div>;
+    if (error)
+      return (
+        <div className="flex justify-center items-center h-full">
+          <div className="text-center bg-red-900/50 border border-red-700 text-red-300 p-4 rounded-lg">
+            <p className="font-semibold">{t('common.labels.error')}</p>
+            <p className="text-sm">{error}</p>
+          </div>
+        </div>
+      );
     if (isDetailedView) return renderDetailedView();
     if (simpleData) return renderSimpleView();
     return <SimpleSkeleton />;
@@ -254,7 +281,10 @@ const VerbConjugationModal: React.FC<VerbConjugationModalProps> = ({ isOpen, onC
 
   return (
     <div className="fixed inset-0 bg-black/60 z-[70] flex justify-center items-center p-0" onClick={onClose}>
-      <div className="bg-slate-800 w-full max-w-3xl m-4 rounded-2xl shadow-2xl flex flex-col h-[90vh]" onClick={e => e.stopPropagation()}>
+      <div
+        className="bg-slate-800 w-full max-w-3xl m-4 rounded-2xl shadow-2xl flex flex-col h-[90vh]"
+        onClick={(e) => e.stopPropagation()}
+      >
         <header className="flex items-center justify-between p-4 border-b border-slate-700 flex-shrink-0">
           <div className="flex items-center space-x-3">
             <TableIcon className="w-6 h-6 text-purple-400" />
@@ -264,9 +294,7 @@ const VerbConjugationModal: React.FC<VerbConjugationModalProps> = ({ isOpen, onC
             <CloseIcon className="w-6 h-6 text-slate-400" />
           </button>
         </header>
-        <div className="p-1 sm:p-6 flex-grow overflow-y-auto hide-scrollbar">
-          {renderContent()}
-        </div>
+        <div className="p-1 sm:p-6 flex-grow overflow-y-auto hide-scrollbar">{renderContent()}</div>
       </div>
     </div>
   );

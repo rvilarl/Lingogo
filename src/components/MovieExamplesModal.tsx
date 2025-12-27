@@ -1,10 +1,10 @@
-
 import React from 'react';
-import type { Phrase, MovieExample } from '../types.ts';
+
+import { useTranslation } from '../hooks/useTranslation';
+import type { MovieExample, Phrase } from '../types.ts';
+import AudioPlayer from './AudioPlayer';
 import CloseIcon from './icons/CloseIcon';
 import FilmIcon from './icons/FilmIcon';
-import AudioPlayer from './AudioPlayer';
-import { useTranslation } from '../hooks/useTranslation';
 
 interface MovieExamplesModalProps {
   isOpen: boolean;
@@ -29,7 +29,7 @@ const HighlightedDialogue: React.FC<{
     const proxyPhrase: Phrase = {
       ...basePhrase,
       id: `proxy_${basePhrase.id}_movie`,
-      text: { learning: contextText, native: dialogueNative }
+      text: { learning: contextText, native: dialogueNative },
     };
     onOpenWordAnalysis(proxyPhrase, word);
   };
@@ -59,7 +59,6 @@ const HighlightedDialogue: React.FC<{
   );
 };
 
-
 const MovieExamplesSkeleton: React.FC = () => (
   <div className="space-y-4 animate-pulse">
     {[...Array(3)].map((_, index) => (
@@ -78,8 +77,15 @@ const MovieExamplesSkeleton: React.FC = () => (
   </div>
 );
 
-
-const MovieExamplesModal: React.FC<MovieExamplesModalProps> = ({ isOpen, onClose, phrase, examples, isLoading, error, onOpenWordAnalysis }) => {
+const MovieExamplesModal: React.FC<MovieExamplesModalProps> = ({
+  isOpen,
+  onClose,
+  phrase,
+  examples,
+  isLoading,
+  error,
+  onOpenWordAnalysis,
+}) => {
   const { t } = useTranslation();
 
   if (!isOpen) return null;
@@ -89,10 +95,21 @@ const MovieExamplesModal: React.FC<MovieExamplesModalProps> = ({ isOpen, onClose
       return <MovieExamplesSkeleton />;
     }
     if (error) {
-      return <div className="flex justify-center items-center h-full"><div className="text-center bg-red-900/50 border border-red-700 text-red-300 p-4 rounded-lg"><p className="font-semibold">{t('modals.movieExamples.errors.generic')}</p><p className="text-sm">{error}</p></div></div>;
+      return (
+        <div className="flex justify-center items-center h-full">
+          <div className="text-center bg-red-900/50 border border-red-700 text-red-300 p-4 rounded-lg">
+            <p className="font-semibold">{t('modals.movieExamples.errors.generic')}</p>
+            <p className="text-sm">{error}</p>
+          </div>
+        </div>
+      );
     }
     if (examples.length === 0) {
-      return <div className="flex justify-center items-center h-full"><p className="text-slate-400">{t('modals.movieExamples.noExamples')}</p></div>;
+      return (
+        <div className="flex justify-center items-center h-full">
+          <p className="text-slate-400">{t('modals.movieExamples.noExamples')}</p>
+        </div>
+      );
     }
 
     return (
@@ -107,7 +124,13 @@ const MovieExamplesModal: React.FC<MovieExamplesModalProps> = ({ isOpen, onClose
               <AudioPlayer textToSpeak={example.dialogueLearning} />
               <div className="flex-1">
                 <p className="text-slate-300 leading-relaxed">
-                  <HighlightedDialogue text={example.dialogueLearning} phraseToHighlight={phrase.text.learning} basePhrase={phrase} onOpenWordAnalysis={onOpenWordAnalysis} dialogueNative={example.dialogueNative} />
+                  <HighlightedDialogue
+                    text={example.dialogueLearning}
+                    phraseToHighlight={phrase.text.learning}
+                    basePhrase={phrase}
+                    onOpenWordAnalysis={onOpenWordAnalysis}
+                    dialogueNative={example.dialogueNative}
+                  />
                 </p>
                 {example.dialogueNative && (
                   <p className="text-slate-400 leading-relaxed italic mt-1 border-l-2 border-slate-600 pl-3">
@@ -126,7 +149,7 @@ const MovieExamplesModal: React.FC<MovieExamplesModalProps> = ({ isOpen, onClose
     <div className="fixed inset-0 bg-black/60 z-50 flex justify-center items-end" onClick={onClose}>
       <div
         className={`bg-slate-800 w-full max-w-2xl h-[90%] max-h-[90vh] rounded-t-2xl shadow-2xl flex flex-col transition-transform duration-300 ease-out ${isOpen ? 'translate-y-0' : 'translate-y-full'}`}
-        onClick={e => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
       >
         <header className="flex items-center justify-between p-4 border-b border-slate-700 flex-shrink-0">
           <div className="flex items-center space-x-3">
@@ -137,9 +160,7 @@ const MovieExamplesModal: React.FC<MovieExamplesModalProps> = ({ isOpen, onClose
             <CloseIcon className="w-6 h-6 text-slate-400" />
           </button>
         </header>
-        <div className="flex-grow p-2 overflow-y-auto hide-scrollbar">
-          {renderContent()}
-        </div>
+        <div className="flex-grow p-2 overflow-y-auto hide-scrollbar">{renderContent()}</div>
       </div>
     </div>
   );

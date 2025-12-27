@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import type { Phrase } from '../types.ts';
-import CloseIcon from './icons/CloseIcon';
-import RefreshIcon from './icons/RefreshIcon';
-import CheckIcon from './icons/CheckIcon';
-import MessageQuestionIcon from './icons/MessageQuestionIcon';
+import React, { useCallback, useEffect, useState } from 'react';
+
 import { useTranslation } from '../hooks/useTranslation';
+import type { Phrase } from '../types.ts';
+import CheckIcon from './icons/CheckIcon';
+import CloseIcon from './icons/CloseIcon';
+import MessageQuestionIcon from './icons/MessageQuestionIcon';
+import RefreshIcon from './icons/RefreshIcon';
 
 interface Suggestion {
   suggestedLearning: string;
@@ -33,8 +34,14 @@ const ImprovePhraseSkeleton: React.FC = () => (
   </div>
 );
 
-
-const ImprovePhraseModal: React.FC<ImprovePhraseModalProps> = ({ isOpen, onClose, phrase, onGenerateImprovement, onPhraseImproved, onOpenDiscussion }) => {
+const ImprovePhraseModal: React.FC<ImprovePhraseModalProps> = ({
+  isOpen,
+  onClose,
+  phrase,
+  onGenerateImprovement,
+  onPhraseImproved,
+  onOpenDiscussion,
+}) => {
   const { t } = useTranslation();
   const [currentSuggestion, setCurrentSuggestion] = useState<Suggestion | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -51,19 +58,22 @@ const ImprovePhraseModal: React.FC<ImprovePhraseModalProps> = ({ isOpen, onClose
     }
   }, [isOpen, phrase]);
 
-  const handleGenerate = useCallback(async (learningToImprove: string) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const result = await onGenerateImprovement(phrase.text.native, learningToImprove);
-      setCurrentSuggestion(result);
-      setCurrentLearning(result.suggestedLearning); // Update current Learning for iterative improvement
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Не удалось получить улучшение.');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [onGenerateImprovement, phrase.text.native]);
+  const handleGenerate = useCallback(
+    async (learningToImprove: string) => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const result = await onGenerateImprovement(phrase.text.native, learningToImprove);
+        setCurrentSuggestion(result);
+        setCurrentLearning(result.suggestedLearning); // Update current Learning for iterative improvement
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Не удалось получить улучшение.');
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [onGenerateImprovement, phrase.text.native]
+  );
 
   const handleUse = () => {
     if (currentSuggestion) {
@@ -111,7 +121,11 @@ const ImprovePhraseModal: React.FC<ImprovePhraseModalProps> = ({ isOpen, onClose
         <p className="font-semibold mb-1 text-white">{t('modals.improvePhrase.reasoning')}</p>
         <p>{currentSuggestion?.explanation}</p>
       </div>
-      {error && <div className="text-center bg-red-900/50 border border-red-700 text-red-300 p-2 rounded-lg text-sm"><p>{t('modals.improvePhrase.errors.generic')}</p></div>}
+      {error && (
+        <div className="text-center bg-red-900/50 border border-red-700 text-red-300 p-2 rounded-lg text-sm">
+          <p>{t('modals.improvePhrase.errors.generic')}</p>
+        </div>
+      )}
       <div className="grid grid-cols-5 gap-3 w-full">
         <button
           onClick={onClose}
@@ -141,22 +155,23 @@ const ImprovePhraseModal: React.FC<ImprovePhraseModalProps> = ({ isOpen, onClose
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/70 z-[60] flex justify-center items-center backdrop-blur-sm p-4" onClick={isLoading ? undefined : onClose}>
+    <div
+      className="fixed inset-0 bg-black/70 z-[60] flex justify-center items-center backdrop-blur-sm p-4"
+      onClick={isLoading ? undefined : onClose}
+    >
       <div
         className="relative w-full max-w-md bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-xl shadow-2xl flex flex-col items-center justify-center p-6 space-y-5"
-        onClick={e => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
       >
-        <button onClick={onClose} className="absolute top-3 right-3 p-2 rounded-full hover:bg-slate-700/80 disabled:opacity-50" disabled={isLoading}>
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 p-2 rounded-full hover:bg-slate-700/80 disabled:opacity-50"
+          disabled={isLoading}
+        >
           <CloseIcon className="w-5 h-5 text-slate-400" />
         </button>
 
-        {isLoading ? (
-          <ImprovePhraseSkeleton />
-        ) : currentSuggestion ? (
-          renderSuggestionState()
-        ) : (
-          renderInitialState()
-        )}
+        {isLoading ? <ImprovePhraseSkeleton /> : currentSuggestion ? renderSuggestionState() : renderInitialState()}
       </div>
     </div>
   );

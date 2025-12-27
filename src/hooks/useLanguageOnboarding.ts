@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+
 import * as backendService from '../services/backendService';
 import * as configService from '../services/configService';
-import { SUPPORTED_LANGUAGE_CODES, type LanguageCode } from '../types.ts';
+import { type LanguageCode, SUPPORTED_LANGUAGE_CODES } from '../types.ts';
 
 interface UseLanguageOnboardingResult {
   needsOnboarding: boolean;
@@ -86,7 +87,7 @@ export const useLanguageOnboarding = (userId: string | null): UseLanguageOnboard
           // Clear localStorage data for this user to avoid stale cache
           // This ensures that when data is regenerated, we start from scratch
           let clearedKeys = 0;
-          Object.keys(localStorage).forEach(key => {
+          Object.keys(localStorage).forEach((key) => {
             if (key.includes(userId) && (key.includes('Phrases') || key.includes('Categories'))) {
               console.log(`🗑️ [useLanguageOnboarding] Removing stale localStorage key: ${key}`);
               localStorage.removeItem(key);

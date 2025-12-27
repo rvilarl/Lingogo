@@ -1,6 +1,5 @@
-import type { LanguageCode, LanguageProfile } from '../types.ts';
 import { getSpeechLocale } from '../i18n/languageMeta';
-
+import type { LanguageCode, LanguageProfile } from '../types.ts';
 
 /**
  * Options for speech synthesis
@@ -44,9 +43,11 @@ export const isSpeechSupported = (): boolean => {
 export const speak = (text: string, options: SpeechOptions): void => {
   if (!isSpeechSupported()) {
     console.warn('[speechService] Speech synthesis not supported in this browser');
-    options.onError?.(new SpeechSynthesisErrorEvent('error', {
-      error: 'not-allowed'
-    } as any));
+    options.onError?.(
+      new SpeechSynthesisErrorEvent('error', {
+        error: 'not-allowed',
+      } as any)
+    );
     return;
   }
 
@@ -143,9 +144,7 @@ export const isVoiceAvailable = (lang: LanguageCode): boolean => {
   // Check if any voice matches the locale (exact or prefix match)
   const localePrefix = locale.split('-')[0]; // e.g., 'en' from 'en-US'
 
-  return voices.some(voice =>
-    voice.lang === locale || voice.lang.startsWith(localePrefix)
-  );
+  return voices.some((voice) => voice.lang === locale || voice.lang.startsWith(localePrefix));
 };
 
 /**
@@ -163,9 +162,7 @@ export const getVoicesForLanguage = (lang: LanguageCode): SpeechSynthesisVoice[]
 
   const localePrefix = locale.split('-')[0];
 
-  return voices.filter(voice =>
-    voice.lang === locale || voice.lang.startsWith(localePrefix)
-  );
+  return voices.filter((voice) => voice.lang === locale || voice.lang.startsWith(localePrefix));
 };
 
 /**

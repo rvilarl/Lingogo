@@ -1,5 +1,5 @@
-import type { LanguageProfile } from '../types.ts';
 import { getLanguageName } from '../i18n/languageMeta';
+import type { LanguageProfile } from '../types.ts';
 
 /**
  * Helper class for building language-aware prompts

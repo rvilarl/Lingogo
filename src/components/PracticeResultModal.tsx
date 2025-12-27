@@ -1,9 +1,10 @@
 import React, { useEffect } from 'react';
+
+import { useTranslation } from '../hooks/useTranslation';
 import type { Phrase, PhraseEvaluation } from '../types.ts';
+import AudioPlayer from './AudioPlayer';
 import CheckIcon from './icons/CheckIcon';
 import XCircleIcon from './icons/XCircleIcon';
-import AudioPlayer from './AudioPlayer';
-import { useTranslation } from '../hooks/useTranslation';
 
 interface PracticeResultModalProps {
   isOpen: boolean;
@@ -14,7 +15,14 @@ interface PracticeResultModalProps {
   onOpenWordAnalysis?: (phrase: Phrase, word: string) => void;
 }
 
-const PracticeResultModal: React.FC<PracticeResultModalProps> = ({ isOpen, onClose, isCorrect, phrase, evaluation, onOpenWordAnalysis }) => {
+const PracticeResultModal: React.FC<PracticeResultModalProps> = ({
+  isOpen,
+  onClose,
+  isCorrect,
+  phrase,
+  evaluation,
+  onOpenWordAnalysis,
+}) => {
   const { t } = useTranslation();
 
   const handleWordClick = (e: React.MouseEvent, word: string) => {
@@ -34,7 +42,8 @@ const PracticeResultModal: React.FC<PracticeResultModalProps> = ({ isOpen, onClo
         onClick={(e) => handleWordClick(e, word)}
         className="cursor-pointer hover:bg-white/20 px-0.5 rounded transition-colors"
       >
-        {word}{i < arr.length - 1 ? ' ' : ''}
+        {word}
+        {i < arr.length - 1 ? ' ' : ''}
       </span>
     ));
   };
@@ -49,10 +58,13 @@ const PracticeResultModal: React.FC<PracticeResultModalProps> = ({ isOpen, onClo
   if (!isOpen || !phrase) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/70 z-50 flex justify-center items-center backdrop-blur-sm p-4" onClick={isCorrect ? undefined : onClose}>
+    <div
+      className="fixed inset-0 bg-black/70 z-50 flex justify-center items-center backdrop-blur-sm p-4"
+      onClick={isCorrect ? undefined : onClose}
+    >
       <div
         className={`bg-slate-800 rounded-lg shadow-2xl w-full max-w-sm m-4 p-6 text-center animate-fade-in border-t-4 ${isCorrect ? 'border-green-500' : 'border-red-500'}`}
-        onClick={e => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
       >
         {isCorrect ? (
           <>
@@ -72,17 +84,20 @@ const PracticeResultModal: React.FC<PracticeResultModalProps> = ({ isOpen, onClo
               </div>
             </div>
             <h2 className="text-2xl font-bold text-slate-100">{t('modals.practiceResult.incorrect')}</h2>
-            {evaluation?.feedback && (
-              <p className="text-slate-400 mt-2 mb-4">{evaluation.feedback}</p>
-            )}
+            {evaluation?.feedback && <p className="text-slate-400 mt-2 mb-4">{evaluation.feedback}</p>}
             <div className="bg-slate-700/50 p-3 rounded-md text-center mb-6">
               <p className="text-xs text-slate-400 text-left">{t('modals.practiceResult.correctAnswer')}</p>
               <div className="flex items-center justify-center gap-x-2 mt-1">
                 <AudioPlayer textToSpeak={evaluation?.correctedPhrase || phrase.text.learning} />
-                <p className="text-slate-100 font-medium text-lg">{renderClickableLearning(evaluation?.correctedPhrase || phrase.text.learning)}</p>
+                <p className="text-slate-100 font-medium text-lg">
+                  {renderClickableLearning(evaluation?.correctedPhrase || phrase.text.learning)}
+                </p>
               </div>
             </div>
-            <button onClick={onClose} className="w-full px-6 py-3 rounded-md bg-purple-600 hover:bg-purple-700 text-white font-semibold transition-colors">
+            <button
+              onClick={onClose}
+              className="w-full px-6 py-3 rounded-md bg-purple-600 hover:bg-purple-700 text-white font-semibold transition-colors"
+            >
               {t('modals.practiceResult.actions.continue')}
             </button>
           </>

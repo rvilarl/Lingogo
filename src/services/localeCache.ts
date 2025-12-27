@@ -1,4 +1,5 @@
-import { openDB, type IDBPDatabase } from 'idb';
+import { type IDBPDatabase, openDB } from 'idb';
+
 import type { TranslationRecord } from './languageService.ts';
 
 interface LocaleCacheEntry {
@@ -33,7 +34,7 @@ const getDb = () => {
 
 export const readLocaleCache = async (lang: string, version: number): Promise<TranslationRecord | null> => {
   const db = await getDb();
-  const entry = await db.get(STORE_NAME, lang) as LocaleCacheEntry | undefined;
+  const entry = (await db.get(STORE_NAME, lang)) as LocaleCacheEntry | undefined;
   if (!entry || entry.version !== version) {
     return null;
   }
