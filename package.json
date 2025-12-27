@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint \"{src,components,pages}/**/*.{ts,tsx}\" \"services/**/*.ts\"",
+    "lint": "eslint",
     "validate-i18n": "npm run lint && node scripts/validate-i18n.mjs",
     "precommit": "npm run validate-i18n",
     "test": "vitest",

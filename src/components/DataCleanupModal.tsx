@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { XMarkIcon, CheckCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { useTranslation } from 'react-i18next';
 import type { Phrase } from '../types.ts';
-import { cleanupAllPhrases, generateCleanupReport } from '../scripts/cleanupPhraseRomanization';
+import { cleanupAllPhrases, generateCleanupReport } from '../../scripts/cleanupPhraseRomanization.ts';
 import Spinner from './Spinner';
 
 interface DataCleanupModalProps {
