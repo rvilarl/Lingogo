@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import type { Phrase, VerbConjugation, TenseForms, PronounConjugation } from '../types';
+import type { Phrase, VerbConjugation, TenseForms, PronounConjugation } from '../types.ts';
 import CloseIcon from './icons/CloseIcon';
 import TableIcon from './icons/TableIcon';
 import AudioPlayer from './AudioPlayer';
 import Spinner from './Spinner';
-import { useTranslation } from '../src/hooks/useTranslation';
+import { useTranslation } from '../hooks/useTranslation';
 
 interface VerbConjugationModalProps {
   isOpen: boolean;

@@ -270,7 +270,7 @@ export const createPhrase = async (phraseData) => {
 // src/App.svelte
 <script>
   import { onMount } from 'svelte'
-  import { AuthProvider, useAuth } from './contexts/AuthContext'
+  import { AuthProvider, useAuth } from '../contexts/AuthContext'
   import { loadCategories } from './stores/categories'
   import { loadPhrases } from './stores/phrases'
   import Login from './components/Login.svelte'

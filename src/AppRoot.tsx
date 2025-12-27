@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import App from '../App';
-import LoginPage from '../pages/LoginPage.tsx';
-import SignUpPage from '../pages/SignUpPage.tsx';
+import App from './App.tsx';
+import LoginPage from './pages/LoginPage.tsx';
+import SignUpPage from './pages/SignUpPage.tsx';
 import { useAuth } from './contexts/authContext.tsx';
 import { useTranslation } from './hooks/useTranslation.ts';
 

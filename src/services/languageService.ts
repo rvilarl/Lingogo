@@ -1,6 +1,6 @@
 import { DEFAULT_LANG, LOCALE_SCHEMA_VERSION, STATIC_RESOURCES, SUPPORTED_LANGS } from '../i18n/config.ts';
-import type { LanguageCode } from '../../types.ts';
-import { translateLocaleTemplate } from '../../services/geminiService.ts';
+import type { LanguageCode } from '../types.ts';
+import { translateLocaleTemplate } from '../services/geminiService.ts';
 import { readLocaleCache, writeLocaleCache } from './localeCache.ts';
 import { LOCALIZATION_STEPS, type LocalizationPhase } from '../i18n/localizationPhases.ts';
 

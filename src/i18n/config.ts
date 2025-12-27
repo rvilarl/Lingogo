@@ -1,7 +1,7 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
-import { SUPPORTED_LANGUAGE_CODES } from '../../types.ts';
+import { SUPPORTED_LANGUAGE_CODES } from '../types.ts';
 
 export const SUPPORTED_LANGS = [...SUPPORTED_LANGUAGE_CODES];
 export const DEFAULT_LANG = 'en';

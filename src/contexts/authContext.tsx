@@ -7,14 +7,14 @@
   useState,
 } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
-import * as authService from '../../services/authService.ts';
-import * as backendService from '../../services/backendService.ts';
+import * as authService from '../services/authService.ts';
+import * as backendService from '../services/backendService.ts';
 import {
   clearAccessToken,
   setAccessToken,
   setUnauthorizedHandler,
-} from '../../services/authTokenStore.ts';
-import { clearAppCaches } from '../../services/storageService.ts';
+} from '../services/authTokenStore.ts';
+import { clearAppCaches } from '../services/storageService.ts';
 
 interface AuthContextValue {
   user: User | null;

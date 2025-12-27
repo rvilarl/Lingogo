@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { Phrase, LanguageProfile, PracticeChatMessage } from '../types';
+import type { Phrase, LanguageProfile, PracticeChatMessage } from '../src/types.ts';
 
 // Mock functions from practiceChatService
 function validateAIResponse(response: any): boolean {

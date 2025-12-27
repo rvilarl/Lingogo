@@ -1,4 +1,4 @@
-import { Phrase } from '../types';
+import { Phrase } from '../src/types.ts';
 
 const now = Date.now();
 

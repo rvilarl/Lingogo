@@ -9,9 +9,9 @@
 } from 'react';
 import { I18nextProvider } from 'react-i18next';
 import i18n, { DEFAULT_LANG, LOCALE_SCHEMA_VERSION, SUPPORTED_LANGS } from '../i18n/config.ts';
-import * as configService from '../../services/configService.ts';
-import * as backendService from '../../services/backendService.ts';
-import type { LanguageProfile, LanguageCode } from '../../types.ts';
+import * as configService from '../services/configService.ts';
+import * as backendService from '../services/backendService.ts';
+import type { LanguageProfile, LanguageCode } from '../types.ts';
 import { useAuth } from './authContext.tsx';
 import {
   hasLocaleGaps,
@@ -19,8 +19,8 @@ import {
   validateLocaleShape,
 } from '../services/languageService.ts';
 import { readLocaleCache } from '../services/localeCache.ts';
-import LocalizationOverlay from '../../components/LocalizationOverlay.tsx';
-import DevLanguageSelector from '../../components/DevLanguageSelector.tsx';
+import LocalizationOverlay from '../components/LocalizationOverlay.tsx';
+import DevLanguageSelector from '../components/DevLanguageSelector.tsx';
 import type { LocalizationPhase } from '../i18n/localizationPhases.ts';
 
 const DEV_OVERRIDE_KEY = 'devLanguageOverride';
@@ -62,7 +62,7 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
       console.log('Testing AI generation...');
 
       try {
-        const { translateLocaleTemplate } = await import('../../services/geminiService.ts');
+        const { translateLocaleTemplate } = await import('../services/geminiService.ts');
         const { STATIC_RESOURCES } = await import('../i18n/config.ts');
 
         const baseTemplate = STATIC_RESOURCES.en?.translation;
@@ -246,10 +246,10 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
           signal: controller.signal,
           onPhase: overlayNeeded
             ? (phase) => {
-                if (!controller.signal.aborted) {
-                  setLocalizationPhase(phase);
-                }
+              if (!controller.signal.aborted) {
+                setLocalizationPhase(phase);
               }
+            }
             : undefined,
         });
 

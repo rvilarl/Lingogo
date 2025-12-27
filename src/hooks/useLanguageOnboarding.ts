@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import * as backendService from '../../services/backendService';
-import * as configService from '../../services/configService';
-import { SUPPORTED_LANGUAGE_CODES, type LanguageCode } from '../../types';
+import * as backendService from '../services/backendService';
+import * as configService from '../services/configService';
+import { SUPPORTED_LANGUAGE_CODES, type LanguageCode } from '../types.ts';
 
 interface UseLanguageOnboardingResult {
   needsOnboarding: boolean;
