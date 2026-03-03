@@ -96,7 +96,7 @@ import {
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const App: React.FC = () => {
-  if (!import.meta.env.DEV) console.log = () => {};
+  if (!import.meta.env.DEV) console.log = () => { };
   const { user } = useAuth();
   const userId = user?.id;
   const { profile: languageProfile } = useLanguage();
@@ -563,8 +563,8 @@ const App: React.FC = () => {
     const isDuplicate = allPhrases.some((p) => p.text.learning.trim().toLowerCase() === normalizedLearning);
     const isDuplicateInCategory = categoryToView
       ? allPhrases.some(
-          (p) => p.category === categoryToView.id && p.text.learning.trim().toLowerCase() === normalizedLearning
-        )
+        (p) => p.category === categoryToView.id && p.text.learning.trim().toLowerCase() === normalizedLearning
+      )
       : false;
 
     if (isDuplicateInCategory) {
@@ -732,8 +732,8 @@ const App: React.FC = () => {
     const toastMessage =
       skippedCount > 0
         ? `${baseToastMessage} ${t('notifications.cards.bulkSkipped', {
-            count: skippedCount,
-          })}`
+          count: skippedCount,
+        })}`
         : baseToastMessage;
     showToast({ message: toastMessage });
 
@@ -1394,21 +1394,21 @@ const App: React.FC = () => {
   );
 
   const unmasteredCountsByCategory = useMemo(() => {
-    return unmasteredPhrases.reduce(
+    return allPhrases.reduce(
       (acc, phrase) => {
         acc[phrase.category] = (acc[phrase.category] || 0) + 1;
         return acc;
       },
       {} as Record<string, number>
     );
-  }, [unmasteredPhrases]);
+  }, [allPhrases]);
 
   const practicePool = useMemo(() => {
     if (practiceCategoryFilter === 'all') {
-      return unmasteredPhrases;
+      return allPhrases;
     }
-    return unmasteredPhrases.filter((p) => p.category === practiceCategoryFilter);
-  }, [unmasteredPhrases, practiceCategoryFilter]);
+    return allPhrases.filter((p) => p.category === practiceCategoryFilter);
+  }, [allPhrases, practiceCategoryFilter]);
 
   const practiceAnalyticsSummary = useMemo(() => {
     return buildPracticeAnalyticsSummary(allPhrases, categories, practiceReviewLog);
@@ -1439,8 +1439,8 @@ const App: React.FC = () => {
     // A change in the filter should immediately present a new card from that category.
     const newPool =
       practiceCategoryFilter === 'all'
-        ? unmasteredPhrases
-        : unmasteredPhrases.filter((p) => p.category === practiceCategoryFilter);
+        ? allPhrases
+        : allPhrases.filter((p) => p.category === practiceCategoryFilter);
 
     const nextPhrase = srsService.selectNextPhrase(newPool, null); // Get a fresh card from the new pool
     changePracticePhrase(nextPhrase, 'right');
@@ -1647,12 +1647,14 @@ const App: React.FC = () => {
         return (
           <PracticePage
             currentPhrase={currentPracticePhrase}
+            setCurrentPhrase={setCurrentPracticePhrase}
             isAnswerRevealed={isPracticeAnswerRevealed}
             onSetIsAnswerRevealed={setIsPracticeAnswerRevealed}
             isCardEvaluated={practiceCardEvaluated}
             animationState={practiceAnimationState}
+            setAnimationState={setPracticeAnimationState}
             isExiting={practiceIsExitingRef.current}
-            unmasteredCount={unmasteredPhrases.length}
+            unmasteredCount={allPhrases.length}
             currentPoolCount={practicePool.length}
             fetchNewPhrases={fetchNewPhrases}
             isLoading={isLoading}
@@ -1738,9 +1740,8 @@ const App: React.FC = () => {
         onOpenAccountDrawer={handleOpenAccountDrawer}
       />
       <main
-        className={`overflow-hidden w-full flex-grow flex flex-col items-center  ${
-          view === 'practice' ? 'justify-center' : ''
-        }`}
+        className={`overflow-hidden w-full flex-grow flex flex-col items-center  ${view === 'practice' ? 'justify-center' : ''
+          }`}
       >
         {renderCurrentView()}
       </main>

@@ -141,6 +141,7 @@ const PhraseCard: React.FC<PhraseCardProps> = ({
   const [isMoreMenuOpenBack, setIsMoreMenuOpenBack] = useState(false);
   const buttonContainerRefFront = useRef<HTMLDivElement>(null);
   const buttonContainerRefBack = useRef<HTMLDivElement>(null);
+  const [blurred, setBlurred] = useState(true);
 
   const flashRef = useRef<HTMLDivElement>(null);
 
@@ -506,7 +507,8 @@ const PhraseCard: React.FC<PhraseCardProps> = ({
               ))}
             </div>
             {phrase.romanization?.learning && (
-              <p className="text-slate-200 mt-3 text-lg font-mono">{phrase.romanization.learning}</p>
+              <p className={`cursor-pointer hover:bg-white/20 px-1 py-0.5 rounded-md transition-colors  ${blurred ? 'blur-sm select-none hover:blur-[3px]' : ''
+                }`} onClick={(e) => { e.stopPropagation(); setBlurred(!blurred) }}>{phrase.romanization.learning}</p>
             )}
           </div>
 

@@ -7,7 +7,7 @@
  */
 
 import { t } from 'i18next';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import ArrowLeftIcon from '../components/icons/ArrowLeftIcon';
 import ArrowRightIcon from '../components/icons/ArrowRightIcon';
@@ -43,10 +43,12 @@ interface AnimationState {
  */
 interface PracticePageProps {
   currentPhrase: Phrase | null;
+  setCurrentPhrase: React.Dispatch<React.SetStateAction<Phrase | null>>;
   isAnswerRevealed: boolean;
   onSetIsAnswerRevealed: React.Dispatch<React.SetStateAction<boolean>>;
   isCardEvaluated: boolean;
   animationState: AnimationState;
+  setAnimationState: React.Dispatch<React.SetStateAction<AnimationState>>;
   isExiting: boolean;
   unmasteredCount: number;
   currentPoolCount: number;
@@ -115,17 +117,8 @@ const CategoryFilter: React.FC<{
   onManageCategories: () => void;
   counts: Record<string, number>;
   totalUnmastered: number;
-}> = ({
-  currentFilter,
-  onFilterChange,
-  enabledCategories,
-  currentPhraseCategory,
-  categories,
-  onAddCategory,
-  onManageCategories,
-  counts,
-  totalUnmastered,
-}) => {
+}> = (props) => {
+  const { currentFilter, onFilterChange, enabledCategories, currentPhraseCategory, categories, onAddCategory, onManageCategories, counts, totalUnmastered } = props;
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const getCategoryNameById = (id: string) => categories.find((c) => c.id === id)?.name || id;
@@ -228,10 +221,12 @@ const CategoryFilter: React.FC<{
 const PracticePage: React.FC<PracticePageProps> = (props) => {
   const {
     currentPhrase,
+    setCurrentPhrase,
     isAnswerRevealed,
     onSetIsAnswerRevealed,
     isCardEvaluated,
     animationState,
+    setAnimationState,
     isExiting,
     unmasteredCount,
     currentPoolCount,
@@ -277,8 +272,10 @@ const PracticePage: React.FC<PracticePageProps> = (props) => {
     unmasteredCountsByCategory,
     onOpenSmartImport,
   } = props;
-  const { t } = useTranslation();
   const { profile } = useLanguage();
+  const [poolPhrases, setPoolPhrases] = useState<Phrase[]>([]);
+  const [practicePhrases, setPracticePhrases] = useState<Phrase[]>([]);
+  const [practiceStartUp, setPracticeStartUp] = useState(true);
 
   // State for the context menu (long press or specific action)
   const [contextMenuTarget, setContextMenuTarget] = useState<{ phrase: Phrase; word?: string } | null>(null);
@@ -295,6 +292,13 @@ const PracticePage: React.FC<PracticePageProps> = (props) => {
       onMarkPhraseAsSeen(currentPhrase.id);
     }
   }, [currentPhrase, onMarkPhraseAsSeen]);
+
+  useEffect(() => {
+    console.log('practiceCategoryFilter changed to', practiceCategoryFilter, practiceStartUp, practicePhrases.length);
+    setPracticeStartUp(true);
+    setPracticePhrases([]);
+    setPoolPhrases(practiceCategoryFilter === 'all' ? allPhrases : allPhrases.filter(p => p.category === practiceCategoryFilter));
+  }, [practiceCategoryFilter]);
 
   // Touch event handlers for swipe gestures
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -313,7 +317,7 @@ const PracticePage: React.FC<PracticePageProps> = (props) => {
   const handleTouchEnd = () => {
     if (touchStartRef.current !== null && touchMoveRef.current !== null) {
       const deltaX = touchMoveRef.current - touchStartRef.current;
-      if (deltaX < -SWIPE_THRESHOLD) onContinue();
+      if (deltaX < -SWIPE_THRESHOLD) selectNewPhrase(false);
       else if (deltaX > SWIPE_THRESHOLD) onSwipeRight();
     }
     touchStartRef.current = null;
@@ -334,8 +338,33 @@ const PracticePage: React.FC<PracticePageProps> = (props) => {
     // If leech modal was shown, it handles the transition.
     // Otherwise, proceed to next card.
     if (!leechModalShown) {
-      onContinue();
+      selectNewPhrase(true);
     }
+  };
+
+  const selectNewPhrase = (knownPhrase: boolean) => {
+    //setIsPracticeAnswerRevealed(false);
+    //setPracticeCardEvaluated(false);
+    //if (!nextPhrase) {
+    //  setCurrentPracticePhrase(null);
+    //  return;
+    //}
+    //setPracticeAnimationState({ key: nextPhrase.id, direction });
+
+    if (practiceStartUp && !knownPhrase) {
+      setPracticePhrases([...practicePhrases, currentPhrase]);
+      if (practicePhrases.length >= 10 || poolPhrases.length === 0) setPracticeStartUp(false);
+    }
+    if (knownPhrase) {
+      setPracticePhrases(practicePhrases.filter(phrase => phrase.id !== currentPhrase.id));
+    }
+    const phrases = practiceStartUp ? poolPhrases : practicePhrases;
+    const nextPhrase = phrases.length > 0 ? phrases[Math.floor(Math.random() * phrases.length)] : null;
+    if (nextPhrase) {
+      setAnimationState({ key: nextPhrase.id, direction: "right" });
+      setPoolPhrases(poolPhrases.filter(phrase => phrase.id !== nextPhrase.id));
+    }
+    setCurrentPhrase(nextPhrase);
   };
 
   /**
@@ -346,70 +375,22 @@ const PracticePage: React.FC<PracticePageProps> = (props) => {
   const renderContent = () => {
     if (isLoading) return <PhraseCardSkeleton />;
 
-    if (!currentPhrase) {
-      if (unmasteredCount === 0 && practiceCategoryFilter === 'all') {
-        return (
-          <div className="text-center text-slate-400 p-4">
-            <h2 className="text-2xl font-bold text-white mb-4">{t('practice.states.congratulations')}</h2>
-            <p>{t('practice.states.learnedAllSelected')}</p>
-            <button
-              onClick={onOpenSmartImport}
-              disabled={!apiProviderAvailable}
-              className="mt-6 px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-md text-white font-bold transition-colors disabled:opacity-50"
-            >
-              {t('fab.smartImport')}
-            </button>
-          </div>
-        );
-      }
-      if (currentPoolCount === 0) {
-        const category = categories.find((c) => c.id === practiceCategoryFilter);
-        const categoryName = category?.name || 'этой';
-
-        if (category?.isFoundational) {
-          return (
-            <div className="text-center text-slate-400 p-4">
-              <h2 className="text-2xl font-bold text-white mb-4">{t('practice.states.excellent')}</h2>
-              <p>{t('practice.states.foundationCompleted', { categoryName })}</p>
-              <p className="mt-2 text-sm">{t('practice.states.noMoreCards')}</p>
-              <button
-                onClick={() => setPracticeCategoryFilter('all')}
-                className="mt-6 px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-md text-white font-bold transition-colors"
-              >
-                {t('practice.states.practiceOtherCategories')}
-              </button>
-            </div>
-          );
-        }
-
-        return (
-          <div className="text-center text-slate-400 p-4">
-            <h2 className="text-2xl font-bold text-white mb-4">{t('practice.states.empty')}</h2>
-            <p>{t('practice.states.noUnlearnedInCategory', { categoryName })}</p>
-            <button
-              onClick={() => setPracticeCategoryFilter('all')}
-              className="mt-6 px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-md text-white font-bold transition-colors"
-            >
-              {t('practice.states.practiceAllCategories')}
-            </button>
-          </div>
-        );
-      } else {
-        // This case means there are cards in the pool, but none are due for review right now.
-        return (
-          <div className="text-center text-slate-400 p-4">
-            <h2 className="text-2xl font-bold text-white mb-4">{t('practice.states.allForToday')}</h2>
-            <p>{t('practice.states.completedAllAvailable')}</p>
-            <p className="mt-2 text-sm">{t('practice.states.comeBackLater')}</p>
-            <button
-              onClick={() => setPracticeCategoryFilter('all')}
-              className="mt-6 px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-md text-white font-bold transition-colors"
-            >
-              {t('practice.states.practiceOtherCategories')}
-            </button>
-          </div>
-        );
-      }
+    console.log("renderContent", currentPhrase);
+    if (practiceStartUp === false && practicePhrases.length === 0) {
+      // This case means there are cards in the pool, but none are due for review right now.
+      return (
+        <div className="text-center text-slate-400 p-4">
+          <h2 className="text-2xl font-bold text-white mb-4">{t('practice.states.allForToday')}</h2>
+          <p>{t('practice.states.completedAllAvailable')}</p>
+          <p className="mt-2 text-sm">{t('practice.states.comeBackLater')}</p>
+          <button
+            onClick={() => setPracticeCategoryFilter('all')}
+            className="mt-6 px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-md text-white font-bold transition-colors"
+          >
+            {t('practice.states.practiceOtherCategories')}
+          </button>
+        </div>
+      );
     }
 
     const animationClass = isExiting
@@ -420,7 +401,7 @@ const PracticePage: React.FC<PracticePageProps> = (props) => {
         ? 'card-enter-right'
         : 'card-enter-left';
 
-    return (
+    if (currentPhrase) return (
       <div className="relative w-full max-w-2xl flex items-center justify-center">
         {currentPhrase && (
           <>
@@ -433,7 +414,7 @@ const PracticePage: React.FC<PracticePageProps> = (props) => {
               <ArrowLeftIcon className="w-6 h-6" />
             </button>
             <button
-              onClick={onContinue}
+              onClick={() => selectNewPhrase(false)}
               disabled={unmasteredCount <= 1}
               className="hidden md:flex absolute top-1/2- right-0 -translate-y-1/2 w-12 h-12 bg-slate-800/50 hover:bg-slate-700/80 rounded-full items-center justify-center transition-colors text-slate-300 hover:text-white z-10 disabled:opacity-30 disabled:cursor-not-allowed"
               aria-label="Следующая карта"
@@ -483,7 +464,7 @@ const PracticePage: React.FC<PracticePageProps> = (props) => {
           <div className="flex justify-center items-center mt-3 h-12 max-w-md w-full">
             <div className="flex items-center justify-center space-x-4 animate-fade-in w-full">
               <button
-                onClick={onContinue}
+                onClick={() => selectNewPhrase(false)}
                 disabled={isExiting}
                 className="flex-grow p-2 rounded-3xl font-light text-sm text-slate-300 shadow-md transition-colors bg-purple-600 hover:bg-purple-700"
               >
@@ -501,6 +482,7 @@ const PracticePage: React.FC<PracticePageProps> = (props) => {
         </div>
       </div>
     );
+    return null
   };
 
   return (
