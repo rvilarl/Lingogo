@@ -1650,22 +1650,9 @@ const App: React.FC = () => {
             setCurrentPhrase={setCurrentPracticePhrase}
             isAnswerRevealed={isPracticeAnswerRevealed}
             onSetIsAnswerRevealed={setIsPracticeAnswerRevealed}
-            isCardEvaluated={practiceCardEvaluated}
-            animationState={practiceAnimationState}
-            setAnimationState={setPracticeAnimationState}
-            isExiting={practiceIsExitingRef.current}
-            unmasteredCount={allPhrases.length}
-            currentPoolCount={practicePool.length}
-            fetchNewPhrases={fetchNewPhrases}
             isLoading={isLoading}
             error={error}
-            isGenerating={isGenerating}
-            apiProviderAvailable={true}
             onUpdateMastery={handlePracticeUpdateMastery}
-            onUpdateMasteryWithoutUI={(phrase: Phrase, action: PracticeReviewAction) =>
-              updatePhraseMasteryAndCache(phrase, action)
-            }
-            onContinue={() => transitionToNext('right')}
             onSwipeRight={handlePracticeSwipeRight}
             onOpenChat={openChatForPhrase}
             onOpenDeepDive={handleOpenDeepDive}
@@ -1683,7 +1670,6 @@ const App: React.FC = () => {
             onGoToList={handleGoToListFromPractice}
             onOpenDiscussTranslation={handleOpenDiscussModal}
             settings={settings}
-            masteryButtonUsage={masteryButtonUsage}
             allPhrases={allPhrases}
             onCreateCard={handleCreateCardFromWord}
             onAnalyzeWord={analyzeWord}
@@ -1698,7 +1684,6 @@ const App: React.FC = () => {
             onAddCategory={handleAddCategoryFromPractice}
             onOpenCategoryManager={() => setIsCategoryManagerModalOpen(true)}
             unmasteredCountsByCategory={unmasteredCountsByCategory}
-            onOpenSmartImport={() => setIsSmartImportModalOpen(true)}
           />
         );
       case 'list':

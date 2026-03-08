@@ -37,20 +37,9 @@ interface PracticePageProps {
   setCurrentPhrase: React.Dispatch<React.SetStateAction<Phrase | null>>;
   isAnswerRevealed: boolean;
   onSetIsAnswerRevealed: React.Dispatch<React.SetStateAction<boolean>>;
-  isCardEvaluated: boolean;
-  animationState: AnimationState;
-  setAnimationState: React.Dispatch<React.SetStateAction<AnimationState>>;
-  isExiting: boolean;
-  unmasteredCount: number;
-  currentPoolCount: number;
-  fetchNewPhrases: (count?: number) => Promise<void>;
   isLoading: boolean;
   error: string | null;
-  isGenerating: boolean;
-  apiProviderAvailable: boolean;
   onUpdateMastery: (action: PracticeReviewAction) => Promise<boolean>;
-  onUpdateMasteryWithoutUI: (phrase: Phrase, action: PracticeReviewAction) => void;
-  onContinue: () => void;
   onSwipeRight: () => void;
   onOpenChat: (phrase: Phrase) => void;
   onOpenDeepDive: (phrase: Phrase) => void;
@@ -76,7 +65,6 @@ interface PracticePageProps {
     autoSpeak: boolean;
     enabledCategories: Record<PhraseCategory, boolean>;
   };
-  masteryButtonUsage: { know: number; forgot: number; dont_know: number };
   allPhrases: Phrase[];
   onCreateCard: (phraseData: { learning: string; native: string }) => void;
   onAnalyzeWord: (phrase: Phrase, word: string) => Promise<WordAnalysis | null>;
@@ -91,7 +79,6 @@ interface PracticePageProps {
   onAddCategory: () => void;
   onOpenCategoryManager: () => void;
   unmasteredCountsByCategory: Record<string, number>;
-  onOpenSmartImport: () => void;
 }
 
 /**
@@ -104,20 +91,9 @@ const PracticePage: React.FC<PracticePageProps> = (props) => {
     setCurrentPhrase,
     isAnswerRevealed,
     onSetIsAnswerRevealed,
-    isCardEvaluated,
-    animationState,
-    setAnimationState,
-    isExiting,
-    unmasteredCount,
-    currentPoolCount,
-    fetchNewPhrases,
     isLoading,
     error,
-    isGenerating,
-    apiProviderAvailable,
     onUpdateMastery,
-    onUpdateMasteryWithoutUI,
-    onContinue,
     onSwipeRight,
     onOpenChat,
     onOpenDeepDive,
@@ -135,7 +111,6 @@ const PracticePage: React.FC<PracticePageProps> = (props) => {
     onGoToList,
     onOpenDiscussTranslation,
     settings,
-    masteryButtonUsage,
     allPhrases,
     onCreateCard,
     onAnalyzeWord,
@@ -150,8 +125,11 @@ const PracticePage: React.FC<PracticePageProps> = (props) => {
     onAddCategory,
     onOpenCategoryManager,
     unmasteredCountsByCategory,
-    onOpenSmartImport,
   } = props;
+
+  const [animationState, setAnimationState] = useState<AnimationState>({ key: '', direction: 'right' });
+  const [isExiting, setIsExiting] = useState(false);
+  const unmasteredCount = useMemo(() => allPhrases.length, [allPhrases]);
   const { profile } = useLanguage();
 
   const {
