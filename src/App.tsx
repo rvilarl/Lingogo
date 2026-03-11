@@ -61,7 +61,6 @@ import useImprovePhraseModal from './hooks/useImprovePhraseModal';
 import { useLanguageOnboarding } from './hooks/useLanguageOnboarding.ts';
 import useLearningAssistantModal from './hooks/useLearningAssistantModal.ts';
 import useLeechModal from './hooks/useLeechModal.ts';
-import { useTranslation } from './hooks/useTranslation.ts';
 import LibraryPage from './pages/LibraryPage.tsx';
 import PhraseListPage from './pages/PhraseListPage.tsx';
 import PracticePage from './pages/PracticePage.tsx';
@@ -118,11 +117,7 @@ const App: React.FC = () => {
   // --- Practice Session State ---
   // (Lifted from PracticePage to maintain state across view switches)
   const [isPracticeAnswerRevealed, setIsPracticeAnswerRevealed] = useState(false);
-  const [practiceCardEvaluated, setPracticeCardEvaluated] = useState(false);
-  const [practiceAnimationState, setPracticeAnimationState] = useState<AnimationState>({ key: '', direction: 'right' });
-  const [cardHistory, setCardHistory] = useState<string[]>([]);
   const [practiceCategoryFilter, setPracticeCategoryFilter] = useState<'all' | PhraseCategory>('all');
-  const practiceIsExitingRef = useRef(false);
   const specificPhraseRequestedRef = useRef(false);
   // --- End Practice Session State ---
 
@@ -915,7 +910,6 @@ const App: React.FC = () => {
     specificPhraseRequestedRef.current = true;
     setCurrentPracticePhrase(phraseToPractice);
     setIsPracticeAnswerRevealed(false);
-    setCardHistory([]);
     setView('practice');
   };
 
@@ -1416,12 +1410,10 @@ const App: React.FC = () => {
 
   const changePracticePhrase = (nextPhrase: Phrase | null, direction: AnimationDirection) => {
     setIsPracticeAnswerRevealed(false);
-    setPracticeCardEvaluated(false);
     if (!nextPhrase) {
       setCurrentPracticePhrase(null);
       return;
     }
-    setPracticeAnimationState({ key: nextPhrase.id, direction });
     setCurrentPracticePhrase(nextPhrase);
   };
 
@@ -1453,7 +1445,6 @@ const App: React.FC = () => {
    */
   const selectNextPracticePhrase = () => {
     if (currentPracticePhrase) {
-      setCardHistory((prev) => [...prev, currentPracticePhrase.id]);
       setLearningAssistantCache((prev) => {
         const newCache = { ...prev };
         delete newCache[currentPracticePhrase.id];
@@ -1495,15 +1486,9 @@ const App: React.FC = () => {
   }, [currentPracticePhrase, isVoiceWorkspaceModalOpen]);
 
   const transitionToNext = (direction: AnimationDirection = 'right') => {
-    if (practiceIsExitingRef.current) return;
-
-    practiceIsExitingRef.current = true;
-    setTimeout(() => {
-      if (direction === 'right') {
-        selectNextPracticePhrase();
-      }
-      practiceIsExitingRef.current = false;
-    }, 250);
+    if (direction === 'right') {
+      selectNextPracticePhrase();
+    }
   };
 
   /**
@@ -1511,7 +1496,7 @@ const App: React.FC = () => {
    * Handles "Leech" detection (checking if a phrase has become difficult).
    */
   const handlePracticeUpdateMastery = async (action: PracticeReviewAction): Promise<boolean> => {
-    if (!currentPracticePhrase || practiceIsExitingRef.current) return false;
+    if (!currentPracticePhrase) return false;
 
     updateMasteryButtonUsage(action);
     const originalPhrase = currentPracticePhrase;
@@ -1535,58 +1520,10 @@ const App: React.FC = () => {
     if (action !== 'know') {
       setIsPracticeAnswerRevealed(true);
     }
-    setPracticeCardEvaluated(action === 'know');
     setCurrentPracticePhrase(finalPhraseState);
 
     return false; // Leech modal not shown
   };
-
-  const handlePracticeSwipeRight = () => {
-    if (practiceIsExitingRef.current || cardHistory.length === 0) return;
-    practiceIsExitingRef.current = true;
-    setTimeout(() => {
-      const lastPhraseId = cardHistory[cardHistory.length - 1];
-      const prevPhrase = allPhrases.find((p) => p.id === lastPhraseId);
-      if (prevPhrase) {
-        setCardHistory((prev) => prev.slice(0, -1));
-        changePracticePhrase(prevPhrase, 'left');
-      }
-      practiceIsExitingRef.current = false;
-    }, 250);
-  };
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't interfere with typing in inputs
-      const target = e.target as HTMLElement;
-      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
-        return;
-      }
-
-      // Check if any modal is open by looking for a modal backdrop
-      const isModalOpen = !!document.querySelector('.fixed.inset-0.bg-black\\/60, .fixed.inset-0.bg-black\\/70');
-      if (isModalOpen) return;
-
-      if (view === 'practice' && currentPracticePhrase && !practiceIsExitingRef.current) {
-        if (e.key === 'ArrowRight') {
-          transitionToNext('right');
-        } else if (e.key === 'ArrowLeft') {
-          handlePracticeSwipeRight();
-        } else if (e.key === ' ') {
-          // Space bar to flip
-          e.preventDefault();
-          if (!isPracticeAnswerRevealed) {
-            setIsPracticeAnswerRevealed(true);
-          }
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [view, currentPracticePhrase, isPracticeAnswerRevealed]);
 
   const getProviderDisplayName = () => {
     const name = apiProvider.getProviderName();
@@ -1653,7 +1590,6 @@ const App: React.FC = () => {
             isLoading={isLoading}
             error={error}
             onUpdateMastery={handlePracticeUpdateMastery}
-            onSwipeRight={handlePracticeSwipeRight}
             onOpenChat={openChatForPhrase}
             onOpenDeepDive={handleOpenDeepDive}
             onOpenMovieExamples={handleOpenMovieExamples}
@@ -1676,7 +1612,6 @@ const App: React.FC = () => {
             isWordAnalysisLoading={isWordAnalysisLoading}
             cardActionUsage={cardActionUsage}
             onLogCardActionUsage={updateCardActionUsage}
-            cardHistoryLength={cardHistory.length}
             practiceCategoryFilter={practiceCategoryFilter}
             setPracticeCategoryFilter={setPracticeCategoryFilter}
             onMarkPhraseAsSeen={handleMarkPhraseAsSeen}
@@ -1766,7 +1701,6 @@ const App: React.FC = () => {
             onOpenNounDeclension={handleOpenNounDeclension}
             onOpenAdjectiveDeclension={handleOpenAdjectiveDeclension}
             onTranslateLearningToNative={handleTranslateLearningToNative}
-            onSessionComplete={updatePracticeChatSessionComplete}
           />
         </AiErrorBoundary>
       )}

@@ -40,7 +40,6 @@ interface PracticePageProps {
   isLoading: boolean;
   error: string | null;
   onUpdateMastery: (action: PracticeReviewAction) => Promise<boolean>;
-  onSwipeRight: () => void;
   onOpenChat: (phrase: Phrase) => void;
   onOpenDeepDive: (phrase: Phrase) => void;
   onOpenMovieExamples: (phrase: Phrase) => void;
@@ -71,7 +70,6 @@ interface PracticePageProps {
   isWordAnalysisLoading: boolean;
   cardActionUsage: { [key: string]: number };
   onLogCardActionUsage: (button: string) => void;
-  cardHistoryLength: number;
   practiceCategoryFilter: 'all' | PhraseCategory;
   setPracticeCategoryFilter: (filter: 'all' | PhraseCategory) => void;
   onMarkPhraseAsSeen: (phraseId: string) => void;
@@ -94,7 +92,6 @@ const PracticePage: React.FC<PracticePageProps> = (props) => {
     isLoading,
     error,
     onUpdateMastery,
-    onSwipeRight,
     onOpenChat,
     onOpenDeepDive,
     onOpenMovieExamples,
@@ -117,7 +114,6 @@ const PracticePage: React.FC<PracticePageProps> = (props) => {
     isWordAnalysisLoading,
     cardActionUsage,
     onLogCardActionUsage,
-    cardHistoryLength,
     practiceCategoryFilter,
     setPracticeCategoryFilter,
     onMarkPhraseAsSeen,
@@ -135,10 +131,12 @@ const PracticePage: React.FC<PracticePageProps> = (props) => {
   const {
     practicePhrases,
     practiceStartUp,
+    cardHistory,
     handleTouchStart,
     handleTouchMove,
     handleTouchEnd,
     selectNewPhrase,
+    handleSwipeRight,
   } = usePracticeSession({
     currentPhrase,
     setCurrentPhrase,
@@ -146,7 +144,7 @@ const PracticePage: React.FC<PracticePageProps> = (props) => {
     practiceCategoryFilter,
     onMarkPhraseAsSeen,
     setAnimationState,
-    onSwipeRight,
+    isExiting,
   });
 
   // State for the context menu (long press or specific action)
@@ -171,6 +169,39 @@ const PracticePage: React.FC<PracticePageProps> = (props) => {
       selectNewPhrase(true);
     }
   };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't interfere with typing in inputs
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+        return;
+      }
+
+      // Check if any modal is open by looking for a modal backdrop
+      const isModalOpen = !!document.querySelector('.fixed.inset-0.bg-black\\/60, .fixed.inset-0.bg-black\\/70');
+      if (isModalOpen) return;
+
+      if (currentPhrase && !isExiting) {
+        if (e.key === 'ArrowRight') {
+          selectNewPhrase(false);
+        } else if (e.key === 'ArrowLeft') {
+          handleSwipeRight();
+        } else if (e.key === ' ') {
+          // Space bar to flip
+          e.preventDefault();
+          if (!isAnswerRevealed) {
+            onSetIsAnswerRevealed(true);
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [currentPhrase, isAnswerRevealed, isExiting, handleSwipeRight, selectNewPhrase, onSetIsAnswerRevealed]);
 
   /**
    * Renders the main content of the practice page based on the current state.
@@ -199,8 +230,8 @@ const PracticePage: React.FC<PracticePageProps> = (props) => {
         {currentPhrase && (
           <>
             <button
-              onClick={onSwipeRight}
-              disabled={cardHistoryLength === 0}
+              onClick={handleSwipeRight}
+              disabled={cardHistory.length === 0}
               className="hidden md:flex absolute top-1/2- left-0 -translate-y-1/2 w-12 h-12 bg-slate-800/50 hover:bg-slate-700/80 rounded-full items-center justify-center transition-colors text-slate-300 hover:text-white z-10 disabled:opacity-30 disabled:cursor-not-allowed"
               aria-label="Предыдущая карта"
             >

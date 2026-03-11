@@ -10,7 +10,7 @@ interface UsePracticeSessionProps {
   practiceCategoryFilter: 'all' | PhraseCategory;
   onMarkPhraseAsSeen: (phraseId: string) => void;
   setAnimationState: React.Dispatch<React.SetStateAction<AnimationState>>;
-  onSwipeRight: () => void;
+  isExiting: boolean;
 }
 
 export const usePracticeSession = ({
@@ -20,10 +20,11 @@ export const usePracticeSession = ({
   practiceCategoryFilter,
   onMarkPhraseAsSeen,
   setAnimationState,
-  onSwipeRight,
+  isExiting,
 }: UsePracticeSessionProps) => {
   const [poolPhrases, setPoolPhrases] = useState<Phrase[]>([]);
   const [practicePhrases, setPracticePhrases] = useState<Phrase[]>([]);
+  const [cardHistory, setCardHistory] = useState<string[]>([]);
   const [practiceStartUp, setPracticeStartUp] = useState(true);
 
   // Refs for handling touch gestures (swiping)
@@ -60,13 +61,17 @@ export const usePracticeSession = ({
     if (touchStartRef.current !== null && touchMoveRef.current !== null) {
       const deltaX = touchMoveRef.current - touchStartRef.current;
       if (deltaX < -SWIPE_THRESHOLD) selectNewPhrase(false);
-      else if (deltaX > SWIPE_THRESHOLD) onSwipeRight();
+      else if (deltaX > SWIPE_THRESHOLD) handleSwipeRight();
     }
     touchStartRef.current = null;
     touchMoveRef.current = null;
   };
 
   const selectNewPhrase = (knownPhrase: boolean) => {
+    if (currentPhrase) {
+      setCardHistory((prev) => [...prev, currentPhrase.id]);
+    }
+
     if (practiceStartUp && !knownPhrase) {
       if (currentPhrase) {
         setPracticePhrases((prev) => [...prev, currentPhrase]);
@@ -90,12 +95,27 @@ export const usePracticeSession = ({
     setCurrentPhrase(nextPhrase);
   };
 
+  const handleSwipeRight = () => {
+    if (isExiting || cardHistory.length === 0) return;
+
+    const lastPhraseId = cardHistory[cardHistory.length - 1];
+    const prevPhrase = allPhrases.find((p) => p.id === lastPhraseId);
+
+    if (prevPhrase) {
+      setCardHistory((prev) => prev.slice(0, -1));
+      setAnimationState({ key: prevPhrase.id, direction: 'left' });
+      setCurrentPhrase(prevPhrase);
+    }
+  };
+
   return {
     practicePhrases,
     practiceStartUp,
+    cardHistory,
     handleTouchStart,
     handleTouchMove,
     handleTouchEnd,
     selectNewPhrase,
+    handleSwipeRight,
   };
 };
