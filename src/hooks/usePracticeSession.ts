@@ -3,16 +3,34 @@ import type { AnimationState, Phrase, PhraseCategory } from '../types.ts';
 
 const SWIPE_THRESHOLD = 50; // pixels
 
+/**
+ * Properties required to initialize the practice session hook.
+ */
 interface UsePracticeSessionProps {
+  /** The phrase currently being shown to the user */
   currentPhrase: Phrase | null;
+  /** State setter for updating the current phrase */
   setCurrentPhrase: React.Dispatch<React.SetStateAction<Phrase | null>>;
+  /** Array of all phrases available for practice */
   allPhrases: Phrase[];
+  /** Filter to apply, either 'all' or a specific category */
   practiceCategoryFilter: 'all' | PhraseCategory;
+  /** Callback executed when a phrase that was previously marked as "new" is seen */
   onMarkPhraseAsSeen: (phraseId: string) => void;
+  /** Updates the swipe animation direction and key for the flashcard */
   setAnimationState: React.Dispatch<React.SetStateAction<AnimationState>>;
+  /** Flag indicating if the user is exiting the practice session */
   isExiting: boolean;
 }
 
+/**
+ * Custom hook to manage the state and logic of a practice session flashcard UI.
+ * Handles maintaining a pool of new phrases, a set of currently practicing phrases,
+ * card navigation history, and touch swipe gestures.
+ * 
+ * @param props - Hook configuration and dependencies
+ * @returns Session state variables and handler functions
+ */
 export const usePracticeSession = ({
   currentPhrase,
   setCurrentPhrase,
@@ -48,15 +66,22 @@ export const usePracticeSession = ({
     );
   }, [practiceCategoryFilter]);
 
+  /** Records the initial X coordinate when a touch starts */
   const handleTouchStart = (e: React.TouchEvent) => {
     touchMoveRef.current = null;
     touchStartRef.current = e.targetTouches[0].clientX;
   };
 
+  /** Updates the current X coordinate as the touch moves */
   const handleTouchMove = (e: React.TouchEvent) => {
     touchMoveRef.current = e.targetTouches[0].clientX;
   };
 
+  /** 
+   * Calculates the swipe distance when a touch ends.
+   * Triggers a left swipe logic (unknown phrase) if deltaX < -SWIPE_THRESHOLD.
+   * Triggers a right swipe logic (previous/known) if deltaX > SWIPE_THRESHOLD.
+   */
   const handleTouchEnd = () => {
     if (touchStartRef.current !== null && touchMoveRef.current !== null) {
       const deltaX = touchMoveRef.current - touchStartRef.current;
@@ -67,6 +92,12 @@ export const usePracticeSession = ({
     touchMoveRef.current = null;
   };
 
+  /**
+   * Advances to the next phrase in the session based on whether the current phrase
+   * is marked as known. Manages the logic mapping pool and practice array sizes.
+   *
+   * @param knownPhrase - True if the user indicated they know the current phrase
+   */
   const selectNewPhrase = (knownPhrase: boolean) => {
     if (currentPhrase) {
       setCardHistory((prev) => [...prev, currentPhrase.id]);
@@ -95,6 +126,10 @@ export const usePracticeSession = ({
     setCurrentPhrase(nextPhrase);
   };
 
+  /**
+   * Returns to the previous phrase in the user's history when swiping right.
+   * Pops the last viewed phrase ID from the history stack and displays it.
+   */
   const handleSwipeRight = () => {
     if (isExiting || cardHistory.length === 0) return;
 
