@@ -46,7 +46,7 @@ export const usePracticeSession = ({
         ? allPhrases
         : allPhrases.filter((p) => p.category === practiceCategoryFilter)
     );
-  }, [practiceCategoryFilter, allPhrases]);
+  }, [practiceCategoryFilter]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     touchMoveRef.current = null;
