@@ -22,7 +22,7 @@ import PhraseCardSkeleton from '../components/PhraseCardSkeleton';
 import PracticePageContextMenu from '../components/PracticePageContextMenu';
 import { useLanguage } from '../contexts/languageContext.tsx';
 import { speak } from '../services/speechService.ts';
-import { usePracticeSession } from '../hooks/usePracticeSession';
+import { usePracticePage } from '../hooks/usePracticePage.ts';
 import type { AnimationDirection, AnimationState, Category, Phrase, PhraseCategory, PracticeReviewAction, WordAnalysis } from '../types.ts';
 
 const SWIPE_THRESHOLD = 50; // pixels
@@ -137,7 +137,7 @@ const PracticePage: React.FC<PracticePageProps> = (props) => {
     handleTouchEnd,
     selectNewPhrase,
     handleSwipeRight,
-  } = usePracticeSession({
+  } = usePracticePage({
     currentPhrase,
     setCurrentPhrase,
     allPhrases,

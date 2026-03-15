@@ -6,7 +6,7 @@ const SWIPE_THRESHOLD = 50; // pixels
 /**
  * Properties required to initialize the practice session hook.
  */
-interface UsePracticeSessionProps {
+interface UsePracticePageProps {
   /** The phrase currently being shown to the user */
   currentPhrase: Phrase | null;
   /** State setter for updating the current phrase */
@@ -31,7 +31,7 @@ interface UsePracticeSessionProps {
  * @param props - Hook configuration and dependencies
  * @returns Session state variables and handler functions
  */
-export const usePracticeSession = ({
+export const usePracticePage = ({
   currentPhrase,
   setCurrentPhrase,
   allPhrases,
@@ -39,7 +39,7 @@ export const usePracticeSession = ({
   onMarkPhraseAsSeen,
   setAnimationState,
   isExiting,
-}: UsePracticeSessionProps) => {
+}: UsePracticePageProps) => {
   const [poolPhrases, setPoolPhrases] = useState<Phrase[]>([]);
   const [practicePhrases, setPracticePhrases] = useState<Phrase[]>([]);
   const [cardHistory, setCardHistory] = useState<string[]>([]);
