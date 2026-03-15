@@ -99,23 +99,26 @@ export const usePracticePage = ({
    * @param knownPhrase - True if the user indicated they know the current phrase
    */
   const selectNewPhrase = (knownPhrase: boolean) => {
+
+    let practicePhrasesCopy = practicePhrases;
+
     if (currentPhrase) {
       setCardHistory((prev) => [...prev, currentPhrase.id]);
     }
 
     if (practiceStartUp && !knownPhrase) {
       if (currentPhrase) {
-        setPracticePhrases((prev) => [...prev, currentPhrase]);
+        practicePhrasesCopy = [...practicePhrasesCopy, currentPhrase];
       }
-      if (practicePhrases.length >= 10 || poolPhrases.length === 0) {
+      if (practicePhrasesCopy.length >= 10 || poolPhrases.length === 0) {
         setPracticeStartUp(false);
       }
     }
     if (knownPhrase && currentPhrase) {
-      setPracticePhrases((prev) => prev.filter((phrase) => phrase.id !== currentPhrase.id));
+      practicePhrasesCopy = practicePhrasesCopy.filter((phrase) => phrase.id !== currentPhrase.id);
     }
 
-    const phrases = practiceStartUp ? poolPhrases : practicePhrases;
+    const phrases = practiceStartUp ? poolPhrases : practicePhrasesCopy;
     const nextPhrase =
       phrases.length > 0 ? phrases[Math.floor(Math.random() * phrases.length)] : null;
 
@@ -123,6 +126,7 @@ export const usePracticePage = ({
       setAnimationState({ key: nextPhrase.id, direction: 'right' });
       setPoolPhrases((prev) => prev.filter((phrase) => phrase.id !== nextPhrase.id));
     }
+    setPracticePhrases(practicePhrasesCopy);
     setCurrentPhrase(nextPhrase);
   };
 
