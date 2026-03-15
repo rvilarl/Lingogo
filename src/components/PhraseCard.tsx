@@ -440,7 +440,7 @@ const PhraseCard: React.FC<PhraseCardProps> = ({
             <SettingsIcon className="w-5 h-5" />
           </button>
           <div className="flex-grow flex flex-col items-center justify-center w-full">
-            <NativePhraseDisplay text={phrase.text.native} as="h2" onWordClick={handleNativeWordClick} />
+            <NativePhraseDisplay text={phrase.text.native} as="h2" onWordClick={handleLearningWordClick} />
             {phrase.context?.native && (
               <p className="text-slate-300 mt-3 text-sm text-center font-normal italic max-w-xs">
                 {phrase.context.native}
@@ -514,7 +514,7 @@ const PhraseCard: React.FC<PhraseCardProps> = ({
 
           <div className="relative w-full">{renderActionButtons('back')}</div>
           <div className="absolute bottom-0 left-0 right-0 pb-1.5 px-2.5">
-            <ProgressBar current={phrase.masteryLevel} max={MAX_MASTERY_LEVEL} variant="inverted" />
+            <ProgressBar current={phrase.masteryLevel} max={MAX_MASTERY_LEVEL} />
           </div>
           <div className="flash-container"></div>
         </div>

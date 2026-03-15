@@ -191,8 +191,8 @@ function convertAIResponseToMessage(aiResponse: PracticeChatAIResponse): Practic
       secondary:
         aiResponse.secondaryText !== undefined && aiResponse.secondaryText !== null && aiResponse.secondaryText !== ''
           ? {
-              text: aiResponse.secondaryText,
-            }
+            text: aiResponse.secondaryText,
+          }
           : undefined,
     },
     actions: {
@@ -246,7 +246,7 @@ export async function sendPracticeChatMessage(
   }
 
   const api = new GoogleGenAI({ apiKey });
-  const model = 'gemini-2.0-flash-exp';
+  const model = 'gemini-3.1-flash-lite-preview';
 
   const learningLang = getLanguageName(languageProfile.learning);
   const nativeLang = getLanguageName(languageProfile.native);

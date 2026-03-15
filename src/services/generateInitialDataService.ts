@@ -5,7 +5,7 @@ import path from 'path';
 // Initialize Gemini AI
 const genAI = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY || '' });
 
-const model = 'gemini-3-flash-preview';
+const model = 'gemini-3.1-flash-lite-preview';
 // const model = 'gemini-2.5-flash-lite-preview-09-2025';
 // const model = "gemini-2.5-flash";
 
@@ -268,9 +268,8 @@ CRITICAL: You must provide THREE separate pieces of information for EACH phrase:
 2. "learning": The translation in ${learningLanguage} (in ${learningLanguage} script)
 3. ${needsTranscription ? `"transcription": Latin alphabet romanization of the ${learningLanguage} word ONLY` : 'No transcription needed'}
 
-${
-  needsTranscription
-    ? `
+${needsTranscription
+        ? `
 IMPORTANT EXAMPLES for ${learningLanguage} (${nativeLanguage}):
 If English word is "Hello":
 - "native": "${nativeLanguage} word in ${nativeLanguage} script" (e.g., "नमस्ते" for Hindi)
@@ -283,18 +282,17 @@ KEY RULES:
 - If ${learningLanguage} uses Latin alphabet (like Spanish, French, English), transcription might be same as learning
 - If ${learningLanguage} uses non-Latin script (like Hindi, Arabic, Chinese), transcription must be romanized version
 `
-    : ''
-}
+        : ''
+      }
 
 Return ONLY a JSON array of objects with this exact structure:
 [
   {
     "native": "${nativeLanguage} translation in ${nativeLanguage} script",
-    "learning": "${learningLanguage} translation in ${learningLanguage} script"${
-      needsTranscription
+    "learning": "${learningLanguage} translation in ${learningLanguage} script"${needsTranscription
         ? ',\n    "transcription": "romanized version of learning field using ONLY Latin alphabet"'
         : ''
-    }
+      }
   }
 ]
 
@@ -308,9 +306,8 @@ MANDATORY REQUIREMENTS:
 - Each object MUST have these fields: "native", "learning"${needsTranscription ? ', and "transcription"' : ''}
 - "native" must be in ${nativeLanguage} using ${nativeLanguage} script
 - "learning" must be in ${learningLanguage} using ${learningLanguage} script
-${
-  needsTranscription
-    ? `
+${needsTranscription
+        ? `
 TRANSCRIPTION RULES (MANDATORY - STRICT):
 - Transcription is REQUIRED for every phrase - never omit it
 - Transcription must use ONLY Latin alphabet characters (a-z, A-Z, spaces)
@@ -336,8 +333,8 @@ TRANSCRIPTION RULES (MANDATORY - STRICT):
 IMPORTANT: If you add brackets or explanations in transcription, the translation will be REJECTED.
 Just provide the simple romanization, nothing more.
 `
-    : ''
-}`;
+        : ''
+      }`;
 
     // Retry logic for AI generation with JSON parsing
     const MAX_RETRIES = 3;
